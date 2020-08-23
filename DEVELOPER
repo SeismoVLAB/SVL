@@ -1,0 +1,58 @@
+*****************************************
+Developers information - Sesmo-VLAB (SVL)
+*****************************************
+
+Variable and Classe names:
+--------------------------
+A) Variable name should began with upper case letter and be self-understandable. Each new word began with a uppercase letter. 
+Exemples : int myInteger; vector<double> VectorOfPointer; etc.
+
+B) Class attribute should be self-understandable. 
+Exemples : int NumberOfLayers; Element ShellOf4Nodes; etc.
+
+C) Class name should began with an uppercase Letter.
+Exemples : class MyClass;
+
+D) Element/Material/Section class file name has the following structure: Formulation-Dimension-Name-nNodes.hpp
+Exemples : lin2DQuad4.hpp, fb3DCircular.hpp, Elastic3DLinear.hpp  
+
+Standart Doxygen comments
+-------------------------
+To automatise code documentation, comments should be insert as follow in header files.
+
+A) At the head of files
+/// @author    authors names
+/// @date      12 Novembre 2009
+/// @version   1.0
+/// @file      file name
+/// @brief     brief description
+
+B) Before class definition
+/// @class     class name
+/// @brief     brief descritption
+/// @details    Detailed description
+///                  continue description
+
+C) Before function and method prototypes
+/// brief description
+/// @details    Detailed description
+///                  continue description
+/// @param      parameter name and description
+/// @return     return description
+/// @see        relation with other classes
+
+D) Class member descrption
+/// member description
+type variable; 
+
+Developer personnal comments - flags
+-------------------------------------
+
+Key word list :     
+//DEV:    in developement
+//TODO:   should be done in the future
+//ERROR:  error : to correct ASAP
+//VERIF:  to verify : is it needed ?
+//TEST:   test : To delete ASAP
+
+-----For each modification, a comment should be prepared to be included to the commit message for Git.

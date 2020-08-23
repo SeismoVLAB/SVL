@@ -1,0 +1,12 @@
+# OSX / default autosave extension
+*.m~
+
+# Icon must end with two \r
+Icon
+
+# Thumbnails
+._*
+
+# C++ / default autosave extension 
+*.cpp~
+*.hpp~
