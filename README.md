@@ -38,7 +38,7 @@ Finally, write in terminal:
 make -s DEBUG=False
 </pre>
 
-@note Some libraries can be easily installed using repositories:
+\note Some libraries can be easily installed using repositories:
 * **LAPACK :** sudo apt-get install liblapack-dev
 * **ATLAS  :** sudo apt-get install libatlas-dev libatlas-base-dev
 * **BLAS   :** sudo apt-get install libblas-dev libblas-common libblacs-mpi-dev
