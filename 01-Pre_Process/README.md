@@ -30,15 +30,15 @@ The previous command will generate the command input line to be used in the Run-
 Files Description
 =================
 
-* PreProcess.py:
+* **PreProcess.py**:
   This is the main python file. 
-* Parser.py:
+* **Parser.py**:
   Field from the input file are transformed into python dictionaries. 
-* Metis.py:
+* **Metis.py**:
   This python file runs the METIS - Serial Graph Partitioning by George Karypis, and gets the element indeces for each partition.
-* Numbering.py:
+* **Numbering.py**:
   This python file assigns the degree of freedom numbering for each Point according to the User's numbering pattern.
-* PlaneWave.py:
+* **PlaneWave.py**:
   This python routine creates the domain reduction input files for the homogeneous linear elastic half-space case.  
-* SeismoVLab.py:
+* **SeismoVLab.py**:
   This python file writes the output files for the Pre-Process format. In other words, transform all dictionaries information into text files. 
