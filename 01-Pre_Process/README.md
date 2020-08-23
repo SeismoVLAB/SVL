@@ -1,3 +1,5 @@
+![SeismoVLAB Logo](../Logo.png)
+
 Pre-Process
 ===========
 
