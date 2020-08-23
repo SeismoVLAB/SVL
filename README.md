@@ -1,7 +1,4 @@
-Seismo-VLAB
-===========
-
-|logo|
+![SeismoVLAB Logo](Logo.png)
 
 **Seismo-VLAB** is a simple, fast, and extendable C++ multi-platform finite element software designed to optimize large-scale simulations of dynamic, nonlinear soil-structure interaction (SSI) problems. It has the vocation to share academics researches in structural and geothecnical field but also for industrials, students, etc.
 
@@ -52,7 +49,3 @@ doi     = {},
 url     = {}
 }
 ```
-
-.. |logo| image:: Logo.png
-    :scale: 25 %
-    :target: https://gihub.com/SeismoVLAB/SVL
