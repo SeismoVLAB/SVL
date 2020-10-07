@@ -234,7 +234,7 @@ def Driver(User, Point, Function, time, Disp, Vels, Accel, nodes, conditions):
         A = np.zeros((nt,3))
         d = np.array([np.cos(phi), np.sin(phi)]) 
 
-        if Function['UNDEFINED']:
+        if 'UNDEFINED' in Function:
             for k in Function['UNDEFINED']:
                 WriteFile(dirName, Function['NAME'], U, V, A, nt, 9, k, 0)
 
