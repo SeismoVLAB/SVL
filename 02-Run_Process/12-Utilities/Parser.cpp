@@ -49,6 +49,10 @@
 #include "lin3DHexa8.hpp"
 #include "kin3DHexa8.hpp"
 #include "lin3DHexa20.hpp"
+#include "UnxBoucWen2DLink.hpp"
+#include "UnxBoucWen3DLink.hpp"
+#include "HDRBYamamoto2DLink.hpp"
+#include "HDRBYamamoto3DLink.hpp"
 
 #include "StaticAnalysis.hpp"
 #include "DynamicAnalysis.hpp"
@@ -483,6 +487,44 @@ Parser::CreateElement(std::ifstream& InputFile, std::shared_ptr<Mesh> &theMesh, 
         //Instantiate the zerolength1D element.
         theElement = std::make_shared<ZeroLength1D>(nodes, theMesh->GetMaterial(matID), dim, dir);
     }
+    else if(strcasecmp(elemName.c_str(),"UnxBoucWen2DLink") == 0){
+        nodes.resize(2);
+        std::vector<double> vars(4);
+        std::vector<double> params(6);
+
+        InputFile >> nodes[0] >> nodes[1] >> params[0] >> params[1] >> params[2] >> params[3] >> params[4] >> params[5] >> vars[0] >> vars[1] >> vars[2] >> vars[3] >> dim >> dir;
+
+        //Instantiate the zerolength1D element.
+        theElement = std::make_shared<UnxBoucWen2DLink>(nodes, params, vars, dim, dir);
+    }
+    else if(strcasecmp(elemName.c_str(),"UnxBoucWen3DLink") == 0){
+        nodes.resize(2);
+        std::vector<double> vars(4);
+        std::vector<double> params(6);
+
+        InputFile >> nodes[0] >> nodes[1] >> params[0] >> params[1] >> params[2] >> params[3] >> params[4] >> params[5] >> vars[0] >> vars[1] >> vars[2] >> vars[3] >> dim >> dir;
+
+        //Instantiate the zerolength1D element.
+        theElement = std::make_shared<UnxBoucWen3DLink>(nodes, params, vars, dim, dir);
+    }
+    else if(strcasecmp(elemName.c_str(),"HDRBYamamoto2DLink") == 0){
+        double De, Di, Hr;
+
+        nodes.resize(2);
+        InputFile >> nodes[0] >> nodes[1] >> De >> Di >> Hr >> dim;
+
+        //Instantiate the zerolength1D element.
+        theElement = std::make_shared<HDRBYamamoto2DLink>(nodes, De, Di, Hr, dim);
+    }
+    else if(strcasecmp(elemName.c_str(),"HDRBYamamoto3DLink") == 0){
+        double De, Di, Hr;
+
+        nodes.resize(2);
+        InputFile >> nodes[0] >> nodes[1] >> De >> Di >> Hr >> dim;
+
+        //Instantiate the zerolength1D element.
+        theElement = std::make_shared<HDRBYamamoto3DLink>(nodes, De, Di, Hr, dim);
+    }
     else if(strcasecmp(elemName.c_str(),"lin2DFrame2") == 0){
         nodes.resize(2);
         std::string Formulation;
@@ -833,283 +875,6 @@ Parser::CreateElementLoad(std::ifstream& InputFile, std::shared_ptr<Mesh> &theMe
             theLoad->AddElements(elemTags);
         }
     }
-    else if(strcasecmp(loadType.c_str(), "PLANEWAVE") == 0){
-        //Auxiliar variables.
-        double angle, phi;
-        double Vs, nu, dt;
-        std::string theFile;
-        Eigen::VectorXd X0, Xmin; 
-        unsigned int ndirs, nSteps;
-        double *time, *disp, *vels, *accel;
-
-        //Loads the incline wave parameters.
-        InputFile >> theFile >> angle >> phi >> Vs >> nu >> ndirs;
-        LoadFile = GetSpacedName(LoadFile, " ");
-
-        //Loads the reference surface point.
-        X0.resize(ndirs);    
-        for(unsigned int k = 0; k < ndirs; k++)
-            InputFile >> X0(k);
-
-        //Loads the reference most distant point.
-        InputFile >> ndirs;
-        Xmin.resize(ndirs);    
-        for(unsigned int k = 0; k < ndirs; k++)
-            InputFile >> Xmin(k);
-
-        //Add the elements that shares this load.
-        InputFile >> nelems;
-        elemTags.resize(nelems);
-        for(unsigned int k = 0; k < nelems; k++){
-            InputFile >> elem;
-            elemTags[k] = elem;
-        }
-
-        //Creates the domain reduction load.
-        theLoad = std::make_shared<Load>(6);
-        theLoad->AddElements(elemTags);
-
-        //List of all interface nodes.
-        std::map<unsigned int, bool> InterfaceNodes;
-
-        //Loads the time history values into memory.
-        std::ifstream load(theFile.c_str());
-
-        //The File is Opened and Ready to be Loaded.
-        if (load.is_open()){
-            unsigned int nInterface;
-
-            //Number of time-steps and field-components.
-            load >> nSteps >> dt >> nInterface;
-
-            //Load Interface Node list.
-            bool cond;
-            unsigned int nodeID;
-            for(unsigned int k = 0; k < nInterface; k++){
-                load >> nodeID >> cond;
-                InterfaceNodes[nodeID] = cond;
-            }
-
-            //Pointers to the input signal values.
-            time  = new double[nSteps];
-            disp  = new double[nSteps];
-            vels  = new double[nSteps];
-            accel = new double[nSteps];
-
-            for(unsigned int k = 0; k < nSteps; k++)
-                load >> time[k] >> disp[k] >> vels[k] >> accel[k];
-        }
-        load.close();
-
-        //Mesh node and element information.
-        std::map<unsigned int, std::shared_ptr<Node> > theNodes = theMesh->GetNodes();
-        std::map<unsigned int, std::shared_ptr<Element> > theElements = theMesh->GetElements();
-
-        //Gets all nodes involved in elements of this partition.
-        std::map<unsigned int, bool> nodes;
-
-        for(unsigned int k = 0; k < elemTags.size(); k++){
-            std::vector<unsigned int> nodeIDs = theElements[elemTags[k]]->GetNodes();
-
-            for(unsigned int j = 0; j < nodeIDs.size(); j++)
-                nodes[nodeIDs[j]] = true;
-        }
-
-        //Computes the Plane-Wave Time history evolution.
-        double Vp = Vs*sqrt(2.0*(1.0 - nu)/(1.0 - 2.0*nu));
-        double theta_s = 3.141592653589793/180.0*angle;
-        double theta_p = asin(Vp/Vs*sin(theta_s));
-
-        double kappa = Vp/Vs;
-
-        //Angles for incident and reflected waves.
-        double sin1s = sin(theta_s);
-        double cos1s = cos(theta_s);
-        double sin1p = sin(theta_p);
-        double cos1p = cos(theta_p); 
-        double sin2p = sin(2.0*theta_p);
-        double sin2s = sin(2.0*theta_s);
-        double cos2s = cos(2.0*theta_s);
-
-        //Amplitudes for incident and reflected waves.
-        double U_si = 1.000;
-        double U_pr = U_si*(-2.0*kappa*sin2s*cos2s)/(sin2s*sin2p + kappa*kappa*cos2s*cos2s);
-        double U_sr = U_si*(sin2s*sin2p - kappa*kappa*cos2s*cos2s)/(sin2s*sin2p + kappa*kappa*cos2s*cos2s);
-
-        int ind;
-        double val;
-        double AmpDisp, AmpVels, AmpAccel;
-
-        //Domain Reduction Forces for 2-dimensions or 3-dimensions.
-        if(nDimensions == 2){
-            for(std::map<unsigned int, bool>::iterator it = nodes.begin(); it != nodes.end(); ++it){
-                unsigned int Index = it->first;
-                bool cond = InterfaceNodes[Index];
-
-                //Reference time and node coordinate.
-                double ti =  (X0(0) - Xmin(0))/Vs*sin1s + (X0(1) - Xmin(1))/Vs*cos1s;
-                Eigen::VectorXd X = theNodes[Index]->GetCoordinates();
-
-                //Time-history displacement field.
-                Eigen::MatrixXd Signal(nSteps, 6);
-                Signal.fill(0.0);
-
-                double x_rel = X(0) - X0(0);
-                double y_rel = X(1) - X0(1);
-
-                for(unsigned int k = 0; k < nSteps; k++){
-                    //Incident and Reflected waves arrival time.
-                    double t1 = -x_rel/Vs*sin1s - y_rel/Vs*cos1s + time[k] - ti;
-                    double t2 = -x_rel/Vs*sin1s + y_rel/Vs*cos1s + time[k] - ti;
-                    double t3 = -x_rel/Vp*sin1p + y_rel/Vp*cos1p + time[k] - ti;
-
-                    //Interpolation value of the incident SV-wave.
-                    val = t1/dt;
-                    ind = (int)val;
-                    if(ind > 0){
-                        AmpDisp  =  disp[ind-1] + ( disp[ind] -  disp[ind-1])/dt*(t1 - time[ind-1]);
-                        AmpVels  =  vels[ind-1] + ( vels[ind] -  vels[ind-1])/dt*(t1 - time[ind-1]);
-                        AmpAccel = accel[ind-1] + (accel[ind] - accel[ind-1])/dt*(t1 - time[ind-1]);
-                    }
-                    else{
-                        AmpDisp = 0.0; AmpVels = 0.0; AmpAccel = 0.0;
-                    }
-                    Signal(k,0) -= U_si*cos1s*AmpDisp; Signal(k,2) -= U_si*cos1s*AmpVels; Signal(k,4) -= U_si*cos1s*AmpAccel; 
-                    Signal(k,1) += U_si*sin1s*AmpDisp; Signal(k,3) += U_si*sin1s*AmpVels; Signal(k,5) += U_si*sin1s*AmpAccel;
-
-                    //Interpolation value of the reflected SV-wave.
-                    val = t2/dt;
-                    ind = (int)val;
-                    if(ind > 0){
-                        AmpDisp  =  disp[ind-1] + ( disp[ind] -  disp[ind-1])/dt*(t2 - time[ind-1]);
-                        AmpVels  =  vels[ind-1] + ( vels[ind] -  vels[ind-1])/dt*(t2 - time[ind-1]);
-                        AmpAccel = accel[ind-1] + (accel[ind] - accel[ind-1])/dt*(t2 - time[ind-1]);
-                    }
-                    else{
-                        AmpDisp = 0.0; AmpVels = 0.0; AmpAccel = 0.0;
-                    }
-                    Signal(k,0) += U_sr*cos1s*AmpDisp; Signal(k,2) += U_sr*cos1s*AmpVels; Signal(k,4) += U_sr*cos1s*AmpAccel; 
-                    Signal(k,1) += U_sr*sin1s*AmpDisp; Signal(k,3) += U_sr*sin1s*AmpVels; Signal(k,5) += U_sr*sin1s*AmpAccel;
-
-                    //Interpolation value of the reflected P-wave.
-                    val = t3/dt;
-                    ind = (int)val;
-                    if(ind > 0){
-                        AmpDisp  =  disp[ind-1] + ( disp[ind] -  disp[ind-1])/dt*(t3 - time[ind-1]);
-                        AmpVels  =  vels[ind-1] + ( vels[ind] -  vels[ind-1])/dt*(t3 - time[ind-1]);
-                        AmpAccel = accel[ind-1] + (accel[ind] - accel[ind-1])/dt*(t3 - time[ind-1]);
-                    }
-                    else{
-                        AmpDisp = 0.0; AmpVels = 0.0; AmpAccel = 0.0;
-                    }
-                    Signal(k,0) += U_pr*sin1p*AmpDisp; Signal(k,2) += U_pr*sin1p*AmpVels; Signal(k,4) += U_pr*sin1p*AmpAccel; 
-                    Signal(k,1) -= U_pr*cos1p*AmpDisp; Signal(k,3) -= U_pr*cos1p*AmpVels; Signal(k,5) -= U_pr*cos1p*AmpAccel;
-                }
-
-                //The node is exterior (change the sign).
-                if(cond){
-                    Signal = -1.00*Signal;
-                }
-
-                theLoad->AddDRMCondition(Index, cond);
-                theNodes[Index]->SetDomainReductionMotion(Signal);
-            }
-        }
-        else if(nDimensions == 3){
-            //Transform angle in radians.
-            phi = 3.141592653589793/180.0*phi;
-            double cosphi = cos(phi);
-            double sinphi = sin(phi);
-
-            //Projects point to propagation plane.
-            X0(0) = X0(0)*cosphi;
-            X0(1) = X0(1)*sinphi;
-
-            for(std::map<unsigned int, bool>::iterator it = nodes.begin(); it != nodes.end(); ++it){
-                unsigned int Index = it->first;
-                bool cond = InterfaceNodes[Index];
-
-                //Reference time and node coordinate.
-                double ti =  (X0(0) - Xmin(0))/Vs*sin1s*cosphi + (X0(1) - Xmin(1))/Vs*cos1s*sinphi + (X0(2) - Xmin(2))/Vs*cos(theta_s);
-                Eigen::VectorXd X = theNodes[Index]->GetCoordinates();
-
-                //Time-history displacement field.
-                Eigen::MatrixXd Signal(nSteps, 9);
-                Signal.fill(0.0);
-
-                double x_rel = X(0) - X0(0);
-                double y_rel = X(1) - X0(1);
-                double z_rel = X(2) - X0(2);
-
-                for(unsigned int k = 0; k < nSteps; k++){
-                    //Incident and Reflected waves arrival time.
-                    double t1 = -x_rel/Vs*sin1s*cosphi - y_rel/Vs*sin1s*sinphi - z_rel/Vs*cos1s + time[k] - ti;
-                    double t2 = -x_rel/Vs*sin1s*cosphi - y_rel/Vs*sin1s*sinphi + z_rel/Vs*cos1s + time[k] - ti;
-                    double t3 = -x_rel/Vp*sin1p*cosphi - y_rel/Vp*sin1p*sinphi + z_rel/Vp*cos1p + time[k] - ti;
-
-                    //Interpolation value of the incident SV-wave.
-                    val = t1/dt;
-                    ind = (int)val;
-                    if(ind > 0){
-                        AmpDisp  =  disp[ind-1] + ( disp[ind] -  disp[ind-1])/dt*(t1 - time[ind-1]);
-                        AmpVels  =  vels[ind-1] + ( vels[ind] -  vels[ind-1])/dt*(t1 - time[ind-1]);
-                        AmpAccel = accel[ind-1] + (accel[ind] - accel[ind-1])/dt*(t1 - time[ind-1]);
-                    }
-                    else{
-                        AmpDisp = 0.0; AmpVels = 0.0; AmpAccel = 0.0;
-                    }
-                    Signal(k,0) -= U_si*cosphi*cos1s*AmpDisp; Signal(k,3) -= U_si*cosphi*cos1s*AmpVels; Signal(k,6) -= U_si*cosphi*cos1s*AmpAccel; 
-                    Signal(k,1) -= U_si*sinphi*cos1s*AmpDisp; Signal(k,4) -= U_si*sinphi*cos1s*AmpVels; Signal(k,7) -= U_si*sinphi*cos1s*AmpAccel;
-                    Signal(k,2) +=        U_si*sin1s*AmpDisp; Signal(k,5) +=        U_si*sin1s*AmpVels; Signal(k,8) +=        U_si*sin1s*AmpAccel;
-
-                    //Interpolation value of the reflected SV-wave.
-                    val = t2/dt;
-                    ind = (int)val;
-                    if(ind > 0){
-                        AmpDisp  =  disp[ind-1] + ( disp[ind] -  disp[ind-1])/dt*(t2 - time[ind-1]);
-                        AmpVels  =  vels[ind-1] + ( vels[ind] -  vels[ind-1])/dt*(t2 - time[ind-1]);
-                        AmpAccel = accel[ind-1] + (accel[ind] - accel[ind-1])/dt*(t2 - time[ind-1]);
-                    }
-                    else{
-                        AmpDisp = 0.0; AmpVels = 0.0; AmpAccel = 0.0;
-                    }
-                    Signal(k,0) += U_sr*cosphi*cos1s*AmpDisp; Signal(k,3) += U_sr*cosphi*cos1s*AmpVels; Signal(k,6) += U_sr*cosphi*cos1s*AmpAccel; 
-                    Signal(k,1) += U_sr*sinphi*cos1s*AmpDisp; Signal(k,4) += U_sr*sinphi*cos1s*AmpVels; Signal(k,7) += U_sr*sinphi*cos1s*AmpAccel;
-                    Signal(k,2) +=        U_sr*sin1s*AmpDisp; Signal(k,5) +=        U_sr*sin1s*AmpVels; Signal(k,8) +=        U_sr*sin1s*AmpAccel;
-
-                    //Interpolation value of the reflected P-wave.
-                    val = t3/dt;
-                    ind = (int)val;
-                    if(ind > 0){
-                        AmpDisp  =  disp[ind-1] + ( disp[ind] -  disp[ind-1])/dt*(t3 - time[ind-1]);
-                        AmpVels  =  vels[ind-1] + ( vels[ind] -  vels[ind-1])/dt*(t3 - time[ind-1]);
-                        AmpAccel = accel[ind-1] + (accel[ind] - accel[ind-1])/dt*(t3 - time[ind-1]);
-                    }
-                    else{
-                        AmpDisp = 0.0; AmpVels = 0.0; AmpAccel = 0.0;
-                    }
-                    Signal(k,0) += U_pr*cosphi*sin1p*AmpDisp; Signal(k,3) += U_pr*cosphi*sin1p*AmpVels; Signal(k,6) += U_pr*cosphi*sin1p*AmpAccel; 
-                    Signal(k,1) += U_pr*sinphi*sin1p*AmpDisp; Signal(k,4) += U_pr*sinphi*sin1p*AmpVels; Signal(k,7) += U_pr*sinphi*sin1p*AmpAccel; 
-                    Signal(k,2) -=        U_pr*cos1p*AmpDisp; Signal(k,5) -=        U_pr*cos1p*AmpVels; Signal(k,8) -=        U_pr*cos1p*AmpAccel;
-                }
-
-                //The node is exterior (change the sign).
-                if(cond)
-                    Signal = -1.00*Signal;
-
-                theLoad->AddDRMCondition(Index, cond);
-                theNodes[Index]->SetDomainReductionMotion(Signal);
-            }
-        }
-
-        delete[] time;
-        delete[] disp;
-        delete[] vels;
-        delete[] accel;
-
-        nodes.clear();
-        InterfaceNodes.clear(); 
-    }
     else if(strcasecmp(loadType.c_str(),"GENERALWAVE") == 0){
         std::string theFile;
         InputFile >> theFile >> nelems;
@@ -1142,9 +907,9 @@ Parser::CreateElementLoad(std::ifstream& InputFile, std::shared_ptr<Mesh> &theMe
         }
 
         //Reads/Copy the node information in specified folder.
-        for(std::map<unsigned int, bool>::iterator it = nodes.begin(); it != nodes.end(); ++it){
-            int ind = it->first;
-            LoadFile = GetPartitionName(theFile, ind, false);
+        for(auto it : nodes){
+            auto &ind = it.first;
+            LoadFile  = GetPartitionName(theFile, ind, false);
                                 
             //Loads the time history values into memory.
             std::ifstream load(LoadFile.c_str());
