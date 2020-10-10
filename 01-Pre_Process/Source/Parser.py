@@ -853,7 +853,7 @@ def GetElementInformation(fileHandler, User, Element):
                 elif token[0].upper() == '-FORM':
                     element['FORMULATION'] = token[1]
 
-                Element[eTag] = element
+            Element[eTag] = element
 
     #Element file was provided
     User['ELEMENT'] = 'YES'
