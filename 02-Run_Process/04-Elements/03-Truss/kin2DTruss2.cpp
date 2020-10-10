@@ -261,6 +261,13 @@ kin2DTruss2::ComputeDampingMatrix(){
     return DampingMatrix;
 }
 
+//Compute the PML history matrix for Perfectly-Matched Layer (PML).
+Eigen::MatrixXd 
+kin2DTruss2::ComputePMLMatrix(){
+    Eigen::MatrixXd Kpml;
+    return Kpml;
+}
+
 //Compute the element the internal forces acting on the element.
 Eigen::VectorXd 
 kin2DTruss2::ComputeInternalForces(){
@@ -294,6 +301,14 @@ kin2DTruss2::ComputeInternalDynamicForces(){
     }
 
     return InternalForces;
+}
+
+//Compute the PML history vector using gauss-integration.
+Eigen::VectorXd 
+kin2DTruss2::ComputePMLVector(){
+    //Empty PML vector.
+    Eigen::VectorXd Fpml;
+    return Fpml;
 }
 
 //Compute the surface forces acting on the element.
