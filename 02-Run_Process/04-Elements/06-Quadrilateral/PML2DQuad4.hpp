@@ -145,6 +145,12 @@ class PML2DQuad4 : public Element{
         ///@see Assembler::ComputeDampingMatrix(), Integrator::ComputeEffectiveStiffness().
         Eigen::MatrixXd ComputeDampingMatrix();
 
+        ///Compute the PML history matrix using gauss-integration.
+        ///@return Matrix with the PML Element matrix.
+        ///@note The PML matrix is none existent for this element.
+        ///@see Assembler::ComputePMLHistoryMatrix(), Integrator::ComputeEffectiveStiffness().
+        Eigen::MatrixXd ComputePMLMatrix();
+
         ///Compute the internal (elastic) forces acting on the element.
         ///@return Vector with the Element internal force.
         ///@note The internal force vector can be revisited in @ref linkPML2DQuad4.
@@ -156,6 +162,12 @@ class PML2DQuad4 : public Element{
         ///@note The internal force vector can be revisited in @ref linkElement.
         ///@see Assembler::ComputeDynamicInternalForceVector().
         Eigen::VectorXd ComputeInternalDynamicForces();
+
+        ///Compute the PML history vector using gauss-integration.
+        ///@return Vector with the PML Element history values.
+        ///@note The PML vector is none existent for this element.
+        ///@see Assembler::ComputePMLHistoryMatrix(), Integrator::ComputeEffectiveStiffness().
+        Eigen::VectorXd ComputePMLVector();
 
         ///Compute the surface forces acting on the element.
         ///@param surface Pointer to the Load object that contains this information.

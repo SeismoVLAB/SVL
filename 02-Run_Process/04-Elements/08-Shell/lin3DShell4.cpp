@@ -343,6 +343,13 @@ lin3DShell4::ComputeDampingMatrix(){
     return DampingMatrix;
 }
 
+//Compute the PML history matrix for Perfectly-Matched Layer (PML).
+Eigen::MatrixXd 
+lin3DShell4::ComputePMLMatrix(){
+    Eigen::MatrixXd Kpml;
+    return Kpml;
+}
+
 //Compute the element the internal forces acting on the element.
 Eigen::VectorXd 
 lin3DShell4::ComputeInternalForces(){
@@ -386,6 +393,14 @@ lin3DShell4::ComputeInternalDynamicForces(){
     }
 
     return InternalForces;
+}
+
+//Compute the PML history vector using gauss-integration.
+Eigen::VectorXd 
+lin3DShell4::ComputePMLVector(){
+    //Empty PML vector.
+    Eigen::VectorXd Fpml;
+    return Fpml;
 }
 
 //Compute the surface forces acting on the element.

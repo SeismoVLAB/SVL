@@ -360,6 +360,13 @@ kin3DHexa8::ComputeDampingMatrix(){
     return DampingMatrix;
 }
 
+//Compute the PML history matrix for Perfectly-Matched Layer (PML).
+Eigen::MatrixXd 
+kin3DHexa8::ComputePMLMatrix(){
+    Eigen::MatrixXd Kpml;
+    return Kpml;
+}
+
 //Compute the internal forces acting on the element.
 Eigen::VectorXd 
 kin3DHexa8::ComputeInternalForces(){
@@ -413,6 +420,14 @@ kin3DHexa8::ComputeInternalDynamicForces(){
     }
 
     return InternalForces;
+}
+
+//Compute the PML history vector using gauss-integration.
+Eigen::VectorXd 
+kin3DHexa8::ComputePMLVector(){
+    //Empty PML vector.
+    Eigen::VectorXd Fpml;
+    return Fpml;
 }
 
 //Compute the surface forces acting on the element.

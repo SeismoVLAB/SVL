@@ -334,6 +334,13 @@ lin2DQuad4::ComputeDampingMatrix(){
     return DampingMatrix;
 }
 
+//Compute the PML history matrix for Perfectly-Matched Layer (PML).
+Eigen::MatrixXd 
+lin2DQuad4::ComputePMLMatrix(){
+    Eigen::MatrixXd Kpml;
+    return Kpml;
+}
+
 //Compute the internal forces acting on the element.
 Eigen::VectorXd 
 lin2DQuad4::ComputeInternalForces(){
@@ -384,6 +391,14 @@ lin2DQuad4::ComputeInternalDynamicForces(){
     }
 
     return InternalForces;
+}
+
+//Compute the PML history vector using gauss-integration.
+Eigen::VectorXd 
+lin2DQuad4::ComputePMLVector(){
+    //Empty PML vector.
+    Eigen::VectorXd Fpml;
+    return Fpml;
 }
 
 //Compute the surface forces acting on the element.
