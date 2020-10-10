@@ -60,8 +60,9 @@ Recorder::Initialize(std::shared_ptr<Mesh> &mesh, unsigned int nsteps){
 
         //Local node indeces mapping.
         unsigned int k = 0;
-        for(std::map<unsigned int, std::shared_ptr<Node> >::iterator it = Nodes.begin(); it != Nodes.end(); ++it){
-            Tag[it->first] = k;
+        for(auto it : Nodes){
+            auto &nTag = it.first;
+            Tag[nTag]  = k;
             k++;
         }
     }
@@ -389,10 +390,11 @@ Recorder::WriteVTKFiles(std::shared_ptr<Mesh> &mesh, unsigned int step){
 
         //Animated nodal mesh coordinates.
         OutputFile << "POINTS " << Nodes.size() << " float\n";
+        for(auto it : Nodes){
+            auto &nTag = it.first;
 
-        for(std::map<unsigned int, std::shared_ptr<Node> >::iterator it = Nodes.begin(); it != Nodes.end(); ++it){
             //Get Node information.
-            Eigen::VectorXd X = Nodes[it->first]->GetCoordinates();
+            Eigen::VectorXd X = Nodes[nTag]->GetCoordinates();
 
             OutputFile << X(0) << " " << X(1) << " ";
             if(X.size() == 2)
@@ -403,8 +405,9 @@ Recorder::WriteVTKFiles(std::shared_ptr<Mesh> &mesh, unsigned int step){
 
         //Elements Connectivities.
         OutputFile << "\nCELLS " << Elements.size() << " " << nParaview << "\n";
-        for(std::map<unsigned int, std::shared_ptr<Element> >::iterator it = Elements.begin(); it != Elements.end(); ++it){
-            std::vector<unsigned int> connection = Elements[it->first]->GetNodes();
+        for(auto it : Elements){
+            auto &eTag = it.first;
+            std::vector<unsigned int> connection = Elements[eTag]->GetNodes();
 
             OutputFile << connection.size();
             for(unsigned int k = 0; k < connection.size(); k++)
@@ -414,17 +417,19 @@ Recorder::WriteVTKFiles(std::shared_ptr<Mesh> &mesh, unsigned int step){
 
         //Elements Geometry Types.
         OutputFile << "\nCELL_TYPES " << Elements.size() << "\n";
-        for(std::map<unsigned int, std::shared_ptr<Element> >::iterator it = Elements.begin(); it != Elements.end(); ++it){
-            OutputFile << Elements[it->first]->GetVTKCellType() <<"\n";
+        for(auto it : Elements){
+            auto &eTag = it.first;
+            OutputFile << Elements[eTag]->GetVTKCellType() <<"\n";
         }
 
         //Writes the displacement at each node.
         OutputFile << "\nPOINT_DATA " << Nodes.size() << "\n";
         OutputFile << "VECTORS Displacement float\n";
 
-        for(std::map<unsigned int, std::shared_ptr<Node> >::iterator it = Nodes.begin(); it != Nodes.end(); ++it){
+        for(auto it : Nodes){
+            auto &nTag = it.first;
             //Get Node information.
-            Eigen::VectorXd U = Nodes[it->first]->GetDisplacements();
+            Eigen::VectorXd U = Nodes[nTag]->GetDisplacements();
 
             OutputFile << U(0) << " " << U(1) << " ";
             if(nDimensions == 2)
@@ -436,9 +441,11 @@ Recorder::WriteVTKFiles(std::shared_ptr<Mesh> &mesh, unsigned int step){
         //Writes the velocity at each node.
         OutputFile << "\nVECTORS Velocity float\n";
 
-        for(std::map<unsigned int, std::shared_ptr<Node> >::iterator it = Nodes.begin(); it != Nodes.end(); ++it){
+        for(auto it : Nodes){
+            auto &nTag = it.first;
+
             //Get Node information.
-            Eigen::VectorXd V = Nodes[it->first]->GetVelocities();
+            Eigen::VectorXd V = Nodes[nTag]->GetVelocities();
 
             OutputFile << V(0) << " " << V(1) << " ";
             if(nDimensions == 2)
@@ -450,9 +457,11 @@ Recorder::WriteVTKFiles(std::shared_ptr<Mesh> &mesh, unsigned int step){
         //Writes the acceleration at each node.
         OutputFile << "\nVECTORS Acceleration float\n";
 
-        for(std::map<unsigned int, std::shared_ptr<Node> >::iterator it = Nodes.begin(); it != Nodes.end(); ++it){
+        for(auto it : Nodes){
+            auto &nTag = it.first;
+
             //Get Node information.
-            Eigen::VectorXd A = Nodes[it->first]->GetAccelerations();
+            Eigen::VectorXd A = Nodes[nTag]->GetAccelerations();
 
             OutputFile << A(0) << " " << A(1) << " ";
             if(nDimensions == 2)
@@ -464,9 +473,10 @@ Recorder::WriteVTKFiles(std::shared_ptr<Mesh> &mesh, unsigned int step){
         //Writes the acceleration at each node.
         OutputFile << "\nVECTORS Reaction float\n";
 
-        for(std::map<unsigned int, std::shared_ptr<Node> >::iterator it = Nodes.begin(); it != Nodes.end(); ++it){
+        for(auto it : Nodes){
+            auto &nTag = it.first;
             //Get Node information.
-            Eigen::VectorXd R = Nodes[it->first]->GetReaction();
+            Eigen::VectorXd R = Nodes[nTag]->GetReaction();
 
             OutputFile << R(0) << " " << R(1) << " ";
             if(nDimensions == 2)
@@ -481,17 +491,21 @@ Recorder::WriteVTKFiles(std::shared_ptr<Mesh> &mesh, unsigned int step){
 
         //Writes the acceleration at each node.
         OutputFile << "Strains 6 " << Elements.size() << " float\n";
-        for(std::map<unsigned int, std::shared_ptr<Element> >::iterator it = Elements.begin(); it != Elements.end(); ++it){
+        for(auto it : Elements){
+            auto &eTag = it.first;
+
             //Gets the material stress.
-            Eigen::VectorXd Strain = Elements[it->first]->GetVTKResponse("Strain");
+            Eigen::VectorXd Strain = Elements[eTag]->GetVTKResponse("Strain");
             OutputFile << Strain(0) << " " << Strain(1) << " " << Strain(2) << " " << Strain(3) << " " << Strain(4) << " " << Strain(5) << "\n";
         }
 
         //Writes the acceleration at each node.
         OutputFile << "\nStresses 6 " << Elements.size() << " float\n";
-        for(std::map<unsigned int, std::shared_ptr<Element> >::iterator it = Elements.begin(); it != Elements.end(); ++it){
+        for(auto it : Elements){
+            auto &eTag = it.first;
+
             //Gets the material stress.
-            Eigen::VectorXd Stress = Elements[it->first]->GetVTKResponse("Stress");
+            Eigen::VectorXd Stress = Elements[eTag]->GetVTKResponse("Stress");
             OutputFile << Stress(0) << " " << Stress(1) << " " << Stress(2) << " "  << Stress(3) << " " << Stress(4) << " " << Stress(5) << "\n";
         }
 

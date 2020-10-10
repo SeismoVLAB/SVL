@@ -177,9 +177,9 @@ Node::GetSupportMotion(unsigned int k){
     Eigen::VectorXd Lg(NumberOfDegreeOfFreedom);
     Lg.fill(0.0);
 
-    for(std::map<unsigned int, std::vector<double> >::iterator it = SupportMotion.begin(); it != SupportMotion.end(); ++it){
-        unsigned int dof = it->first;
-        Lg(dof) = SupportMotion[dof][k];
+    for(auto it : SupportMotion){
+        auto &dof = it.first;
+        Lg(dof)   = SupportMotion[dof][k];
     }
 
     return Lg;

@@ -71,8 +71,8 @@ DynamicAnalysis::UpdateDomain(unsigned int k){
     //Gets all nodes from the mesh.
     std::map<unsigned int, std::shared_ptr<Node> >  Nodes = theMesh->GetNodes();
 
-    for(std::map<unsigned int, std::shared_ptr<Node> >::iterator it = Nodes.begin(); it != Nodes.end(); ++it){
-        unsigned int Tag = it->first;
+    for(auto it : Nodes){
+        auto &Tag = it.first;
 
         //Gets the associated nodal degree-of-freedom.
         std::vector<int> TotalDofs = Nodes[Tag]->GetTotalDegreeOfFreedom();
@@ -100,8 +100,8 @@ DynamicAnalysis::UpdateDomain(unsigned int k){
     //Gets all elements from the mesh.
     std::map<unsigned int, std::shared_ptr<Element> > Elements = theMesh->GetElements();
 
-    for(std::map<unsigned int, std::shared_ptr<Element> >::iterator it = Elements.begin(); it != Elements.end(); ++it){
-        unsigned int Tag = it->first;
+    for(auto it : Elements){
+        auto &Tag = it.first;
 
         //Saves the material states for each element.
         Elements[Tag]->CommitState();
@@ -111,8 +111,8 @@ DynamicAnalysis::UpdateDomain(unsigned int k){
     Eigen::VectorXd R = theIntegrator->ComputeReactionForce(theMesh, k);
     ReducedParallelReaction(R);
 
-    for(std::map<unsigned int, std::shared_ptr<Node> >::iterator it = Nodes.begin(); it != Nodes.end(); ++it){
-        unsigned int Tag = it->first;
+    for(auto it : Nodes){
+        auto &Tag = it.first;
 
         //Only if the node is fixed.
         if(Nodes[Tag]->IsFixed()){

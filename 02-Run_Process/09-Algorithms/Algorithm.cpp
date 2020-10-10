@@ -26,8 +26,8 @@ Algorithm::UpdateStatesIncrements(std::shared_ptr<Mesh> &mesh, const Eigen::Vect
     std::map<unsigned int, std::shared_ptr<Node> >  Nodes = mesh->GetNodes();    
 
     //TODO: Use OpenMP to accelerate here.
-    for(std::map<unsigned int, std::shared_ptr<Node> >::iterator it = Nodes.begin(); it != Nodes.end(); ++it){
-        unsigned int Tag = it->first;
+    for(auto it : Nodes){
+        auto &Tag = it.first;
 
         //Gets the associated nodal degree-of-freedom.
         std::vector<int> TotalDofs = Nodes[Tag]->GetTotalDegreeOfFreedom();
@@ -47,8 +47,8 @@ Algorithm::UpdateStatesIncrements(std::shared_ptr<Mesh> &mesh, const Eigen::Vect
     //Gets all elements from the mesh.
     std::map<unsigned int, std::shared_ptr<Element> > Elements = mesh->GetElements();
 
-    for(std::map<unsigned int, std::shared_ptr<Element> >::iterator it = Elements.begin(); it != Elements.end(); ++it){
-        unsigned int Tag = it->first;
+    for(auto it : Elements){
+        auto &Tag = it.first;
 
         //Updates the material states for each element.
         Elements[Tag]->UpdateState();

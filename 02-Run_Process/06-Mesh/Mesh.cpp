@@ -20,9 +20,8 @@ Mesh::~Mesh(){
 void 
 Mesh::Initialize(){
     //Initialize the mesh objects.
-    for(std::map<unsigned int, std::shared_ptr<Element> >::iterator it = Elements.begin(); it != Elements.end(); ++it){
-        //Gets the element identifier.
-        unsigned int Tag = it->first;
+    for(auto it : Elements){
+        auto &Tag = it.first;
 
         //Sets the finite element dependance among objects.
         Elements[Tag]->SetDomain(Nodes);
@@ -167,8 +166,8 @@ Mesh::GetTotalToFreeMatrix(){
 
     //Assembly transformation matrix process.
     unsigned int sum = 0;
-    for(std::map<unsigned int, std::shared_ptr<Node> >::iterator it = Nodes.begin(); it != Nodes.end(); ++it){
-        unsigned int Tag = it->first;
+    for(auto it : Nodes){
+        auto &Tag = it.first;
 
         //Free degree-of fredom index list for this node.
         std::vector<int> free = Nodes[Tag]->GetFreeDegreeOfFreedom();
