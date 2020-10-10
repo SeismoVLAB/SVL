@@ -18,7 +18,7 @@ Further informatin can be obatained at:
 
 Compiling Run-Analysis
 ----------------------
-Installation of **Seismo-VLab** on Linux/MacOSX requires to download `Eigen C++ library`, `MUMPS Library`, and `Pestc Library`. Also, python3 is needed along with libraries such as numpy, scipy, and matplotlib.
+Installation of **Seismo-VLAB** on Linux/MacOSX requires to download `Eigen C++ library`, `MUMPS Library`, and `Pestc Library`. Also, python3 is needed along with libraries such as numpy, scipy, and matplotlib.
 
 * The **Eigen C++ library** can be downloaded from the website http://eigen.tuxfamily.org/. This package needs to be unzip and its content move (for instnce) to `/usr/include/Eigen`. 
 * The **MUMPS library** can be downloaded from the website http://mumps.enseeiht.fr/. This package needs to be unzip and compiled (for instnce) at `/usr/include/Mumps`.
@@ -49,7 +49,7 @@ Some libraries can be easily installed using repositories:
 Running the Run-Analysis
 ------------------------
 
-Once **Seismo-VLab** is compiled, write in a terminal window (Linux/MacOSX) or command prompt (cmd in Windows),
+Once **Seismo-VLAB** is compiled, write in a terminal window (Linux/MacOSX) or command prompt (cmd in Windows),
 
 <pre>
 ./SeismoVLab -help
@@ -82,7 +82,7 @@ and the following message will be printed:
      -file : Name of the SeismoVLab input file to be loaded.      
 </pre>
 
-Then, we can run a serial/parallel **Seismo-VLab** in the following manner:
+Then, we can run a serial/parallel **Seismo-VLAB** in the following manner:
 
 * For a single-core execution,
 <pre>
