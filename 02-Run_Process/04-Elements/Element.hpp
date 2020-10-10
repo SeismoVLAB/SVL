@@ -139,6 +139,12 @@ class Element{
         ///@see Assembler::ComputeDampingMatrix(), Integrator::ComputeEffectiveStiffness().
         virtual Eigen::MatrixXd ComputeDampingMatrix() = 0;
 
+        ///Compute the PML history matrix for Perfectly-Matched Layer (PML).
+        ///@return Matrix with the PML history variables.
+        ///@note The history matrix only applies for PML in 3D, see @ref linkPML3DHexa8 linkPML3DHexa20.
+        ///@see Assembler::ComputeDampingMatrix(), Integrator::ComputeEffectiveStiffness().
+        virtual Eigen::MatrixXd ComputePMLMatrix() = 0;
+
         ///Compute the internal forces acting on the element.
         ///@return Vector with the Element internal force.
         ///@note The internal force vector can be revisited in @ref linkElement.
@@ -150,6 +156,12 @@ class Element{
         ///@note The internal force vector can be revisited in @ref linkElement.
         ///@see Assembler::ComputeDynamicInternalForceVector().
         virtual Eigen::VectorXd ComputeInternalDynamicForces() = 0;
+
+        ///Compute the PML history vector for Perfectly-Matched Layer (PML).
+        ///@return Vector with the PML history variables.
+        ///@note The history vector only applies for PML in 3D, see @ref linkPML3DHexa8 linkPML3DHexa20.
+        ///@see Assembler::ComputeExternalForceVector(), Integrator::ComputeEffectiveForce().
+        virtual Eigen::VectorXd ComputePMLVector() = 0;
 
         ///Compute the surface forces acting on the element.
         ///@param surface Pointer to the Load object that contains this information.
