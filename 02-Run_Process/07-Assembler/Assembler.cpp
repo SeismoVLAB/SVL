@@ -85,8 +85,8 @@ Assembler::ComputeStiffnessMatrix(std::shared_ptr<Mesh> &mesh){
     //Assembly stiffness matrix process:
     unsigned int sum = 0;
 
-    for(std::map<unsigned int, std::shared_ptr<Element> >::iterator it = Elements.begin(); it != Elements.end(); ++it){
-        unsigned int Tag = it->first;
+    for(auto it : Elements){
+        auto &Tag = it.first;
 
         //Gets the element degree-of-freedom connectivity.
         std::vector<unsigned int> dofs = Elements[Tag]->GetTotalDegreeOfFreedom();
@@ -131,8 +131,8 @@ Assembler::ComputeDampingMatrix(std::shared_ptr<Mesh> &mesh){
     //Assembly damping matrix process:
     unsigned int sum = 0;
     
-    for(std::map<unsigned int, std::shared_ptr<Element> >::iterator it = Elements.begin(); it != Elements.end(); ++it){
-        unsigned int Tag = it->first;
+    for(auto it : Elements){
+        auto &Tag = it.first;
 
         //Gets the element degree-of-freedom connectivity.
         std::vector<unsigned int> dofs = Elements[Tag]->GetTotalDegreeOfFreedom();
@@ -158,6 +158,53 @@ Assembler::ComputeDampingMatrix(std::shared_ptr<Mesh> &mesh){
     return DampingMatrix;
 }
 
+//Assemble the integrated history matrix for Perfectly-Matched Layer(PML)
+Eigen::SparseMatrix<double> 
+Assembler::ComputePMLHistoryMatrix(std::shared_ptr<Mesh> &mesh){
+    //Starts profiling this function.
+    PROFILE_FUNCTION();
+
+    //Global stiffness matrix.
+    Eigen::SparseMatrix<double> HistoryMatrix(numberOfTotalDofs,numberOfTotalDofs);
+
+    //Sparse matrix format.
+    std::vector<T> tripletList;
+    tripletList.reserve(ConsistentStorage);
+    
+    //Gets element information from the mesh.
+    std::map<unsigned int, std::shared_ptr<Element> > Elements = mesh->GetElements();
+
+    //Assembly stiffness matrix process:
+    unsigned int sum = 0;
+
+    for(auto it : Elements){
+        auto &Tag = it.first;
+
+        //Gets the element degree-of-freedom connectivity.
+        std::vector<unsigned int> dofs = Elements[Tag]->GetTotalDegreeOfFreedom();
+
+        //Gets the Stiffness matrix in global coordinates:
+        Eigen::MatrixXd Kpml = Elements[Tag]->ComputePMLMatrix();
+
+        //Assemble contribution of each element in mesh.
+        if(Kpml.rows() > 0){
+            for(unsigned int j = 0; j < dofs.size(); j++){
+                for(unsigned int i = 0; i < dofs.size(); i++){
+                    if(fabs(Kpml(i,j)) > StiffnessTolerance){
+                        tripletList[sum] = T(dofs[i], dofs[j], Kpml(i,j));
+                        sum++;
+                    }
+                }
+            }
+        }
+    }
+
+    //Builds the stiffness sparse matrix.
+    HistoryMatrix.setFromTriplets(tripletList.begin(), tripletList.begin() + sum);
+
+    return HistoryMatrix;
+}
+
 //Assembles the internal force vector.
 Eigen::VectorXd
 Assembler::ComputeInternalForceVector(std::shared_ptr<Mesh> &mesh){
@@ -171,8 +218,8 @@ Assembler::ComputeInternalForceVector(std::shared_ptr<Mesh> &mesh){
     //Gets element information from the mesh.
     std::map<unsigned int, std::shared_ptr<Element> > Elements = mesh->GetElements();
 
-    for(std::map<unsigned int, std::shared_ptr<Element> >::iterator it = Elements.begin(); it != Elements.end(); ++it){
-        unsigned int Tag = it->first;
+    for(auto it : Elements){
+        auto &Tag = it.first;
 
         //Gets the element degree-of-freedom connectivity.
         std::vector<unsigned int> dofs = Elements[Tag]->GetTotalDegreeOfFreedom();
@@ -429,6 +476,41 @@ Assembler::ComputeSupportMotionIncrement(std::shared_ptr<Mesh> &mesh, unsigned i
     return SupportMotion;
 }
 
+//Assemble the integrated history vector for Perfectly-Matched Layer (PML).
+Eigen::VectorXd 
+Assembler::ComputePMLHistoryVector(std::shared_ptr<Mesh> &mesh){
+    //Starts profiling this function.
+    PROFILE_FUNCTION();
+
+    //Sets the total force vector. 
+    Eigen::VectorXd HistoryVector(numberOfTotalDofs);
+    HistoryVector.fill(0.0);
+
+    //Gets element information from the mesh.
+    std::map<unsigned int, std::shared_ptr<Element> > Elements = mesh->GetElements();
+
+    for(auto it : Elements){
+        auto &Tag = it.first;
+
+        //Gets the element degree-of-freedom connectivity.
+        std::vector<unsigned int> dofs = Elements[Tag]->GetTotalDegreeOfFreedom();
+
+        //Gets the Stiffness matrix in global coordinates:
+        Eigen::VectorXd Fpml = Elements[Tag]->ComputePMLVector();
+
+        //Assemble contribution of each PML in mesh.
+        if(Fpml.size() > 0){
+            for(unsigned int j = 0; j < dofs.size(); j++){
+                if(fabs(Fpml(j)) > ForceTolerance){
+                    HistoryVector(dofs[j]) += Fpml(j);
+                }
+            }
+        }
+    }
+
+    return HistoryVector;
+}
+
 //Adds the inertial forces contribution associated to the nodes.
 void 
 Assembler::AddNodeInertiaForces(std::shared_ptr<Mesh> &mesh, Eigen::VectorXd &DynamicForces){
@@ -439,8 +521,8 @@ Assembler::AddNodeInertiaForces(std::shared_ptr<Mesh> &mesh, Eigen::VectorXd &Dy
     std::map<unsigned int, std::shared_ptr<Node> > Nodes = mesh->GetNodes();
    
     //Loops over all nodes in mesh.
-    for(std::map<unsigned int, std::shared_ptr<Node> >::iterator it = Nodes.begin(); it != Nodes.end(); ++it){
-        unsigned int Tag = it->first;
+    for(auto it : Nodes){
+        auto &Tag = it.first;
 
         //Obtains the node inertial force vector.
         Eigen::VectorXd Fn = Nodes[Tag]->GetInertialForces();
@@ -466,8 +548,8 @@ Assembler::AddElementDynamicForces(std::shared_ptr<Mesh> &mesh, Eigen::VectorXd 
     std::map<unsigned int, std::shared_ptr<Element>> Elements = mesh->GetElements();
 
     //Loops over all elements in mesh.
-    for(std::map<unsigned int, std::shared_ptr<Element> >::iterator it = Elements.begin(); it != Elements.end(); ++it){
-        unsigned int Tag = it->first;
+    for(auto it : Elements){
+        auto &Tag = it.first;
 
         //Gets the element degree-of-freedom connectivity.
         std::vector<unsigned int> dofs = Elements[Tag]->GetTotalDegreeOfFreedom();
@@ -499,8 +581,8 @@ Assembler::AssembleNodalMass(std::shared_ptr<Mesh> &mesh, Eigen::SparseMatrix<do
     //Assembly mass matrix process:
     unsigned int sum = 0;
 
-    for(std::map<unsigned int, std::shared_ptr<Node> >::iterator it = Nodes.begin(); it != Nodes.end(); ++it){
-        unsigned int Tag = it->first;
+    for(auto it : Nodes){
+        auto &Tag = it.first;
 
         Eigen::VectorXd Mn = Nodes[Tag]->GetMass();
         if(Mn.size() != 0){
@@ -537,8 +619,8 @@ Assembler::AssembleElementMass(std::shared_ptr<Mesh> &mesh, Eigen::SparseMatrix<
     //Assembly mass matrix process:
     unsigned int sum = 0;
 
-    for(std::map<unsigned int, std::shared_ptr<Element> >::iterator it = Elements.begin(); it != Elements.end(); ++it){
-        unsigned int Tag = it->first;
+    for(auto it : Elements){
+        auto &Tag = it.first;
 
         //Gets the element degree-of-freedom connectivity.
         std::vector<unsigned int> dofs = Elements[Tag]->GetTotalDegreeOfFreedom();

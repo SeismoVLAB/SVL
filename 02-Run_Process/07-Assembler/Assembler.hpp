@@ -94,6 +94,13 @@ class Assembler{
         ///@see Element::ComputeDampingMatrix(), Integrator::ComputeEffectiveStiffness().
         Eigen::SparseMatrix<double> ComputeDampingMatrix(std::shared_ptr<Mesh> &mesh);
 
+        ///Assemble the integrated history matrix for Perfectly-Matched Layer (PML).
+        ///@param mesh The finite element Mesh object.
+        ///@return A vector with the PML history values.
+        ///@note More details can be found at @ref linkAssembler.
+        ///@see Element::ComputeDampingMatrix(), Integrator::ComputeEffectiveStiffness().
+        Eigen::SparseMatrix<double> ComputePMLHistoryMatrix(std::shared_ptr<Mesh> &mesh);
+
         ///Assemble the internal force vector.
         ///@param mesh The finite element Mesh object.
         ///return A vector with the model total internal force.
@@ -120,6 +127,12 @@ class Assembler{
         ///@return A vector with the model support motion displacements.
         ///@see Integrator::ComputeEffectiveForce(), Integrator::ComputeEffectiveStiffness() 
         Eigen::VectorXd ComputeSupportMotionIncrement(std::shared_ptr<Mesh> &mesh, unsigned int k);
+
+        ///Assemble the integrated history vector for Perfectly-Matched Layer (PML).
+        ///@param mesh The finite element Mesh object.
+        ///@return A vector with the PML history values.
+        ///@see Integrator::ComputeEffectiveForce(), Integrator::ComputeEffectiveStiffness() 
+        Eigen::VectorXd ComputePMLHistoryVector(std::shared_ptr<Mesh> &mesh);
 
     protected:
         ///Adds the inertial forces contribution associated to the nodes.
