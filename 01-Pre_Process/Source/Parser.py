@@ -96,9 +96,9 @@ def CheckCorrectness(User, Point, Mass, Element, Material, Section, Constraint, 
         sys.exit(-1)
 
     #Material information was not specified.
-    if User['MATERIAL'] == 'NO':
-        print('\x1B[31m ERROR \x1B[0m: There are no MATERIAL provided. Elements cannot be generated.')
-        sys.exit(-1)
+    #if User['MATERIAL'] == 'NO':
+        #print('\x1B[31m ERROR \x1B[0m: There are no MATERIAL provided. Elements cannot be generated.')
+        #sys.exit(-1)
 
     #Element information was not specified.
     if User['ELEMENT'] == 'NO':
@@ -153,6 +153,18 @@ def CheckCorrectness(User, Point, Mass, Element, Material, Section, Constraint, 
         if eTags:
             dTags = max(list(Damping.keys())) + 1
             Damping[dTags] = {'NAME': 'Free', 'LIST': eTags}
+
+    #Consistency in Link
+    for eTag in Element:
+        LinkName = Element[eTag]['NAME'].upper()
+        if LinkName == 'UNXBOUCWEN2DLINK' or LinkName == 'UNXBOUCWEN3DLINK' or LinkName == 'HDRBYAMAMOTO2DLINK' or LinkName == 'HDRBYAMAMOTO3DLINK':
+            conn = Element[eTag]['CONNECTIVITY']
+            nDofi = Point[conn[0]]['NDOF']
+            nDofj = Point[conn[1]]['NDOF']
+            if nDofi != nDofj:
+                print('\x1B[31m ERROR \x1B[0m: The number of degree-of-freedom in Point[' + str(conn[0]) + '] does not match Restrain[' + str(conn[1]) + '].')
+                sys.exit(-1)            
+            Element[eTag]['DIMENSION'] = nDofi
 
     #Checks consistency between SURFACE/ELEMENT and Assign face
     if Surface:
@@ -852,6 +864,32 @@ def GetElementInformation(fileHandler, User, Element):
                     element['X0'] = x0
                 elif token[0].upper() == '-FORM':
                     element['FORMULATION'] = token[1]
+                elif token[0].upper() == '-DE':
+                    element['DE'] = float(token[1])
+                elif token[0].upper() == '-DI':
+                    element['DI'] = float(token[1])
+                elif token[0].upper() == '-HR':
+                    element['HR'] = float(token[1])
+                elif token[0].upper() == '-ALPHA':
+                    element['ALPHA'] = float(token[1])
+                elif token[0].upper() == '-MU':
+                    element['MU'] = float(token[1])
+                elif token[0].upper() == '-ETA':
+                    element['ETA'] = float(token[1])
+                elif token[0].upper() == '-BETA':
+                    element['BETA'] = float(token[1])
+                elif token[0].upper() == '-GAMMA':
+                    element['GAMMA'] = float(token[1])
+                elif token[0].upper() == '-TOL':
+                    element['TOL'] = float(token[1])
+                elif token[0].upper() == '-FY':
+                    element['FY'] = float(token[1])
+                elif token[0].upper() == '-K0':
+                    element['K0'] = float(token[1])
+                elif token[0].upper() == '-ALPHA1':
+                    element['ALPHA1'] = float(token[1])
+                elif token[0].upper() == '-ALPHA2':
+                    element['ALPHA2'] = float(token[1])
 
             Element[eTag] = element
 
