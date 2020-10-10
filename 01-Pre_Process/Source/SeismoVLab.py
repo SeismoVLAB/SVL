@@ -734,6 +734,18 @@ def WriteElementPartition(SeismoVLabfile, Tags, Element, User):
             if Element[k]['NPOINTS'] < 27:
                 Element[k]['NPOINTS'] = 27
             SeismoVLabfile.write("%d %d\n" %(Element[k]['MATERIAL'], Element[k]['NPOINTS']))
+        elif  name == 'UNXBOUCWEN2DLINK':
+            nParaview += 3
+            SeismoVLabfile.write("%1.5f %1.5f %1.5f %1.5f %1.5f %E %E %E %1.5f %1.5f %d %d\n" %(Element[k]['ALPHA'], Element[k]['MU'], Element[k]['ETA'], Element[k]['BETA'], Element[k]['GAMMA'], Element[k]['TOL'], Element[k]['FY'], Element[k]['K0'], Element[k]['ALPHA1'], Element[k]['ALPHA2'], Element[k]['DIMENSION'], Element[k]['DIRECTION']))
+        elif  name == 'UNXBOUCWEN3DLINK':
+            nParaview += 3
+            SeismoVLabfile.write("%1.5f %1.5f %1.5f %1.5f %1.5f %E %E %E %1.5f %1.5f %d %d\n" %(Element[k]['ALPHA'], Element[k]['MU'], Element[k]['ETA'], Element[k]['BETA'], Element[k]['GAMMA'], Element[k]['TOL'], Element[k]['FY'], Element[k]['K0'], Element[k]['ALPHA1'], Element[k]['ALPHA2'], Element[k]['DIMENSION'], Element[k]['DIRECTION']))
+        elif  name == 'HDRBYAMAMOTO2DLINK':
+            nParaview += 3
+            SeismoVLabfile.write("%1.5f %1.5f %1.5f %d\n" %(Element[k]['DE'], Element[k]['DI'], Element[k]['HR'], Element[k]['DIMENSION']))
+        elif  name == 'HDRBYAMAMOTO3DLINK':
+            nParaview += 3
+            SeismoVLabfile.write("%1.5f %1.5f %1.5f %d\n" %(Element[k]['DE'], Element[k]['DI'], Element[k]['HR'], Element[k]['DIMENSION']))
         else:
             print('\x1B[31mERROR \x1B[0m: The ELEMENT=' + Element[k]['NAME'].upper() + ' could not be recognized.')
             sys.exit(-1)
@@ -811,7 +823,7 @@ def WriteParaviewFile(User, Point, Element, Material, Section):
     for eTag in Element:
         if Element[eTag]['NAME'].upper() == 'ZEROLENGTH1D':
             Paraviewfile.write("3\n")
-        elif Element[eTag]['NAME'] == 'LIN2DTRUSS2':
+        elif Element[eTag]['NAME'].upper() == 'LIN2DTRUSS2':
             Paraviewfile.write("3\n")
         elif Element[eTag]['NAME'].upper() == 'KIN2DTRUSS2':
             Paraviewfile.write("3\n")
@@ -845,6 +857,14 @@ def WriteParaviewFile(User, Point, Element, Material, Section):
             Paraviewfile.write("12\n")
         elif Element[eTag]['NAME'].upper() == 'PML3DHEXA20':
             Paraviewfile.write("25\n")
+        elif Element[eTag]['NAME'].upper() == 'UNXBOUCWEN2DLINK':
+            Paraviewfile.write("3\n")
+        elif Element[eTag]['NAME'].upper() == 'UNXBOUCWEN3DLINK':
+            Paraviewfile.write("3\n")
+        elif Element[eTag]['NAME'].upper() == 'HDRBYAMAMOTO2DLINK':
+            Paraviewfile.write("3\n")
+        elif Element[eTag]['NAME'].upper() == 'HDRBYAMAMOTO3DLINK':
+            Paraviewfile.write("3\n")
     Paraviewfile.write("\n")
 
     #Scalar Attributes applied to Element.
@@ -862,10 +882,12 @@ def WriteParaviewFile(User, Point, Element, Material, Section):
     for eTag in Element:
         if 'MATERIAL' in Element[eTag]:
             Paraviewfile.write("%d\n" % Element[eTag]['MATERIAL'])
-        else:
+        elif 'SECTION' in Element[eTag]:
             sTag = Element[eTag]['SECTION']
             mTag = Section[sTag]['MATERIAL']
             Paraviewfile.write("%d\n" % mTag)
+        else:
+            Paraviewfile.write("-1\n")
     Paraviewfile.write("\n")
 
     #Element's Section
@@ -979,6 +1001,10 @@ def WriteMeshPartition(User, Point, Mass, Element, Material, Section, Constraint
             Master = Constraint[cTag]['MASTERNODE']
             for mNode in Master:
                 nodeSubdomain.add(mNode)
+
+        #########
+        #print("Elems : ", len(elemSubdomain),", Nodes : ", len(nodeSubdomain), ", Mat : ", len(matSubdomain), ", Secs : ", len(secSubdomain), ", constrs : ", len(conSubdomain))
+        #########
 
         #WRITES THE PARTITIONED MESH FILE
         path  = User['FOLDER'] + 'Partition/' + User['MODEL'] + '.' + str(k) + '.svl'
