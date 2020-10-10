@@ -61,7 +61,7 @@ class lin3DHexa20 : public Element{
         ///@param massform The mass formulation to compute the mass matrix.
         ///@note More details can be found at @ref linklin3DHexa20.
         ///@see lin3DHexa20::theNodes, lin3DHexa20::theMaterial, lin3DHexa20::QuadraturePoints.
-        lin3DHexa20(const std::vector<unsigned int> nodes, std::unique_ptr<Material> &material, const unsigned int nGauss=8, bool massform=false);
+        lin3DHexa20(const std::vector<unsigned int> nodes, std::unique_ptr<Material> &material, const unsigned int nGauss=27, bool massform=false);
 
         ///Destroys this lin3DHexa20 object.
         ~lin3DHexa20();
