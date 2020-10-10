@@ -117,7 +117,8 @@ ZeroLength1D::GetStrainRate() const{
 Eigen::MatrixXd 
 ZeroLength1D::GetStrainAt(double x3, double x2) const{
     //Stress at coordinate is define within section.
-    Eigen::MatrixXd theStrain(1, 3*theDimension);
+    unsigned int ndim = theDimension*(theDimension + 1)/2;
+    Eigen::MatrixXd theStrain(1, ndim);
     theStrain.fill(0.0);
 
     return theStrain;
@@ -127,7 +128,8 @@ ZeroLength1D::GetStrainAt(double x3, double x2) const{
 Eigen::MatrixXd 
 ZeroLength1D::GetStressAt(double x3, double x2) const{
     //Stress at coordinate is define within section.
-    Eigen::MatrixXd theStress(1, 3*theDimension);
+    unsigned int ndim = theDimension*(theDimension + 1)/2;
+    Eigen::MatrixXd theStress(1, ndim);
     theStress.fill(0.0);
 
     return theStress;
@@ -200,6 +202,13 @@ ZeroLength1D::ComputeDampingMatrix(){
     return DampingMatrix;
 }
 
+//Compute the PML history matrix for Perfectly-Matched Layer (PML).
+Eigen::MatrixXd 
+ZeroLength1D::ComputePMLMatrix(){
+    Eigen::MatrixXd Kpml;
+    return Kpml;
+}
+
 //Compute the element internal forces acting on the element.
 Eigen::VectorXd 
 ZeroLength1D::ComputeInternalForces(){
@@ -237,6 +246,14 @@ ZeroLength1D::ComputeInternalDynamicForces(){
     }
 
     return InternalForces;
+}
+
+//Compute the PML history vector using gauss-integration.
+Eigen::VectorXd 
+ZeroLength1D::ComputePMLVector(){
+    //Empty PML vector.
+    Eigen::VectorXd Fpml;
+    return Fpml;
 }
 
 //Compute the surface forces acting on the element.
