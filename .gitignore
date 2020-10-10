@@ -10,3 +10,7 @@ Icon
 # C++ / default autosave extension 
 *.cpp~
 *.hpp~
+
+# C++ / Compilation files
+*.o
+SeismoVLab.exe
