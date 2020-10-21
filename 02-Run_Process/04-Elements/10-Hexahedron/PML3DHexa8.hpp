@@ -278,7 +278,7 @@ class PML3DHexa8 : public Element{
         ///@return Vector with the stretching parameters.
         Eigen::VectorXd ComputePMLStretchingFactors(const double ri, const double si, const double ti, const double rho, const double mu, const double lambda) const;
 
-        Eigen::MatrixXd ComputeGMatrix() const;
+        Eigen::MatrixXd ComputePMLMatrix() const;
 };
 
 #endif

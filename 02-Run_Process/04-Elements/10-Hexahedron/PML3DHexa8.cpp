@@ -15,42 +15,16 @@ Element("PML3DHexa8", nodes, 54, VTKCELL), MassForm(massform), m_pml(parameters[
     //The element nodes.
     theNodes.resize(8);
 
-	//Numerical integration rule.
-	//QuadraturePoints = new GaussQuadrature("Hexa", 3, nGauss);
     QuadraturePoints = std::make_unique<GaussQuadrature>("Hexa", nGauss);
-
-	//The element nodes.
-	//unsigned int nNodes = GetNumberOfNodes();
-	//theNodes = new Node *[nNodes];
 
 	//The element material.
     theMaterial.resize(nGauss);
     for(unsigned int i = 0; i < nGauss; i++)
         theMaterial[i] = material->CopyMaterial(); 
-	//theMaterial = new Material *[nGauss];
-	//for(unsigned int i = 0; i < nGauss; i++){
-	//	theMaterial[i] = material->CopyMaterial();
-	//}
 }
 
 //Destructor.
 PML3DHexa8::~PML3DHexa8(){
-    //Does nothing.
-    //This is the beauty of smart pointers, we do not need to free them :)
-
-	//number of integration points.
-	//unsigned int nPoints = QuadraturePoints->GetNumberOfQuadraturePoints();
-
-	//Cleans the integration pointer.
-	//delete QuadraturePoints;
-
-	//Clean node pointers.
-	//delete[] theNodes;
-
-	//Clean the material pointer.
-	//for(unsigned int i = 0; i < nPoints; i++)  
-	//	delete theMaterial[i];
-	//delete[] theMaterial;
 }
 
 //Save the material states in the element.
@@ -71,9 +45,7 @@ PML3DHexa8::UpdateState(void){
 	//Gets the quadrature information.
     Eigen::VectorXd wi;
     Eigen::MatrixXd xi;
-    QuadraturePoints->GetQuadraturePoints("Quad", wi, xi);
-	//Eigen::MatrixXd xi = QuadraturePoints->GetPoints();
-	//unsigned int nPoints = QuadraturePoints->GetNumberOfQuadraturePoints();
+    QuadraturePoints->GetQuadraturePoints("Hexa", wi, xi);
 
 	//Update material states.
 	for(unsigned int k = 0; k < wi.size(); k++){
@@ -271,31 +243,10 @@ PML3DHexa8::ComputeMassMatrix(void){
     Eigen::VectorXd wi;
     Eigen::MatrixXd xi;
     QuadraturePoints->GetQuadraturePoints("Hexa", wi, xi);
-	//Eigen::VectorXd wi   = QuadraturePoints->GetWeights();
-	//Eigen::MatrixXd xi   = QuadraturePoints->GetPoints() ;
-	//unsigned int nPoints = QuadraturePoints->GetNumberOfQuadraturePoints();
 
 	Eigen::MatrixXd Mu1u1(8,8), Mu2u2(8,8), Mu3u3(8,8);
 	Eigen::MatrixXd Ms11s11(8,8), Ms22s22(8,8), Ms33s33(8,8), Ms23s23(8,8), Ms13s13(8,8), Ms12s12(8,8);
 	Eigen::MatrixXd Ms11s22(8,8), Ms22s11(8,8), Ms11s33(8,8), Ms33s11(8,8), Ms22s33(8,8), Ms33s22(8,8);
-
-/*
-	Mu1u1.resize(8,8);
-	Mu2u2.resize(8,8);
-	Mu3u3.resize(8,8);
-	Ms11s11.resize(8,8);
-	Ms22s22.resize(8,8);
-	Ms33s33.resize(8,8);
-	Ms23s23.resize(8,8);
-	Ms13s13.resize(8,8);
-	Ms12s12.resize(8,8);
-	Ms11s22.resize(8,8);
-	Ms22s11.resize(8,8);
-	Ms11s33.resize(8,8);
-	Ms33s11.resize(8,8);
-	Ms22s33.resize(8,8);
-	Ms33s22.resize(8,8);
-*/
 
 	//Numerical integration.
     for(unsigned int i = 0; i < wi.size(); i++){
@@ -305,9 +256,6 @@ PML3DHexa8::ComputeMassMatrix(void){
         double mu     = theMaterial[i]->GetShearModulus();
         double E      = theMaterial[i]->GetElasticityModulus();
         double lambda = E*nu/(1.0 + nu)/(1.0 - 2.0*nu);
-		//double rho    = theMaterial[i]->GetRho()   ;
-		//double mu     = theMaterial[i]->GetMu()    ;
-		//double lambda = theMaterial[i]->GetLambda();
 
 		double ri = xi(i,0);
 		double si = xi(i,1);
@@ -387,45 +335,13 @@ PML3DHexa8::ComputeStiffnessMatrix(void){
     Eigen::VectorXd wi;
     Eigen::MatrixXd xi;
     QuadraturePoints->GetQuadraturePoints("Hexa", wi, xi);
-	//Eigen::VectorXd wi   = QuadraturePoints->GetWeights();
-	//Eigen::MatrixXd xi   = QuadraturePoints->GetPoints();
-	//unsigned int nPoints = QuadraturePoints->GetNumberOfQuadraturePoints();
 
 	Eigen::MatrixXd Ku1u1(8,8), Ku2u2(8,8), Ku3u3(8,8);
 	Eigen::MatrixXd Ks11s11(8,8), Ks22s22(8,8), Ks33s33(8,8), Ks12s12(8,8), Ks23s23(8,8), Ks13s13(8,8);
 	Eigen::MatrixXd Ks11s22(8,8), Ks11s33(8,8), Ks22s33(8,8), Ks22s11(8,8), Ks33s11(8,8), Ks33s22(8,8);
 	Eigen::MatrixXd Ku1s11(8,8), Ku1s12(8,8), Ku1s13(8,8), Ku2s22(8,8), Ku2s12(8,8), Ku2s23(8,8), Ku3s33(8,8), Ku3s13(8,8), Ku3s23(8,8); 
-
-
-    //SEEMS LIKE YOU FORGOT THESE ONES!!! THEY ARE USE IN LINES 520 - 590.
 	Eigen::MatrixXd Ks11u1(8,8), Ks12u1(8,8), Ks13u1(8,8), Ks22u2(8,8), Ks12u2(8,8), Ks23u2(8,8), Ks33u3(8,8), Ks13u3(8,8), Ks23u3(8,8); 
 
-/*
-	Ku1u1.resize(8,8);
-	Ku2u2.resize(8,8);
-	Ku3u3.resize(8,8);
-	Ks11s11.resize(8,8);
-	Ks22s22.resize(8,8);
-	Ks33s33.resize(8,8);
-	Ks12s12.resize(8,8);
-	Ks23s23.resize(8,8);
-	Ks13s13.resize(8,8);
-	Ks11s22.resize(8,8);
-	Ks11s33.resize(8,8);
-	Ks22s33.resize(8,8);
-	Ks22s11.resize(8,8);
-	Ks33s11.resize(8,8);
-	Ks33s22.resize(8,8);
-	Ku1s11.resize(8,8); Ks11u1.resize(8,8);
-	Ku1s12.resize(8,8); Ks12u1.resize(8,8);
-	Ku1s13.resize(8,8); Ks13u1.resize(8,8);
-	Ku2s22.resize(8,8); Ks22u2.resize(8,8);
-	Ku2s12.resize(8,8); Ks12u2.resize(8,8);
-	Ku2s23.resize(8,8); Ks23u2.resize(8,8);
-	Ku3s33.resize(8,8); Ks33u3.resize(8,8);
-	Ku3s13.resize(8,8); Ks13u3.resize(8,8);
-	Ku3s23.resize(8,8); Ks23u3.resize(8,8);
-*/
 
 	//Numerical integration.
     for(unsigned int i = 0; i < wi.size(); i++){
@@ -435,9 +351,6 @@ PML3DHexa8::ComputeStiffnessMatrix(void){
         double mu     = theMaterial[i]->GetShearModulus();
         double E      = theMaterial[i]->GetElasticityModulus();
         double lambda = E*nu/(1.0 + nu)/(1.0 - 2.0*nu);
-		//double rho    = theMaterial[i]->GetRho()   ;
-		//double mu     = theMaterial[i]->GetMu()    ;
-		//double lambda = theMaterial[i]->GetLambda();
 
 		double ri = xi(i,0);
 		double si = xi(i,1);
@@ -607,44 +520,13 @@ PML3DHexa8::ComputeDampingMatrix(void){
     Eigen::VectorXd wi;
     Eigen::MatrixXd xi;
     QuadraturePoints->GetQuadraturePoints("Hexa", wi, xi);
-	//Eigen::VectorXd wi   = QuadraturePoints->GetWeights();
-	//Eigen::MatrixXd xi   = QuadraturePoints->GetPoints();
-	//unsigned int nPoints = QuadraturePoints->GetNumberOfQuadraturePoints();
 
 	Eigen::MatrixXd Cu1u1(8,8), Cu2u2(8,8), Cu3u3(8,8);
 	Eigen::MatrixXd Cs11s11(8,8), Cs22s22(8,8), Cs33s33(8,8), Cs12s12(8,8), Cs23s23(8,8), Cs13s13(8,8);
 	Eigen::MatrixXd Cs11s22(8,8), Cs11s33(8,8), Cs22s33(8,8), Cs22s11(8,8), Cs33s11(8,8), Cs33s22(8,8);
 	Eigen::MatrixXd Cu1s11(8,8), Cu1s12(8,8), Cu1s13(8,8), Cu2s22(8,8), Cu2s12(8,8), Cu2s23(8,8), Cu3s33(8,8), Cu3s13(8,8), Cu3s23(8,8); 
-
-    //SEEMS LIKE YOU FORGOT THESE ONES!!! THEY ARE USE IN LINES 735 - 770.
 	Eigen::MatrixXd Cs11u1(8,8), Cs12u1(8,8), Cs13u1(8,8), Cs22u2(8,8), Cs12u2(8,8), Cs23u2(8,8), Cs23u3(8,8), Cs33u3(8,8), Cs13u3(8,8);
 
-/*
-	Cu1u1.resize(8,8);
-	Cu2u2.resize(8,8);
-	Cu3u3.resize(8,8);
-	Cs11s11.resize(8,8);
-	Cs22s22.resize(8,8);
-	Cs33s33.resize(8,8);
-	Cs12s12.resize(8,8);
-	Cs23s23.resize(8,8);
-	Cs13s13.resize(8,8);
-	Cs11s22.resize(8,8);
-	Cs11s33.resize(8,8);
-	Cs22s33.resize(8,8);
-	Cs22s11.resize(8,8);
-	Cs33s11.resize(8,8);
-	Cs33s22.resize(8,8);
-	Cu1s11.resize(8,8); Cs11u1.resize(8,8);
-	Cu1s12.resize(8,8); Cs12u1.resize(8,8);
-	Cu1s13.resize(8,8); Cs13u1.resize(8,8);
-	Cu2s22.resize(8,8); Cs22u2.resize(8,8);
-	Cu2s12.resize(8,8); Cs12u2.resize(8,8);
-	Cu2s23.resize(8,8); Cs23u2.resize(8,8);
-	Cu3s33.resize(8,8); Cs33u3.resize(8,8);
-	Cu3s13.resize(8,8); Cs13u3.resize(8,8);
-	Cu3s23.resize(8,8); Cs23u3.resize(8,8);
-*/
 
 	//Numerical integration.
     for(unsigned int i = 0; i < wi.size(); i++){
@@ -654,9 +536,6 @@ PML3DHexa8::ComputeDampingMatrix(void){
         double mu     = theMaterial[i]->GetShearModulus();
         double E      = theMaterial[i]->GetElasticityModulus();
         double lambda = E*nu/(1.0 + nu)/(1.0 - 2.0*nu);
-		//double rho    = theMaterial[i]->GetRho()   ;
-		//double mu     = theMaterial[i]->GetMu()    ;
-		//double lambda = theMaterial[i]->GetLambda();
 
 		double ri = xi(i,0);
 		double si = xi(i,1);
@@ -821,7 +700,179 @@ PML3DHexa8::ComputePMLMatrix(){
     Eigen::MatrixXd Kpml(54,54);
 	Kpml.fill(0.0);
 
-    //HERE ELNAZ YOU IMPLEMENT THE G-Matrix
+	//Gets the quadrature information.
+    Eigen::VectorXd wi;
+    Eigen::MatrixXd xi;
+    QuadraturePoints->GetQuadraturePoints("Hexa", wi, xi);
+
+	Eigen::MatrixXd Gu1u1(8,8), Gu2u2(8,8), Gu3u3(8,8);
+	Eigen::MatrixXd Gs11s11(8,8), Gs22s22(8,8), Gs33s33(8,8), Gs12s12(8,8), Gs23s23(8,8), Gs13s13(8,8);
+	Eigen::MatrixXd Gs11s22(8,8), Gs11s33(8,8), Gs22s33(8,8), Gs22s11(8,8), Gs33s11(8,8), Gs33s22(8,8);
+	Eigen::MatrixXd Gu1s11(8,8), Gu1s12(8,8), Gu1s13(8,8), Gu2s22(8,8), Gu2s12(8,8), Gu2s23(8,8), Gu3s33(8,8), Gu3s13(8,8), Gu3s23(8,8); 
+	Eigen::MatrixXd Gs11u1(8,8), Gs12u1(8,8), Gs13u1(8,8), Gs22u2(8,8), Gs12u2(8,8), Gs23u2(8,8), Gs33u3(8,8), Gs13u3(8,8), Gs23u3(8,8);
+
+	//Numerical integration.
+    for(unsigned int i = 0; i < wi.size(); i++){
+		//Gets material properties:
+        double rho    = theMaterial[i]->GetDensity();
+        double nu     = theMaterial[i]->GetPoissonRatio();
+        double mu     = theMaterial[i]->GetShearModulus();
+        double E      = theMaterial[i]->GetElasticityModulus();
+        double lambda = E*nu/(1.0 + nu)/(1.0 - 2.0*nu);
+
+		double ri = xi(i,0);
+		double si = xi(i,1);
+		double ti = xi(i,2);
+
+		Eigen::VectorXd abc_pml = ComputePMLStretchingFactors(ri, si, ti, rho, mu, lambda);
+
+		double ax = abc_pml(0);
+		double ay = abc_pml(1);
+		double az = abc_pml(2);
+		double bx = abc_pml(3);
+		double by = abc_pml(4);
+		double bz = abc_pml(5);
+
+		double d  = bx*by*bz;
+
+		double H11 = 1.0/8.0*(1.0 - ri)*(1.0 - si)*(1.0 - ti);
+		double H22 = 1.0/8.0*(1.0 + ri)*(1.0 - si)*(1.0 - ti);
+		double H33 = 1.0/8.0*(1.0 + ri)*(1.0 + si)*(1.0 - ti);
+		double H44 = 1.0/8.0*(1.0 - ri)*(1.0 + si)*(1.0 - ti);
+		double H55 = 1.0/8.0*(1.0 - ri)*(1.0 - si)*(1.0 + ti);
+		double H66 = 1.0/8.0*(1.0 + ri)*(1.0 - si)*(1.0 + ti);
+		double H77 = 1.0/8.0*(1.0 + ri)*(1.0 + si)*(1.0 + ti);
+		double H88 = 1.0/8.0*(1.0 - ri)*(1.0 + si)*(1.0 + ti);
+
+		//Jacobian matrix:
+		Eigen::MatrixXd Jij = ComputeJacobianMatrix(ri, si, ti);
+		
+		double D = fabs(Jij.determinant());
+
+		Eigen::MatrixXd J = Jij.inverse();
+
+
+		//Strain-displacement matrix coefficients:
+		double B11 = -1.0/8.0*J(0,2)*(1.0 - ri)*(1.0 - si) - 1.0/8.0*J(0,1)*(1.0 - ri)*(1.0 - ti) - 1.0/8.0*J(0,0)*(1.0 - si)*(1.0 - ti);
+		double B21 = -1.0/8.0*J(0,2)*(1.0 + ri)*(1.0 - si) - 1.0/8.0*J(0,1)*(1.0 + ri)*(1.0 - ti) + 1.0/8.0*J(0,0)*(1.0 - si)*(1.0 - ti);
+		double B31 = -1.0/8.0*J(0,2)*(1.0 + ri)*(1.0 + si) + 1.0/8.0*J(0,1)*(1.0 + ri)*(1.0 - ti) + 1.0/8.0*J(0,0)*(1.0 + si)*(1.0 - ti);
+		double B41 = -1.0/8.0*J(0,2)*(1.0 - ri)*(1.0 + si) + 1.0/8.0*J(0,1)*(1.0 - ri)*(1.0 - ti) - 1.0/8.0*J(0,0)*(1.0 + si)*(1.0 - ti);
+		double B51 =  1.0/8.0*J(0,2)*(1.0 - ri)*(1.0 - si) - 1.0/8.0*J(0,1)*(1.0 - ri)*(1.0 + ti) - 1.0/8.0*J(0,0)*(1.0 - si)*(1.0 + ti);
+		double B61 =  1.0/8.0*J(0,2)*(1.0 + ri)*(1.0 - si) - 1.0/8.0*J(0,1)*(1.0 + ri)*(1.0 + ti) + 1.0/8.0*J(0,0)*(1.0 - si)*(1.0 + ti);
+		double B71 =  1.0/8.0*J(0,2)*(1.0 + ri)*(1.0 + si) + 1.0/8.0*J(0,1)*(1.0 + ri)*(1.0 + ti) + 1.0/8.0*J(0,0)*(1.0 + si)*(1.0 + ti);
+		double B81 =  1.0/8.0*J(0,2)*(1.0 - ri)*(1.0 + si) + 1.0/8.0*J(0,1)*(1.0 - ri)*(1.0 + ti) - 1.0/8.0*J(0,0)*(1.0 + si)*(1.0 + ti);
+
+		double B12 = -1.0/8.0*J(1,2)*(1.0 - ri)*(1.0 - si) - 1.0/8.0*J(1,1)*(1.0 - ri)*(1.0 - ti) - 1.0/8.0*J(1,0)*(1.0 - si)*(1.0 - ti);
+		double B22 = -1.0/8.0*J(1,2)*(1.0 + ri)*(1.0 - si) - 1.0/8.0*J(1,1)*(1.0 + ri)*(1.0 - ti) + 1.0/8.0*J(1,0)*(1.0 - si)*(1.0 - ti);
+		double B32 = -1.0/8.0*J(1,2)*(1.0 + ri)*(1.0 + si) + 1.0/8.0*J(1,1)*(1.0 + ri)*(1.0 - ti) + 1.0/8.0*J(1,0)*(1.0 + si)*(1.0 - ti);
+		double B42 = -1.0/8.0*J(1,2)*(1.0 - ri)*(1.0 + si) + 1.0/8.0*J(1,1)*(1.0 - ri)*(1.0 - ti) - 1.0/8.0*J(1,0)*(1.0 + si)*(1.0 - ti);
+		double B52 =  1.0/8.0*J(1,2)*(1.0 - ri)*(1.0 - si) - 1.0/8.0*J(1,1)*(1.0 - ri)*(1.0 + ti) - 1.0/8.0*J(1,0)*(1.0 - si)*(1.0 + ti);
+		double B62 =  1.0/8.0*J(1,2)*(1.0 + ri)*(1.0 - si) - 1.0/8.0*J(1,1)*(1.0 + ri)*(1.0 + ti) + 1.0/8.0*J(1,0)*(1.0 - si)*(1.0 + ti);
+		double B72 =  1.0/8.0*J(1,2)*(1.0 + ri)*(1.0 + si) + 1.0/8.0*J(1,1)*(1.0 + ri)*(1.0 + ti) + 1.0/8.0*J(1,0)*(1.0 + si)*(1.0 + ti);
+		double B82 =  1.0/8.0*J(1,2)*(1.0 - ri)*(1.0 + si) + 1.0/8.0*J(1,1)*(1.0 - ri)*(1.0 + ti) - 1.0/8.0*J(1,0)*(1.0 + si)*(1.0 + ti);
+
+		double B13 = -1.0/8.0*J(2,2)*(1.0 - ri)*(1.0 - si) - 1.0/8.0*J(2,1)*(1.0 - ri)*(1.0 - ti) - 1.0/8.0*J(2,0)*(1.0 - si)*(1.0 - ti);
+		double B23 = -1.0/8.0*J(2,2)*(1.0 + ri)*(1.0 - si) - 1.0/8.0*J(2,1)*(1.0 + ri)*(1.0 - ti) + 1.0/8.0*J(2,0)*(1.0 - si)*(1.0 - ti);
+		double B33 = -1.0/8.0*J(2,2)*(1.0 + ri)*(1.0 + si) + 1.0/8.0*J(2,1)*(1.0 + ri)*(1.0 - ti) + 1.0/8.0*J(2,0)*(1.0 + si)*(1.0 - ti);
+		double B43 = -1.0/8.0*J(2,2)*(1.0 - ri)*(1.0 + si) + 1.0/8.0*J(2,1)*(1.0 - ri)*(1.0 - ti) - 1.0/8.0*J(2,0)*(1.0 + si)*(1.0 - ti);
+		double B53 =  1.0/8.0*J(2,2)*(1.0 - ri)*(1.0 - si) - 1.0/8.0*J(2,1)*(1.0 - ri)*(1.0 + ti) - 1.0/8.0*J(2,0)*(1.0 - si)*(1.0 + ti);
+		double B63 =  1.0/8.0*J(2,2)*(1.0 + ri)*(1.0 - si) - 1.0/8.0*J(2,1)*(1.0 + ri)*(1.0 + ti) + 1.0/8.0*J(2,0)*(1.0 - si)*(1.0 + ti);
+		double B73 =  1.0/8.0*J(2,2)*(1.0 + ri)*(1.0 + si) + 1.0/8.0*J(2,1)*(1.0 + ri)*(1.0 + ti) + 1.0/8.0*J(2,0)*(1.0 + si)*(1.0 + ti);
+		double B83 =  1.0/8.0*J(2,2)*(1.0 - ri)*(1.0 + si) + 1.0/8.0*J(2,1)*(1.0 - ri)*(1.0 + ti) - 1.0/8.0*J(2,0)*(1.0 + si)*(1.0 + ti);
+
+		Eigen::VectorXd SF(8);
+		SF << H11, H22, H33, H44, H55, H66, H77, H88;
+
+		Eigen::VectorXd dSFdx(8);
+		dSFdx << B11, B21, B31, B41, B51, B61, B71, B81;
+
+		Eigen::VectorXd dSFdy(8);
+		dSFdy << B12, B22, B32, B42, B52, B62, B72, B82;
+
+		Eigen::VectorXd dSFdz(8);
+		dSFdz << B13, B23, B33, B43, B53, B63, B73, B83;
+
+		for (unsigned int j = 0; j < 8 ; j++) {
+			for (unsigned int k = 0; k < 8 ; k++) {
+				Gu1u1(j,k)   = rho*d*SF(j)*SF(k)*wi(i)*D;
+				Gu2u2(j,k)   = rho*d*SF(j)*SF(k)*wi(i)*D;
+				Gu3u3(j,k)   = rho*d*SF(j)*SF(k)*wi(i)*D;
+
+				Gs11s11(j,k) = -d*(lambda+mu)/mu/(3*lambda+2*mu)*SF(j)*SF(k)*wi(i)*D;
+				Gs22s22(j,k) = -d*(lambda+mu)/mu/(3*lambda+2*mu)*SF(j)*SF(k)*wi(i)*D;
+				Gs33s33(j,k) = -d*(lambda+mu)/mu/(3*lambda+2*mu)*SF(j)*SF(k)*wi(i)*D;
+				Gs23s23(j,k) = -d/mu*SF(j)*SF(k)*wi(i)*D;
+				Gs13s13(j,k) = -d/mu*SF(j)*SF(k)*wi(i)*D;
+				Gs12s12(j,k) = -d/mu*SF(j)*SF(k)*wi(i)*D;
+				Gs11s22(j,k) = d*lambda/2/mu/(3*lambda+2*mu)*SF(j)*SF(k)*wi(i)*D;
+				Gs11s33(j,k) = d*lambda/2/mu/(3*lambda+2*mu)*SF(j)*SF(k)*wi(i)*D;
+				Gs22s33(j,k) = d*lambda/2/mu/(3*lambda+2*mu)*SF(j)*SF(k)*wi(i)*D;
+				Gs22s11(j,k) = d*lambda/2/mu/(3*lambda+2*mu)*SF(j)*SF(k)*wi(i)*D;
+				Gs33s11(j,k) = d*lambda/2/mu/(3*lambda+2*mu)*SF(j)*SF(k)*wi(i)*D;
+				Gs33s22(j,k) = d*lambda/2/mu/(3*lambda+2*mu)*SF(j)*SF(k)*wi(i)*D;
+
+				Gu1s11(j,k)  = dSFdx(j)*SF(k)*(by*bz+bz*by)*wi(i)*D; 
+				Gu1s12(j,k)  = dSFdy(j)*SF(k)*(bx*bz+bz*bx)*wi(i)*D;
+				Gu1s13(j,k)  = dSFdz(j)*SF(k)*(bx*by+by*bx)*wi(i)*D;
+				Gu2s22(j,k)  = dSFdy(j)*SF(k)*(bx*bz+bz*bx)*wi(i)*D;
+				Gu2s12(j,k)  = dSFdx(j)*SF(k)*(by*bz+bz*by)*wi(i)*D;
+				Gu2s23(j,k)  = dSFdz(j)*SF(k)*(bx*by+by*bx)*wi(i)*D;
+				Gu3s33(j,k)  = dSFdz(j)*SF(k)*(bx*by+by*bx)*wi(i)*D;
+				Gu3s13(j,k)  = dSFdx(j)*SF(k)*(by*bz+bz*by)*wi(i)*D;
+				Gu3s23(j,k)  = dSFdy(j)*SF(k)*(bx*bz+bz*bx)*wi(i)*D;
+
+				Gs11u1(j,k)  = dSFdx(k)*SF(j)*(by*bz+bz*by)*wi(i)*D; 
+				Gs12u1(j,k)  = dSFdy(k)*SF(j)*(bx*bz+bz*bx)*wi(i)*D;
+				Gs13u1(j,k)  = dSFdz(k)*SF(j)*(bx*by+by*bx)*wi(i)*D;
+				Gs22u2(j,k)  = dSFdy(k)*SF(j)*(bx*bz+bz*bx)*wi(i)*D;
+				Gs12u2(j,k)  = dSFdx(k)*SF(j)*(by*bz+bz*by)*wi(i)*D;
+				Gs23u2(j,k)  = dSFdz(k)*SF(j)*(bx*by+by*bx)*wi(i)*D;
+				Gs33u3(j,k)  = dSFdz(k)*SF(j)*(bx*by+by*bx)*wi(i)*D;
+				Gs13u3(j,k)  = dSFdx(k)*SF(j)*(by*bz+bz*by)*wi(i)*D;
+				Gs23u3(j,k)  = dSFdy(k)*SF(j)*(bx*bz+bz*bx)*wi(i)*D;
+
+				// u1 0, u2 1, u3 2, s11 3, s22 4, s33 5, s12 6, s23 7, s13 8
+
+				Kpml(9*j  ,9*k  ) += Gu1u1(j,k)  ;
+				Kpml(9*j+1,9*k+1) += Gu2u2(j,k)  ;
+				Kpml(9*j+2,9*k+2) += Gu3u3(j,k)  ;
+				Kpml(9*j+3,9*k+3) += Gs11s11(j,k);
+				Kpml(9*j+4,9*k+4) += Gs22s22(j,k);
+				Kpml(9*j+5,9*k+5) += Gs33s33(j,k);
+				Kpml(9*j+6,9*k+6) += Gs12s12(j,k);
+				Kpml(9*j+7,9*k+7) += Gs23s23(j,k);
+				Kpml(9*j+8,9*k+8) += Gs13s13(j,k);
+				
+				Kpml(9*j+3,9*k+4) += Gs11s22(j,k);
+				Kpml(9*j+3,9*k+5) += Gs11s33(j,k);
+				Kpml(9*j+4,9*k+5) += Gs22s33(j,k);
+
+				Kpml(9*j+4,9*k+3) += Gs22s11(j,k);
+				Kpml(9*j+5,9*k+3) += Gs33s11(j,k);
+				Kpml(9*j+5,9*k+4) += Gs33s22(j,k);
+
+				Kpml(9*j  ,9*k+3) += Gu1s11(j,k);
+				Kpml(9*j  ,9*k+6) += Gu1s12(j,k);
+				Kpml(9*j  ,9*k+8) += Gu1s13(j,k);
+				Kpml(9*j+1,9*k+4) += Gu2s22(j,k);
+				Kpml(9*j+1,9*k+6) += Gu2s12(j,k);
+				Kpml(9*j+1,9*k+7) += Gu2s23(j,k);
+				Kpml(9*j+2,9*k+5) += Gu3s33(j,k);
+				Kpml(9*j+2,9*k+8) += Gu3s13(j,k);
+				Kpml(9*j+2,9*k+7) += Gu3s23(j,k);
+
+				Kpml(9*j+3,9*k  ) += Gs11u1(j,k);
+				Kpml(9*j+6,9*k  ) += Gs12u1(j,k);
+				Kpml(9*j+8,9*k  ) += Gs13u1(j,k);
+				Kpml(9*j+4,9*k+1) += Gs22u2(j,k);
+				Kpml(9*j+6,9*k+1) += Gs12u2(j,k);
+				Kpml(9*j+7,9*k+1) += Gs23u2(j,k);
+				Kpml(9*j+5,9*k+2) += Gs33u3(j,k);
+				Kpml(9*j+8,9*k+2) += Gs13u3(j,k);
+				Kpml(9*j+7,9*k+2) += Gs23u3(j,k);
+			}
+		}
+	}
 
     return Kpml;
 }
@@ -876,15 +927,15 @@ PML3DHexa8::ComputeInternalDynamicForces(){
 }
 
 //Compute the PML history vector using gauss-integration.
-Eigen::VectorXd 
-PML3DHexa8::ComputePMLVector(){
-    Eigen::VectorXd Fpml(54);
-    Fpml.fill(0.0);
+//Eigen::VectorXd 
+//PML3DHexa8::ComputePMLVector(){
+//    Eigen::VectorXd Fpml(54);
+//    Fpml.fill(0.0);
 
     //HERE ELNAZ YOU IMPLEMENT THE U-bar vector
 
-    return Fpml;
-}
+//    return Fpml;
+//}
 
 //Compute the body forces acting on the element.
 Eigen::VectorXd 
@@ -1066,222 +1117,4 @@ PML3DHexa8::ComputeStrainDisplacementMatrix(const double ri, const double si, co
 		    B13, 0.0, B11, B23, 0.0, B21, B33, 0.0, B31, B43, 0.0, B41, B53, 0.0, B51, B63, 0.0, B61, B73, 0.0, B71, B83, 0.0, B81;
 
 	return Bij;
-}
-
-//Compute the G matrix of the element using gauss-integration.
-Eigen::MatrixXd 
-PML3DHexa8::ComputeGMatrix() const{
-	//Stiffness matrix definition:
-	Eigen::MatrixXd GMatrix(54,54);
-	GMatrix.fill(0.0);
-
-	//Gets the quadrature information.
-    Eigen::VectorXd wi;
-    Eigen::MatrixXd xi;
-    QuadraturePoints->GetQuadraturePoints("Quad", wi, xi);	
-	//Eigen::VectorXd wi   = QuadraturePoints->GetWeights();
-	//Eigen::MatrixXd xi   = QuadraturePoints->GetPoints();
-	//unsigned int nPoints = QuadraturePoints->GetNumberOfQuadraturePoints();
-
-	Eigen::MatrixXd Gu1u1(8,8), Gu2u2(8,8), Gu3u3(8,8);
-	Eigen::MatrixXd Gs11s11(8,8), Gs22s22(8,8), Gs33s33(8,8), Gs12s12(8,8), Gs23s23(8,8), Gs13s13(8,8);
-	Eigen::MatrixXd Gs11s22(8,8), Gs11s33(8,8), Gs22s33(8,8), Gs22s11(8,8), Gs33s11(8,8), Gs33s22(8,8);
-	Eigen::MatrixXd Gu1s11(8,8), Gu1s12(8,8), Gu1s13(8,8), Gu2s22(8,8), Gu2s12(8,8), Gu2s23(8,8), Gu3s33(8,8), Gu3s13(8,8), Gu3s23(8,8); 
-
-	Eigen::MatrixXd Gs11u1(8,8), Gs12u1(8,8), Gs13u1(8,8), Gs22u2(8,8), Gs12u2(8,8), Gs23u2(8,8), Gs33u3(8,8), Gs13u3(8,8), Gs23u3(8,8);
-
-/*
-	Gu1u1.resize(8,8);
-	Gu2u2.resize(8,8);
-	Gu3u3.resize(8,8);
-	Gs11s11.resize(8,8);
-	Gs22s22.resize(8,8);
-	Gs33s33.resize(8,8);
-	Gs12s12.resize(8,8);
-	Gs23s23.resize(8,8);
-	Gs13s13.resize(8,8);
-	Gs11s22.resize(8,8);
-	Gs11s33.resize(8,8);
-	Gs22s33.resize(8,8);
-	Gs22s11.resize(8,8);
-	Gs33s11.resize(8,8);
-	Gs33s22.resize(8,8);
-	Gu1s11.resize(8,8); Gs11u1.resize(8,8);
-	Gu1s12.resize(8,8); Gs12u1.resize(8,8);
-	Gu1s13.resize(8,8); Gs13u1.resize(8,8);
-	Gu2s22.resize(8,8); Gs22u2.resize(8,8);
-	Gu2s12.resize(8,8); Gs12u2.resize(8,8);
-	Gu2s23.resize(8,8); Gs23u2.resize(8,8);
-	Gu3s33.resize(8,8); Gs33u3.resize(8,8);
-	Gu3s13.resize(8,8); Gs13u3.resize(8,8);
-	Gu3s23.resize(8,8); Gs23u3.resize(8,8);
-*/
-
-	//Numerical integration.
-    for(unsigned int i = 0; i < wi.size(); i++){
-		//Gets material properties:
-        double rho    = theMaterial[i]->GetDensity();
-        double nu     = theMaterial[i]->GetPoissonRatio();
-        double mu     = theMaterial[i]->GetShearModulus();
-        double E      = theMaterial[i]->GetElasticityModulus();
-        double lambda = E*nu/(1.0 + nu)/(1.0 - 2.0*nu);
-		//double rho    = theMaterial[i]->GetRho()   ;
-		//double mu     = theMaterial[i]->GetMu()    ;
-		//double lambda = theMaterial[i]->GetLambda();
-
-		double ri = xi(i,0);
-		double si = xi(i,1);
-		double ti = xi(i,2);
-
-		Eigen::VectorXd abc_pml = ComputePMLStretchingFactors(ri, si, ti, rho, mu, lambda);
-
-		double ax = abc_pml(0);
-		double ay = abc_pml(1);
-		double az = abc_pml(2);
-		double bx = abc_pml(3);
-		double by = abc_pml(4);
-		double bz = abc_pml(5);
-
-		double d  = bx*by*bz;
-
-		double H11 = 1.0/8.0*(1.0 - ri)*(1.0 - si)*(1.0 - ti);
-		double H22 = 1.0/8.0*(1.0 + ri)*(1.0 - si)*(1.0 - ti);
-		double H33 = 1.0/8.0*(1.0 + ri)*(1.0 + si)*(1.0 - ti);
-		double H44 = 1.0/8.0*(1.0 - ri)*(1.0 + si)*(1.0 - ti);
-		double H55 = 1.0/8.0*(1.0 - ri)*(1.0 - si)*(1.0 + ti);
-		double H66 = 1.0/8.0*(1.0 + ri)*(1.0 - si)*(1.0 + ti);
-		double H77 = 1.0/8.0*(1.0 + ri)*(1.0 + si)*(1.0 + ti);
-		double H88 = 1.0/8.0*(1.0 - ri)*(1.0 + si)*(1.0 + ti);
-
-		//Jacobian matrix:
-		Eigen::MatrixXd Jij = ComputeJacobianMatrix(ri, si, ti);
-		
-		double D = fabs(Jij.determinant());
-
-		Eigen::MatrixXd J = Jij.inverse();
-
-
-		//Strain-displacement matrix coefficients:
-		double B11 = -1.0/8.0*J(0,2)*(1.0 - ri)*(1.0 - si) - 1.0/8.0*J(0,1)*(1.0 - ri)*(1.0 - ti) - 1.0/8.0*J(0,0)*(1.0 - si)*(1.0 - ti);
-		double B21 = -1.0/8.0*J(0,2)*(1.0 + ri)*(1.0 - si) - 1.0/8.0*J(0,1)*(1.0 + ri)*(1.0 - ti) + 1.0/8.0*J(0,0)*(1.0 - si)*(1.0 - ti);
-		double B31 = -1.0/8.0*J(0,2)*(1.0 + ri)*(1.0 + si) + 1.0/8.0*J(0,1)*(1.0 + ri)*(1.0 - ti) + 1.0/8.0*J(0,0)*(1.0 + si)*(1.0 - ti);
-		double B41 = -1.0/8.0*J(0,2)*(1.0 - ri)*(1.0 + si) + 1.0/8.0*J(0,1)*(1.0 - ri)*(1.0 - ti) - 1.0/8.0*J(0,0)*(1.0 + si)*(1.0 - ti);
-		double B51 =  1.0/8.0*J(0,2)*(1.0 - ri)*(1.0 - si) - 1.0/8.0*J(0,1)*(1.0 - ri)*(1.0 + ti) - 1.0/8.0*J(0,0)*(1.0 - si)*(1.0 + ti);
-		double B61 =  1.0/8.0*J(0,2)*(1.0 + ri)*(1.0 - si) - 1.0/8.0*J(0,1)*(1.0 + ri)*(1.0 + ti) + 1.0/8.0*J(0,0)*(1.0 - si)*(1.0 + ti);
-		double B71 =  1.0/8.0*J(0,2)*(1.0 + ri)*(1.0 + si) + 1.0/8.0*J(0,1)*(1.0 + ri)*(1.0 + ti) + 1.0/8.0*J(0,0)*(1.0 + si)*(1.0 + ti);
-		double B81 =  1.0/8.0*J(0,2)*(1.0 - ri)*(1.0 + si) + 1.0/8.0*J(0,1)*(1.0 - ri)*(1.0 + ti) - 1.0/8.0*J(0,0)*(1.0 + si)*(1.0 + ti);
-
-		double B12 = -1.0/8.0*J(1,2)*(1.0 - ri)*(1.0 - si) - 1.0/8.0*J(1,1)*(1.0 - ri)*(1.0 - ti) - 1.0/8.0*J(1,0)*(1.0 - si)*(1.0 - ti);
-		double B22 = -1.0/8.0*J(1,2)*(1.0 + ri)*(1.0 - si) - 1.0/8.0*J(1,1)*(1.0 + ri)*(1.0 - ti) + 1.0/8.0*J(1,0)*(1.0 - si)*(1.0 - ti);
-		double B32 = -1.0/8.0*J(1,2)*(1.0 + ri)*(1.0 + si) + 1.0/8.0*J(1,1)*(1.0 + ri)*(1.0 - ti) + 1.0/8.0*J(1,0)*(1.0 + si)*(1.0 - ti);
-		double B42 = -1.0/8.0*J(1,2)*(1.0 - ri)*(1.0 + si) + 1.0/8.0*J(1,1)*(1.0 - ri)*(1.0 - ti) - 1.0/8.0*J(1,0)*(1.0 + si)*(1.0 - ti);
-		double B52 =  1.0/8.0*J(1,2)*(1.0 - ri)*(1.0 - si) - 1.0/8.0*J(1,1)*(1.0 - ri)*(1.0 + ti) - 1.0/8.0*J(1,0)*(1.0 - si)*(1.0 + ti);
-		double B62 =  1.0/8.0*J(1,2)*(1.0 + ri)*(1.0 - si) - 1.0/8.0*J(1,1)*(1.0 + ri)*(1.0 + ti) + 1.0/8.0*J(1,0)*(1.0 - si)*(1.0 + ti);
-		double B72 =  1.0/8.0*J(1,2)*(1.0 + ri)*(1.0 + si) + 1.0/8.0*J(1,1)*(1.0 + ri)*(1.0 + ti) + 1.0/8.0*J(1,0)*(1.0 + si)*(1.0 + ti);
-		double B82 =  1.0/8.0*J(1,2)*(1.0 - ri)*(1.0 + si) + 1.0/8.0*J(1,1)*(1.0 - ri)*(1.0 + ti) - 1.0/8.0*J(1,0)*(1.0 + si)*(1.0 + ti);
-
-		double B13 = -1.0/8.0*J(2,2)*(1.0 - ri)*(1.0 - si) - 1.0/8.0*J(2,1)*(1.0 - ri)*(1.0 - ti) - 1.0/8.0*J(2,0)*(1.0 - si)*(1.0 - ti);
-		double B23 = -1.0/8.0*J(2,2)*(1.0 + ri)*(1.0 - si) - 1.0/8.0*J(2,1)*(1.0 + ri)*(1.0 - ti) + 1.0/8.0*J(2,0)*(1.0 - si)*(1.0 - ti);
-		double B33 = -1.0/8.0*J(2,2)*(1.0 + ri)*(1.0 + si) + 1.0/8.0*J(2,1)*(1.0 + ri)*(1.0 - ti) + 1.0/8.0*J(2,0)*(1.0 + si)*(1.0 - ti);
-		double B43 = -1.0/8.0*J(2,2)*(1.0 - ri)*(1.0 + si) + 1.0/8.0*J(2,1)*(1.0 - ri)*(1.0 - ti) - 1.0/8.0*J(2,0)*(1.0 + si)*(1.0 - ti);
-		double B53 =  1.0/8.0*J(2,2)*(1.0 - ri)*(1.0 - si) - 1.0/8.0*J(2,1)*(1.0 - ri)*(1.0 + ti) - 1.0/8.0*J(2,0)*(1.0 - si)*(1.0 + ti);
-		double B63 =  1.0/8.0*J(2,2)*(1.0 + ri)*(1.0 - si) - 1.0/8.0*J(2,1)*(1.0 + ri)*(1.0 + ti) + 1.0/8.0*J(2,0)*(1.0 - si)*(1.0 + ti);
-		double B73 =  1.0/8.0*J(2,2)*(1.0 + ri)*(1.0 + si) + 1.0/8.0*J(2,1)*(1.0 + ri)*(1.0 + ti) + 1.0/8.0*J(2,0)*(1.0 + si)*(1.0 + ti);
-		double B83 =  1.0/8.0*J(2,2)*(1.0 - ri)*(1.0 + si) + 1.0/8.0*J(2,1)*(1.0 - ri)*(1.0 + ti) - 1.0/8.0*J(2,0)*(1.0 + si)*(1.0 + ti);
-
-		Eigen::VectorXd SF(8);
-		SF << H11, H22, H33, H44, H55, H66, H77, H88;
-
-		Eigen::VectorXd dSFdx(8);
-		dSFdx << B11, B21, B31, B41, B51, B61, B71, B81;
-
-		Eigen::VectorXd dSFdy(8);
-		dSFdy << B12, B22, B32, B42, B52, B62, B72, B82;
-
-		Eigen::VectorXd dSFdz(8);
-		dSFdz << B13, B23, B33, B43, B53, B63, B73, B83;
-
-		for (unsigned int j = 0; j < 8 ; j++) {
-			for (unsigned int k = 0; k < 8 ; k++) {
-				Gu1u1(j,k)   = rho*d*SF(j)*SF(k)*wi(i)*D;
-				Gu2u2(j,k)   = rho*d*SF(j)*SF(k)*wi(i)*D;
-				Gu3u3(j,k)   = rho*d*SF(j)*SF(k)*wi(i)*D;
-
-				Gs11s11(j,k) = -d*(lambda+mu)/mu/(3*lambda+2*mu)*SF(j)*SF(k)*wi(i)*D;
-				Gs22s22(j,k) = -d*(lambda+mu)/mu/(3*lambda+2*mu)*SF(j)*SF(k)*wi(i)*D;
-				Gs33s33(j,k) = -d*(lambda+mu)/mu/(3*lambda+2*mu)*SF(j)*SF(k)*wi(i)*D;
-				Gs23s23(j,k) = -d/mu*SF(j)*SF(k)*wi(i)*D;
-				Gs13s13(j,k) = -d/mu*SF(j)*SF(k)*wi(i)*D;
-				Gs12s12(j,k) = -d/mu*SF(j)*SF(k)*wi(i)*D;
-				Gs11s22(j,k) = d*lambda/2/mu/(3*lambda+2*mu)*SF(j)*SF(k)*wi(i)*D;
-				Gs11s33(j,k) = d*lambda/2/mu/(3*lambda+2*mu)*SF(j)*SF(k)*wi(i)*D;
-				Gs22s33(j,k) = d*lambda/2/mu/(3*lambda+2*mu)*SF(j)*SF(k)*wi(i)*D;
-				Gs22s11(j,k) = d*lambda/2/mu/(3*lambda+2*mu)*SF(j)*SF(k)*wi(i)*D;
-				Gs33s11(j,k) = d*lambda/2/mu/(3*lambda+2*mu)*SF(j)*SF(k)*wi(i)*D;
-				Gs33s22(j,k) = d*lambda/2/mu/(3*lambda+2*mu)*SF(j)*SF(k)*wi(i)*D;
-
-				Gu1s11(j,k)  = dSFdx(j)*SF(k)*(by*bz+bz*by)*wi(i)*D; 
-				Gu1s12(j,k)  = dSFdy(j)*SF(k)*(bx*bz+bz*bx)*wi(i)*D;
-				Gu1s13(j,k)  = dSFdz(j)*SF(k)*(bx*by+by*bx)*wi(i)*D;
-				Gu2s22(j,k)  = dSFdy(j)*SF(k)*(bx*bz+bz*bx)*wi(i)*D;
-				Gu2s12(j,k)  = dSFdx(j)*SF(k)*(by*bz+bz*by)*wi(i)*D;
-				Gu2s23(j,k)  = dSFdz(j)*SF(k)*(bx*by+by*bx)*wi(i)*D;
-				Gu3s33(j,k)  = dSFdz(j)*SF(k)*(bx*by+by*bx)*wi(i)*D;
-				Gu3s13(j,k)  = dSFdx(j)*SF(k)*(by*bz+bz*by)*wi(i)*D;
-				Gu3s23(j,k)  = dSFdy(j)*SF(k)*(bx*bz+bz*bx)*wi(i)*D;
-
-				Gs11u1(j,k)  = dSFdx(k)*SF(j)*(by*bz+bz*by)*wi(i)*D; 
-				Gs12u1(j,k)  = dSFdy(k)*SF(j)*(bx*bz+bz*bx)*wi(i)*D;
-				Gs13u1(j,k)  = dSFdz(k)*SF(j)*(bx*by+by*bx)*wi(i)*D;
-				Gs22u2(j,k)  = dSFdy(k)*SF(j)*(bx*bz+bz*bx)*wi(i)*D;
-				Gs12u2(j,k)  = dSFdx(k)*SF(j)*(by*bz+bz*by)*wi(i)*D;
-				Gs23u2(j,k)  = dSFdz(k)*SF(j)*(bx*by+by*bx)*wi(i)*D;
-				Gs33u3(j,k)  = dSFdz(k)*SF(j)*(bx*by+by*bx)*wi(i)*D;
-				Gs13u3(j,k)  = dSFdx(k)*SF(j)*(by*bz+bz*by)*wi(i)*D;
-				Gs23u3(j,k)  = dSFdy(k)*SF(j)*(bx*bz+bz*bx)*wi(i)*D;
-
-				// u1 0, u2 1, u3 2, s11 3, s22 4, s33 5, s12 6, s23 7, s13 8
-
-				GMatrix(9*j  ,9*k  ) += Gu1u1(j,k)  ;
-				GMatrix(9*j+1,9*k+1) += Gu2u2(j,k)  ;
-				GMatrix(9*j+2,9*k+2) += Gu3u3(j,k)  ;
-				GMatrix(9*j+3,9*k+3) += Gs11s11(j,k);
-				GMatrix(9*j+4,9*k+4) += Gs22s22(j,k);
-				GMatrix(9*j+5,9*k+5) += Gs33s33(j,k);
-				GMatrix(9*j+6,9*k+6) += Gs12s12(j,k);
-				GMatrix(9*j+7,9*k+7) += Gs23s23(j,k);
-				GMatrix(9*j+8,9*k+8) += Gs13s13(j,k);
-				
-				GMatrix(9*j+3,9*k+4) += Gs11s22(j,k);
-				GMatrix(9*j+3,9*k+5) += Gs11s33(j,k);
-				GMatrix(9*j+4,9*k+5) += Gs22s33(j,k);
-
-				GMatrix(9*j+4,9*k+3) += Gs22s11(j,k);
-				GMatrix(9*j+5,9*k+3) += Gs33s11(j,k);
-				GMatrix(9*j+5,9*k+4) += Gs33s22(j,k);
-
-				GMatrix(9*j  ,9*k+3) += Gu1s11(j,k);
-				GMatrix(9*j  ,9*k+6) += Gu1s12(j,k);
-				GMatrix(9*j  ,9*k+8) += Gu1s13(j,k);
-				GMatrix(9*j+1,9*k+4) += Gu2s22(j,k);
-				GMatrix(9*j+1,9*k+6) += Gu2s12(j,k);
-				GMatrix(9*j+1,9*k+7) += Gu2s23(j,k);
-				GMatrix(9*j+2,9*k+5) += Gu3s33(j,k);
-				GMatrix(9*j+2,9*k+8) += Gu3s13(j,k);
-				GMatrix(9*j+2,9*k+7) += Gu3s23(j,k);
-
-				GMatrix(9*j+3,9*k  ) += Gs11u1(j,k);
-				GMatrix(9*j+6,9*k  ) += Gs12u1(j,k);
-				GMatrix(9*j+8,9*k  ) += Gs13u1(j,k);
-				GMatrix(9*j+4,9*k+1) += Gs22u2(j,k);
-				GMatrix(9*j+6,9*k+1) += Gs12u2(j,k);
-				GMatrix(9*j+7,9*k+1) += Gs23u2(j,k);
-				GMatrix(9*j+5,9*k+2) += Gs33u3(j,k);
-				GMatrix(9*j+8,9*k+2) += Gs13u3(j,k);
-				GMatrix(9*j+7,9*k+2) += Gs23u3(j,k);
-			}
-		}
-	}
-	
-	return GMatrix;
 }
