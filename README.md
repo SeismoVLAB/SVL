@@ -57,7 +57,7 @@ Citation
 ========
 To cite Seismo-VLAB, please use :
 
-Kusanovic Danilo, Seylabi Elnaz, Kottke Albert, and Asimaki Domniki (2020). Seismo-Vlab: A parallel object-oriented platform for reliable nonlinear seismic wave propagation and soil-structure interaction simulation. *Computer Methods in Applied Mechanics and Engineering*. [![DOI](https://img.shields.io/badge/DOI-10.1016/j.cma.2009.08.016-green.svg)](https://doi.org/10.1016/j.cma.2009.08.016)
+Kusanovic Danilo, Seylabi Elnaz, Kottke Albert, and Asimaki Domniki (2020). Seismo-Vlab: A parallel object-oriented platform for reliable nonlinear seismic wave propagation and soil-structure interaction simulation. *Computers and Geotechnics*. [![DOI](https://img.shields.io/badge/DOI-10.1016/j.cma.2009.08.016-green.svg)](https://doi.org/10.1016/j.cma.2009.08.016)
 
 ```
 @article{Kusanovic2020SeismoVLab,
@@ -74,7 +74,7 @@ url     = {}
 }
 ```
 
-Kusanovic Danilo, Seylabi Elnaz, and Asimaki Domniki (2021). Seismo-VLAB: A parallel C++ finite element software for structural and soil mechanics. *SoftwareX*. [![DOI](https://img.shields.io/badge/DOI-10.1016/j.cma.2009.08.016-green.svg)](https://doi.org/10.1016/j.cma.2009.08.016)
+Kusanovic Danilo, Seylabi Elnaz, and Asimaki Domniki (2021). Seismo-VLAB: A parallel C++ finite element software for structural and soil mechanics. *The Journal of Open Source Software*. [![DOI](https://img.shields.io/badge/DOI-10.1016/j.cma.2009.08.016-green.svg)](https://doi.org/10.1016/j.cma.2009.08.016)
 
 ```
 @article{Kusanovic2021SeismoVLab,
