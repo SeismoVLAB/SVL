@@ -49,6 +49,8 @@
 #include "lin3DHexa8.hpp"
 #include "kin3DHexa8.hpp"
 #include "lin3DHexa20.hpp"
+#include "EQlin2DQuad4.hpp"
+#include "TIEQlin2DQuad4.hpp"
 #include "UnxBoucWen2DLink.hpp"
 #include "UnxBoucWen3DLink.hpp"
 #include "HDRBYamamoto2DLink.hpp"
@@ -626,6 +628,28 @@ Parser::CreateElement(std::ifstream& InputFile, std::shared_ptr<Mesh> &theMesh, 
 
         //Instantiate the lin3DHexa20 element.
         theElement = std::make_shared<lin3DHexa20>(nodes, theMesh->GetMaterial(matID), nGauss, MassForm);
+    }
+    else if(strcasecmp(elemName.c_str(),"TIEQlin2DQuad4") == 0){
+        std::string eType;
+        double zref, cf1, cf2, eref;
+
+        nodes.resize(4);
+        parameters.resize(1);
+        InputFile >> nodes[0] >> nodes[1] >> nodes[2] >> nodes[3] >> matID >> parameters[0] >> nGauss >> eType >> zref >> cf1 >> cf2 >> eref;
+
+        //Instantiate the TIEQlin2DQuad4 element.
+        theElement = std::make_shared<TIEQlin2DQuad4>(nodes, theMesh->GetMaterial(matID), parameters[0], nGauss, MassForm, eType, zref, cf1, cf2, eref);
+    }
+    else if(strcasecmp(elemName.c_str(),"EQlin2DQuad4") == 0){
+        std::string eType;
+        double zref, cf1, cf2;
+
+        nodes.resize(4);
+        parameters.resize(1);
+        InputFile >> nodes[0] >> nodes[1] >> nodes[2] >> nodes[3] >> matID >> parameters[0]  >> nGauss >> eType >> zref >> cf1 >> cf2;
+
+        //Instantiate the EQlin2DQuad4 element.
+        theElement = std::make_shared<EQlin2DQuad4>(nodes, theMesh->GetMaterial(matID), parameters[0], nGauss, MassForm, eType, zref, cf1, cf2);
     }
 
     //TODO: Add more elements models here.
