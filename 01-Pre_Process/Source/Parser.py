@@ -862,6 +862,16 @@ def GetElementInformation(fileHandler, User, Element):
                     for k in range(1, len(token)):
                         x0.append(float(token[k]))
                     element['X0'] = x0
+                elif token[0].upper() == '-TYPE':
+                    element['TYPE'] = token[1].upper()
+                elif token[0].upper() == '-CF1':
+                    element['CF1'] = float(token[1])
+                elif token[0].upper() == '-CF2':
+                    element['CF2'] = float(token[1])
+                elif token[0].upper() == '-ZREF':
+                    element['ZREF'] = float(token[1])
+                elif token[0].upper() == '-EREF':
+                    element['EREF'] = float(token[1])
                 elif token[0].upper() == '-FORM':
                     element['FORMULATION'] = token[1]
                 elif token[0].upper() == '-DE':
