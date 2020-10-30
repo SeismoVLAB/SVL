@@ -22,6 +22,9 @@ def GetIntegration(x, dt):
 
 def ComputeField(disp, vel, accel, dt, option):
     """
+    This function computes the absent time history signal for the displacement, 
+    velocity and acceleration depending on the option=ALL,DISP,VEL,ACCEL provied 
+    by the user.
     """
     if  option.upper() == 'DISP':
         U = disp
@@ -77,6 +80,7 @@ def Compute2DBackgroundField(Values, t, Vs, Vp, theta_s, theta_p, X, X0, Xmin, n
 
 def Compute3DBackgroundField(Values, t, Vs, Vp, theta_s, theta_p, di, X, X0, Xmin, nt):
     """
+    This function generates the 3D DRM field to be specified at a particular node.
     """
     x_rela =  X[0] - X0[0]
     y_rela =  X[1] - X0[1]
@@ -136,6 +140,9 @@ def WriteFile(filepath, filename, Disp, Vels, Accel, nt, nc, n, option):
 
 def ParseDRMFile(Function):
     """
+    This function parses the DRM input signal information provided in the *FUNCTION. 
+    It reads the displacement, velocity, or accelertion input signal depending on 
+    the option=ALL,DISP,VEL,ACCEL provied by the user.
     """
     #Open the provided file
     path = Function['PATH']
@@ -189,6 +196,9 @@ def ParseDRMFile(Function):
 
 def Driver(User, Point, Function, time, Disp, Vels, Accel, nodes, conditions):
     """
+    This function writes (generates) the DRM input files to be used in the 
+    Run-Analysis. The function writes the input information regarding 
+    displacement, velocity and acceleration at each DRM node.
     """
     #Planar wave in homogeneous half-space parameters
     angle  = Function['THETA'] 
