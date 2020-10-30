@@ -7,6 +7,23 @@ from scipy.sparse import find
 
 def PetscAllocation(User, Point, Element, Constraint):
     """
+    This function computes (bruta fuerza) the number of non-zero for each 
+    diagonal and off-diagonal blocks required for allocation in PETSc.
+
+    Parameters
+    ----------
+    User : dict 
+           The dictionary containing all the user's relevant information.
+    Point : dict
+           The dictionary containing all point information.
+    Element : dict
+           The dictionary containing all element information.
+    Constraint : dict
+           The dictionary containing all constraint information.
+
+    Output
+    -------
+    Modifies User['D_NZ'], User['O_NZ'] fields
     """
     N = User['NPART']
     M  = User['NFREEDOF']
