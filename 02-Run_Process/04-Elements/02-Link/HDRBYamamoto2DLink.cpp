@@ -21,7 +21,7 @@ Element("HDRBYamamoto2DLink", nodes, 2*dim, VTKCELL), Hr(hr), Dimension(dim), Ma
     //HDRB Parameters
     alpha = 0.7*Hr;
     Ar    = (De*De - Di*Di)*3.141592653589793238/4.0;
-    Krb   = (0.22*cr + 1.0*cs)*Ar/Hr; 
+    Krb   = 1.0E6*(0.22*cr + 1.0*cs)*Ar/Hr; 
 
     //Assign internal variables.
     Pn.resize(2); Pn.fill(0.0);
@@ -82,13 +82,13 @@ HDRBYamamoto2DLink::UpdateState(){
         
     double gamma = strain.norm();
         
-    //Radial Restoring Force
+    //Radial Restoring Force (taur: [MPa], Fr: [N])
     double taur = 0.22*gamma + 0.2*pow(gamma - 1.8, 2.0)*(gamma > 1.8);
-    Eigen::VectorXd Fr = cr*taur*Ar*strain/gamma;
+    Eigen::VectorXd Fr = 1.0E6*cr*taur*Ar*strain/gamma;
 
-    //Non-Linear Restoring Force
+    //Non-Linear Restoring Force (taus: [MPa], Fs: [N])
     double taus = 0.25 + 0.02*gamma + 0.016*pow(gamma, 3.0);
-    Eigen::VectorXd Fs = cs*taus*Ar*Qaux;
+    Eigen::VectorXd Fs = 1.0E6*cs*taus*Ar*Qaux;
 
     //Total Non-Linear Restoring Force
     Fn = Fr + Fs;
