@@ -746,6 +746,20 @@ def WriteElementPartition(SeismoVLabfile, Tags, Element, User):
         elif  name == 'HDRBYAMAMOTO3DLINK':
             nParaview += 3
             SeismoVLabfile.write("%1.5f %1.5f %1.5f %d\n" %(Element[k]['DE'], Element[k]['DI'], Element[k]['HR'], Element[k]['DIMENSION']))
+        elif name == 'EQLIN2DQUAD4':
+            nParaview +=5
+            if 'NPOINTS' not in Element[k]:
+                Element[k]['NPOINTS'] = 4
+            if Element[k]['NPOINTS'] < 4:
+                Element[k]['NPOINTS'] = 4
+            SeismoVLabfile.write("%d %1.5f %d %s %1.5f %1.5f %1.5f \n" %(Element[k]['MATERIAL'], Element[k]['THICKNESS'], Element[k]['NPOINTS'], Element[k]['TYPE'], Element[k]['ZREF'], Element[k]['CF1'], Element[k]['CF2']))
+        elif name == 'TIEQLIN2DQUAD4':
+            nParaview +=5
+            if 'NPOINTS' not in Element[k]:
+                Element[k]['NPOINTS'] = 4
+            if Element[k]['NPOINTS'] < 4:
+                Element[k]['NPOINTS'] = 4
+            SeismoVLabfile.write("%d %1.5f %d %s %1.5f %1.5f %1.5f %1.10f \n" %(Element[k]['MATERIAL'], Element[k]['THICKNESS'], Element[k]['NPOINTS'], Element[k]['TYPE'], Element[k]['ZREF'], Element[k]['CF1'], Element[k]['CF2'], Element[k]['EREF']))
         else:
             print('\x1B[31mERROR \x1B[0m: The ELEMENT=' + Element[k]['NAME'].upper() + ' could not be recognized.')
             sys.exit(-1)
@@ -865,6 +879,10 @@ def WriteParaviewFile(User, Point, Element, Material, Section):
             Paraviewfile.write("3\n")
         elif Element[eTag]['NAME'].upper() == 'HDRBYAMAMOTO3DLINK':
             Paraviewfile.write("3\n")
+        elif Element[eTag]['NAME'].upper() == 'EQLIN2DQUAD4':
+            Paraviewfile.write("9\n")
+        elif Element[eTag]['NAME'].upper() == 'TIEQLIN2DQUAD4':
+            Paraviewfile.write("9\n")
     Paraviewfile.write("\n")
 
     #Scalar Attributes applied to Element.
@@ -903,9 +921,9 @@ def WriteParaviewFile(User, Point, Element, Material, Section):
 
 def WriteMeshPartition(User, Point, Mass, Element, Material, Section, Constraint, Damping, Surface, Support, Initial, Function, Load, Combination, Recorder, Simulation):
     """
-    This function writes the SeismoVLab mesh and simulation files. It first
-    creates the METIS Graph Input Files, then creates the domain partition, 
-    and finally writes the partition files in SeismoVLab format.
+    This function writes the SeismoVLab (*.svl) file. It first reads the METIS 
+    Graph output files, then select the domain partition elements, and finally 
+    writes the partition files (name.$.svl) in SeismoVLab format.
 
     Parameters
     ----------
