@@ -27,7 +27,7 @@
 //
 // Description:
 ///This file contains the "HDRBYamamoto2DLink" two-node link declarations, which 
-///defines a bi-directional HDRB model for 3D analyses.
+///defines a bi-directional HDRB model for 2D analyses.
 //------------------------------------------------------------------------------
 
 #ifndef _HDRBYAMAMOTO2DLINK_HPP_
@@ -50,7 +50,7 @@
 /// @file      HDRBYamamoto2DLink.hpp
 /// @class     HDRBYamamoto2DLink
 /// @see       Element.hpp Mesh.hpp
-/// @brief     Class for creating a bidirectional 3D two-node link element using Yamamoto HDRB formulation
+/// @brief     Class for creating a bidirectional 2D two-node link element using Yamamoto HDRB formulation
 class HDRBYamamoto2DLink : public Element{
 
     public:
