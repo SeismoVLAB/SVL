@@ -1,4 +1,5 @@
 #include <cmath>
+#include <string>
 #include <iostream>
 #include <Eigen/LU> 
 #include "Material.hpp"
@@ -54,7 +55,7 @@ TIEQlin2DQuad4::UpdateState(){
     Eigen::VectorXd X4 = theNodes[3]->GetCoordinates();
 
     Eigen::VectorXd X(8);
-    X << X1(0), X1(1), X2(0), X2(1), X3(0), X3(1), X4(0), X4(1);
+    X << X1, X2, X3, X4;
 
 
     //Update material states.
@@ -78,13 +79,11 @@ TIEQlin2DQuad4::UpdateState(){
 
         double z = XGauss(1);
 
-        //double gamma = sqrt((strain(0)-strain(1))*(strain(0)-strain(1)) + strain(2)*strain(2)); //sqrt(pow(strain(0)-strain(1),2)+pow(strain(2),2));
-
         Eigen::VectorXd EqLinParam = ComputeGGmaxDamping(vs,z,rho);
 
         double GGmax = EqLinParam(0);
 
-        theMaterial[k]->UpdateState(GGmax*strain, 1); //UpdateState(GGmax*strain, 1); //
+        theMaterial[k]->UpdateState(strain, 1);
     }
 }
 
@@ -157,18 +156,12 @@ TIEQlin2DQuad4::GetStress() const{
     Eigen::VectorXd X4 = theNodes[3]->GetCoordinates();
 
     Eigen::VectorXd X(8);
-    X << X1(0), X1(1), X2(0), X2(1), X3(0), X3(1), X4(0), X4(1);
+    X << X1, X2, X3, X4;
 
     Eigen::MatrixXd theStress(nPoints,3);
 
     //Numerical integration.
     for(unsigned int i = 0; i < wi.size(); i++){
-        //Jacobian matrix.
-        //Eigen::MatrixXd Jij = ComputeJacobianMatrix(xi(i,0), xi(i,1));
-
-        //Compute Strain-Displacement Matrix at Gauss Point.
-        //Eigen::MatrixXd Bij = ComputeStrainDisplacementMatrix(xi(i,0), xi(i,1), Jij);
-
         //Gets material tangent matrix at Gauss point.
         Eigen::MatrixXd Cij = theMaterial[i]->GetTangentStiffness();
 
@@ -181,10 +174,6 @@ TIEQlin2DQuad4::GetStress() const{
         Eigen::VectorXd XGauss = Hij*X;
 
         double z = XGauss(1);
-
-        //Eigen::VectorXd strain = theMaterial[i]->GetStrain();
-
-        //double gamma = sqrt((strain(0)-strain(1))*(strain(0)-strain(1)) + strain(2)*strain(2)); //sqrt(pow(strain(0)-strain(1),2)+pow(strain(2),2));
 
         Eigen::VectorXd EqLinParam = ComputeGGmaxDamping(vs,z,rho);
 
@@ -317,7 +306,7 @@ TIEQlin2DQuad4::ComputeStiffnessMatrix(){
     Eigen::VectorXd X4 = theNodes[3]->GetCoordinates();
 
     Eigen::VectorXd X(8);
-    X << X1(0), X1(1), X2(0), X2(1), X3(0), X3(1), X4(0), X4(1);
+    X << X1, X2, X3, X4;
 
     //Numerical integration.
     for(unsigned int i = 0; i < wi.size(); i++){
@@ -339,11 +328,6 @@ TIEQlin2DQuad4::ComputeStiffnessMatrix(){
         Eigen::VectorXd XGauss = Hij*X;
 
         double z = XGauss(1);
-
-        //Eigen::VectorXd strain = theMaterial[i]->GetStrain();
-        //Eigen::VectorXd strain = ComputeStrain(Bij);
-
-        //double gamma = sqrt((strain(0)-strain(1))*(strain(0)-strain(1)) + strain(2)*strain(2)); //sqrt(pow(strain(0)-strain(1),2)+pow(strain(2),2));
 
         Eigen::VectorXd EqLinParam = ComputeGGmaxDamping(vs,z,rho);
 
@@ -375,7 +359,7 @@ TIEQlin2DQuad4::ComputeDampingMatrix(){
     Eigen::VectorXd X4 = theNodes[3]->GetCoordinates();
 
     Eigen::VectorXd X(8);
-    X << X1(0), X1(1), X2(0), X2(1), X3(0), X3(1), X4(0), X4(1);
+    X << X1, X2, X3, X4;
 
     //Numerical integration.
     for(unsigned int i = 0; i < wi.size(); i++){
@@ -389,7 +373,10 @@ TIEQlin2DQuad4::ComputeDampingMatrix(){
         Eigen::MatrixXd Hij = ComputeShapeFunctionMatrix(xi(i,0), xi(i,1));
 
         //Gets material tangent matrix at Gauss point.
-        Eigen::MatrixXd Cij = theMaterial[i]->GetInitialTangentStiffness(); //->GetTangentStiffness(): Makes sure initial stiffness is used.
+        //----------------------------------------------
+        //Eigen::MatrixXd Cij = theMaterial[i]->GetTangentStiffness();
+        Eigen::MatrixXd Cij = theMaterial[i]->GetInitialTangentStiffness(); 
+        //----------------------------------------------
 
         double Gmax = theMaterial[i]->GetShearModulus();
         double rho  = theMaterial[i]->GetDensity();
@@ -399,20 +386,17 @@ TIEQlin2DQuad4::ComputeDampingMatrix(){
 
         double z = XGauss(1);
 
-        //Eigen::VectorXd strain = theMaterial[i]->GetStrain();
-
-        //double gamma = sqrt((strain(0)-strain(1))*(strain(0)-strain(1)) + strain(2)*strain(2)); //sqrt(pow(strain(0)-strain(1),2)+pow(strain(2),2));
-
         Eigen::VectorXd EqLinParam = ComputeGGmaxDamping(vs,z,rho);
 
-        double xi = EqLinParam(1);
+		double xi_R = EqLinParam(1);
+		double GGmax = EqLinParam(0);
 
-        double d  = cf2/4/cf1-cf1/4/cf2;
-        double aM = (M_PI*cf2*xi-M_PI*cf1*xi)/d;
-        double aK = (-xi/4/M_PI/cf2+xi/4/M_PI/cf1)/d;
+		double d  = cf2/4.0/cf1 - cf1/4.0/cf2;
+		double aM = (M_PI*cf2*xi_R - M_PI*cf1*xi_R)/d;
+		double aK = (-xi_R/4.0/M_PI/cf2 + xi_R/4.0/M_PI/cf1)/d;
 
         //Numerical integration.
-        DampingMatrix += aM*wi(i)*rho*t*fabs(Jij.determinant())*Hij.transpose()*Hij+aK*wi(i)*t*fabs(Jij.determinant())*Bij.transpose()*Cij*Bij;
+        DampingMatrix += aM*wi(i)*rho*t*fabs(Jij.determinant())*Hij.transpose()*Hij + aK*GGmax*wi(i)*t*fabs(Jij.determinant())*Bij.transpose()*Cij*Bij;
     }
     
     return DampingMatrix;
@@ -429,8 +413,7 @@ TIEQlin2DQuad4::ComputePMLMatrix(){
 Eigen::VectorXd 
 TIEQlin2DQuad4::ComputeInternalForces(){
     //Stiffness matrix definition:
-    Eigen::VectorXd InternalForces;
-    InternalForces.resize(8);
+    Eigen::VectorXd InternalForces(8);
     InternalForces.fill(0.0);
 
     //Gets the quadrature information.    
@@ -445,7 +428,7 @@ TIEQlin2DQuad4::ComputeInternalForces(){
     Eigen::VectorXd X4 = theNodes[3]->GetCoordinates();
 
     Eigen::VectorXd X(8);
-    X << X1(0), X1(1), X2(0), X2(1), X3(0), X3(1), X4(0), X4(1);
+    X << X1, X2, X3, X4;
 
     //Numerical integration.
     for(unsigned int i = 0; i < wi.size(); i++){
@@ -458,10 +441,6 @@ TIEQlin2DQuad4::ComputeInternalForces(){
         //Gets material strain at Gauss point.
         Eigen::VectorXd Stress = theMaterial[i]->GetStress();
 
-        //Eigen::MatrixXd Cij = theMaterial[i]->GetTangentStiffness();
-        //Eigen::VectorXd strain = ComputeStrain(Bij);
-        //Eigen::VectorXd Stress = Cij*strain;
-
         double Gmax = theMaterial[i]->GetShearModulus();
         double rho  = theMaterial[i]->GetDensity();
         double vs   = sqrt(Gmax/rho);
@@ -471,10 +450,6 @@ TIEQlin2DQuad4::ComputeInternalForces(){
         Eigen::VectorXd XGauss = Hij*X;
 
         double z = XGauss(1);
-
-        //Eigen::VectorXd strain = theMaterial[i]->GetStrain();
-
-        //double gamma = sqrt((strain(0)-strain(1))*(strain(0)-strain(1)) + strain(2)*strain(2)); //sqrt(pow(strain(0)-strain(1),2)+pow(strain(2),2));
 
         Eigen::VectorXd EqLinParam = ComputeGGmaxDamping(vs,z,rho);
 
@@ -789,56 +764,58 @@ TIEQlin2DQuad4::ComputeStrainDisplacementMatrix(const double ri, const double si
 Eigen::VectorXd
 TIEQlin2DQuad4::ComputeGGmaxDamping(const double vs, const double z, const double rho) const{
 
-    double GGmax, xi, Dmin;
-    double g  = 9.81;  //gravity acceleration [m/s^2]
-    double K0 = 0.50;  //coefficeint of lateral earth pressure
-    double PIndex;     //plasticity index
-    double H = zref-z; //soil column height
+	double GGmax, xi, Dmin, F;
+	double g  = 9.81;  //gravity acceleration [m/s^2]
+	double K0 = 0.50;  //coefficeint of lateral earth pressure
+	double PIndex;     //plasticity index
+	double H = zref-z; //soil column height
 
     if (H < 0.0)
         H = 0.0;
 
-    double sigmav = rho*g*H;//vertical pressure
-    double sigma0 = (1.0+2.0*K0)*sigmav/3.0;//lateral pressure
-    double ppre = 0.106*pow(vs,1.47)*1000; // [Pa]
-    double OCR = ppre/sigmav;//overconsolidation ratio
+    double sigmav = rho*g*H; //vertical pressure
+    double sigma0 = (1.0 + 2.0*K0)*sigmav/3.0;//lateral pressure
+    double ppre   = 0.106*pow(vs,1.47)*1000; // [Pa]
+    double OCR    = ppre/sigmav;//overconsolidation ratio
 
     //emprical coefficients -- based on Table 8.7 of [1]
     Eigen::VectorXd phi(7);
     phi << 3.52E-2 , 7.07E-4, 3.69E-1 , 2.97E-1 , 9.5E-1 , 6.00E-1 , 0.0;
 
     //based on [2]
-    if (vs<=200) {
+    if (vs <= 200.0) {
         PIndex = 10.0;
-    }else if (vs>200 && vs<=360){
+    }
+    else if (vs > 200.0 && vs <= 360.0){
         PIndex = 5.0;
-    }else{
+    }
+    else{
         PIndex = 0.0;
     }
 
     //based on [1]
-    double gammar = (phi(0)+phi(1)*PIndex*pow(OCR,phi(2)))*pow(sigma0*9.86923E-6,phi(3))/100;//reference strain
+    double gammar = (phi(0) + phi(1)*PIndex*pow(OCR,phi(2)))*pow(sigma0*9.86923E-6, phi(3))/100;//reference strain
 
-    double c1 = -1.1143*phi(4)*phi(4)+1.8618*phi(4)+0.2523;
-    double c2 =  0.0805*phi(4)*phi(4)-0.0710*phi(4)-0.0095;
-    double c3 = -0.0005*phi(4)*phi(4)+0.0002*phi(4)+0.0003;
+    double c1 = -1.1143*phi(4)*phi(4) + 1.8618*phi(4) + 0.2523;
+    double c2 =  0.0805*phi(4)*phi(4) - 0.0710*phi(4) - 0.0095;
+    double c3 = -0.0005*phi(4)*phi(4) + 0.0002*phi(4) + 0.0003;
 
-    double Dmasinga1 = 100.0/M_PI*(4.0*(eref-gammar*log((eref+gammar)/gammar))/(eref*eref/(eref+gammar))-2.0);
-    double Dmasing  = c1*Dmasinga1+c2*pow(Dmasinga1,2)+c3*pow(Dmasinga1,3);
-    double b = phi(4)+phi(5)*log(1.0);
-    double F = b*pow(GGmax,0.1);
+    double Dmasinga1 = 100.0/M_PI*(4.0*(eref - gammar*log((eref+gammar)/gammar))/(eref*eref/(eref + gammar)) - 2.0);
+    double Dmasing   = c1*Dmasinga1 + c2*pow(Dmasinga1,2) + c3*pow(Dmasinga1,3);
+    double b         = phi(4) + phi(5)*log(1.0);
 
-    Dmin = (0.8005+0.0129*PIndex*pow(OCR,-0.1069))*pow(sigma0,-0.2889)*(1+0.2919*log(1.0));//small strain damping
+    Dmin = 0.01;//(0.8005+0.0129*PIndex*pow(OCR,-0.1069))*pow(sigma0,-0.2889)*(1+0.2919*log(1.0));//small strain damping
 
-    if (Type=="DARENDELI") {
-        GGmax  = 1.0/(1.0+pow(eref/gammar,phi(4)));
-        xi = F*Dmasing/100+Dmin;
-        if (eref<1.0E-8) {
+    if (strcasecmp(Type.c_str(),"DARENDELI") == 0) {
+        GGmax  = 1.0/(1.0 + pow(eref/gammar,phi(4)));
+        F  = b*pow(GGmax,0.1);
+        xi = F*Dmasing/100 + Dmin;
+        if (eref < 1.0E-8) {
             GGmax = 1.0;
             xi    = Dmin;
         }
     }
-    else if (Type == "SmallStrain") {
+    else if (strcasecmp(Type.c_str(),"SmallStrain") == 0) {
         GGmax = 1.0;
         xi    = Dmin;
     }
@@ -848,4 +825,3 @@ TIEQlin2DQuad4::ComputeGGmaxDamping(const double vs, const double z, const doubl
 
     return result;
 }
-
