@@ -7,6 +7,10 @@ Icon
 # Thumbnails
 ._*
 
+#Python compiled
+*.pyc
+*.pyc~
+
 # C++ / default autosave extension 
 *.cpp~
 *.hpp~
