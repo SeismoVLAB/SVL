@@ -135,7 +135,10 @@ if __name__ == "__main__":
     print( "                                                                     " )
 
     #GETS THE CONFIGURATION INPUT FILE
-    path = str(sys.argv[1])
-    path = path.replace("\"", "")
-
-    main(path)
+    if len(sys.argv) == 1:
+        print(' Please provide an svl input file and run once more:')
+        print('   python3 PreProcess.py /path/to/file/input.svl\n')
+    else:
+        path = str(sys.argv[1])
+        path = path.replace("\"", "")
+        main(path)
