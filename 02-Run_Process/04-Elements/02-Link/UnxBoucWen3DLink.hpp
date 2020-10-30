@@ -48,7 +48,7 @@
 /// @file      UnxBoucWen3DLink.hpp
 /// @class     UnxBoucWen3DLink
 /// @see       Element.hpp Mesh.hpp
-/// @brief     Class for creating an uniaxial 2D two-node link element using Bouc-Wen formulation
+/// @brief     Class for creating an uniaxial 3D two-node link element using Bouc-Wen formulation
 class UnxBoucWen3DLink : public Element{
 
     public:
