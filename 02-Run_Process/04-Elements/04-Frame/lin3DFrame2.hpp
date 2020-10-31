@@ -54,7 +54,7 @@
 class lin3DFrame2 : public Element{
 
     public:
-        ///Creates a ZeroLength1D in a finite element Mesh.
+        ///Creates a lin3DFrame2 in a finite element Mesh.
         ///@param nodes The Node connectivity array of this Element.
         ///@param section Pointer to the Section that this Element is made out of.
         ///@param massform The mass formulation to compute the mass matrix.

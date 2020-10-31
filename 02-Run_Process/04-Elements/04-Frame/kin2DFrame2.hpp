@@ -55,7 +55,7 @@
 class kin2DFrame2 : public Element{
 
     public:
-        ///Creates a kin3DTruss2 in a finite element Mesh.
+        ///Creates a kin2DFrame2 in a finite element Mesh.
         ///@param nodes The Node connectivity array of this Element.
         ///@param material Pointer to the Material that this Element is made out of.
         ///@param area The cross-section area of the kin3DTruss2 Element.
