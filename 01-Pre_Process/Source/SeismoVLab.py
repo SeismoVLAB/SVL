@@ -760,6 +760,12 @@ def WriteElementPartition(SeismoVLabfile, Tags, Element, User):
             if Element[k]['NPOINTS'] < 4:
                 Element[k]['NPOINTS'] = 4
             SeismoVLabfile.write("%d %1.5f %d %s %1.5f %1.5f %1.5f %1.10f \n" %(Element[k]['MATERIAL'], Element[k]['THICKNESS'], Element[k]['NPOINTS'], Element[k]['TYPE'], Element[k]['ZREF'], Element[k]['CF1'], Element[k]['CF2'], Element[k]['EREF']))
+        elif  name == 'NULL2DFRAME2':
+            nParaview += 3
+            SeismoVLabfile.write("\n")
+        elif  name == 'NULL3DFRAME2':
+            nParaview += 3
+            SeismoVLabfile.write("\n")
         else:
             print('\x1B[31mERROR \x1B[0m: The ELEMENT=' + Element[k]['NAME'].upper() + ' could not be recognized.')
             sys.exit(-1)
@@ -883,6 +889,10 @@ def WriteParaviewFile(User, Point, Element, Material, Section):
             Paraviewfile.write("9\n")
         elif Element[eTag]['NAME'].upper() == 'TIEQLIN2DQUAD4':
             Paraviewfile.write("9\n")
+        elif Element[eTag]['NAME'].upper() == 'NULL2DFRAME2':
+            Paraviewfile.write("3\n")
+        elif Element[eTag]['NAME'].upper() == 'NULL3DFRAME2':
+            Paraviewfile.write("3\n")
     Paraviewfile.write("\n")
 
     #Scalar Attributes applied to Element.
