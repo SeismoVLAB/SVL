@@ -191,9 +191,9 @@ Lin3DWideFlange::CommitState(){
 void
 Lin3DWideFlange::UpdateState(Eigen::VectorXd strain, unsigned int cond){
     //Update the matrial behavior.
-    Eigen::VectorXd matStrain(1);
-    matStrain << strain(0);
-    theMaterial->UpdateState(matStrain, cond);
+    Eigen::VectorXd mStrain(1);
+    mStrain << strain(0);
+    theMaterial->UpdateState(mStrain, cond);
 
     //Update the section strain.
     Strain = strain;

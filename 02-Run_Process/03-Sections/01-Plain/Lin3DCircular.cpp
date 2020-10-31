@@ -176,7 +176,13 @@ Lin3DCircular::CommitState(){
 //Update the section state for this iteration.
 void
 Lin3DCircular::UpdateState(Eigen::VectorXd strain, unsigned int cond){
-    theMaterial->UpdateState(strain, cond);
+    //Update the matrial behavior.
+    Eigen::VectorXd mStrain(1);
+    mStrain << strain(0);
+    theMaterial->UpdateState(mStrain, cond);
+
+    //Update the section strain.
+    Strain = strain;
 }
 
 //Computes the Lin3DCircular area.
