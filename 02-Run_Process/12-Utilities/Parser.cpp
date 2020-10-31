@@ -55,6 +55,8 @@
 #include "UnxBoucWen3DLink.hpp"
 #include "HDRBYamamoto2DLink.hpp"
 #include "HDRBYamamoto3DLink.hpp"
+#include "null2DFrame2.hpp"
+#include "null3DFrame2.hpp"
 
 #include "StaticAnalysis.hpp"
 #include "DynamicAnalysis.hpp"
@@ -650,6 +652,20 @@ Parser::CreateElement(std::ifstream& InputFile, std::shared_ptr<Mesh> &theMesh, 
 
         //Instantiate the EQlin2DQuad4 element.
         theElement = std::make_shared<EQlin2DQuad4>(nodes, theMesh->GetMaterial(matID), parameters[0], nGauss, MassForm, eType, zref, cf1, cf2);
+    }
+    else if(strcasecmp(elemName.c_str(),"null2DFrame2") == 0){
+        nodes.resize(2);
+        InputFile >> nodes[0] >> nodes[1];
+
+        //Instantiate the lin2DTruss2 element.
+        theElement = std::make_shared<null2DFrame2>(nodes);
+    }
+    else if(strcasecmp(elemName.c_str(),"null3DFrame2") == 0){
+        nodes.resize(2);
+        InputFile >> nodes[0] >> nodes[1];
+
+        //Instantiate the lin2DTruss2 element.
+        theElement = std::make_shared<null3DFrame2>(nodes);
     }
 
     //TODO: Add more elements models here.
