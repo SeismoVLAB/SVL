@@ -926,16 +926,18 @@ PML3DHexa8::ComputeInternalDynamicForces(){
     return InternalForces;
 }
 
+//-------------------------------------------------------------------------------
 //Compute the PML history vector using gauss-integration.
-//Eigen::VectorXd 
-//PML3DHexa8::ComputePMLVector(){
-//    Eigen::VectorXd Fpml(54);
-//    Fpml.fill(0.0);
+Eigen::VectorXd 
+PML3DHexa8::ComputePMLVector(){
+    Eigen::VectorXd Fpml(54);
+    Fpml.fill(0.0);
 
     //HERE ELNAZ YOU IMPLEMENT THE U-bar vector
 
-//    return Fpml;
-//}
+    return Fpml;
+}
+//-------------------------------------------------------------------------------
 
 //Compute the body forces acting on the element.
 Eigen::VectorXd 
