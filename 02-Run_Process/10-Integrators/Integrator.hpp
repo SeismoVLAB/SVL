@@ -82,6 +82,10 @@ class Integrator{
         ///@return Vector with the acceleration states at current time step.
         virtual Eigen::VectorXd& GetAccelerations() = 0;
 
+        ///Gets the perfectly-matched layer history vector.
+        ///@return Vector with the PML history states at current time step.
+        virtual Eigen::VectorXd& GetPMLHistoryVector() = 0;
+
         ///Computes a new time step.
         ///@param mesh The finite element Mesh object.
         ///@param k The time step number to be solved.
