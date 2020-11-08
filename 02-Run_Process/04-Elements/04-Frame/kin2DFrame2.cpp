@@ -326,17 +326,11 @@ kin2DFrame2::ComputeInternalDynamicForces(){
     return InternalForces;
 }
 
-//Compute the PML history vector using gauss-integration.
-Eigen::VectorXd 
-kin2DFrame2::ComputePMLVector(){
-    //Empty PML vector.
-    Eigen::VectorXd Fpml;
-    return Fpml;
-}
-
 //Compute the surface forces acting on the element.
 Eigen::VectorXd 
 kin2DFrame2::ComputeSurfaceForces(const std::shared_ptr<Load> &surfaceLoad, unsigned int face){
+    UNUNSED_PARAMETER(face);
+
     //Local surface load vector:
     Eigen::VectorXd surfaceForces(6);
 
@@ -398,6 +392,9 @@ kin2DFrame2::ComputeBodyForces(const std::shared_ptr<Load> &bodyLoad, unsigned i
 //Compute the domain reduction forces acting on the element.
 Eigen::VectorXd 
 kin2DFrame2::ComputeDomainReductionForces(const std::shared_ptr<Load> &drm, unsigned int k){
+    UNUNSED_PARAMETER(k);
+    UNUNSED_PARAMETER(drm);
+
     //TODO: Domain reduction forces not implemented for frame.
     Eigen::VectorXd DRMForces(6);
     DRMForces.fill(0.0);

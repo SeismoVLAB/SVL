@@ -2,6 +2,7 @@
 #include <iostream>
 #include "lin3DFrame2.hpp"
 #include "GaussQuadrature.hpp"
+#include "LobattoQuadrature.hpp"
 #include "Definitions.hpp"
 
 //Define constant tolerance value:
@@ -11,13 +12,16 @@ const double TOL = 0.9999995;
 const unsigned int VTKCELL = 3;
 
 //Overload constructor.
-lin3DFrame2::lin3DFrame2(const std::vector<unsigned int> nodes, std::unique_ptr<Section> &section, bool massform, bool formulation, unsigned int nGauss) :
+lin3DFrame2::lin3DFrame2(const std::vector<unsigned int> nodes, std::unique_ptr<Section> &section, bool massform, bool formulation, const std::string quadrature, unsigned int nGauss) :
 Element("lin3DFrame2", nodes, 12, VTKCELL), MassForm(massform), Formulation(formulation), Phiy(0.0), Phiz(0.0){
     //The element nodes.
     theNodes.resize(2);
 
     //Numerical integration rule.
-    QuadraturePoints = std::make_unique<GaussQuadrature>("Line", nGauss);
+    if(strcasecmp(quadrature.c_str(),"GAUSS") == 0)
+        QuadraturePoints = std::make_unique<GaussQuadrature>("Line", nGauss);
+    else if(strcasecmp(quadrature.c_str(),"LOBATTO") == 0)
+        QuadraturePoints = std::make_unique<LobattoQuadrature>("Line", nGauss);
 
     //The element material. 
     theSection.resize(nGauss);
@@ -391,17 +395,11 @@ lin3DFrame2::ComputeInternalDynamicForces(){
     return InternalForces;
 }
 
-//Compute the PML history vector using gauss-integration.
-Eigen::VectorXd 
-lin3DFrame2::ComputePMLVector(){
-    //Empty PML vector.
-    Eigen::VectorXd Fpml;
-    return Fpml;
-}
-
 //Compute the surface forces acting on the element.
 Eigen::VectorXd 
 lin3DFrame2::ComputeSurfaceForces(const std::shared_ptr<Load> &surfaceLoad, unsigned int face){
+    UNUNSED_PARAMETER(face);
+
     //Local surface load vector:
     Eigen::VectorXd surfaceForces(12);
 
@@ -475,6 +473,9 @@ lin3DFrame2::ComputeBodyForces(const std::shared_ptr<Load> &bodyLoad, unsigned i
 //Compute the domain reduction forces acting on the element.
 Eigen::VectorXd 
 lin3DFrame2::ComputeDomainReductionForces(const std::shared_ptr<Load> &drm, unsigned int k){
+    UNUNSED_PARAMETER(k);
+    UNUNSED_PARAMETER(drm);
+
     //TODO: Domain reduction forces not implemented for frame.
     Eigen::VectorXd DRMForces(12);
     DRMForces.fill(0.0);

@@ -59,10 +59,11 @@ class lin2DFrame2 : public Element{
         ///@param section Pointer to the Section that this Element is made out of.
         ///@param massform The mass formulation to compute the mass matrix.
         ///@param formulation The frame formulation: "Bernoulli", "Timoshenko".
+        ///@param quadrature The integration rule to be employed.
         ///@param nGauss Number of Gauss points for Element integration.
         ///@note More details can be found at @ref linklin2DFrame2.
         ///@see lin2DFrame2::theNodes, lin2DFrame2::theSection, lin2DFrame2::QuadraturePoints.
-        lin2DFrame2(const std::vector<unsigned int> nodes, std::unique_ptr<Section> &section, bool massform=true, bool formulation=false, unsigned int nGauss=3);
+        lin2DFrame2(const std::vector<unsigned int> nodes, std::unique_ptr<Section> &section, bool massform=true, bool formulation=false, const std::string quadrature="GAUSS", unsigned int nGauss=3);
 
         ///Destroys this lin2DFrame2 object.
         ~lin2DFrame2();
@@ -160,12 +161,6 @@ class lin2DFrame2 : public Element{
         ///@note The internal force vector can be revisited in @ref linkElement.
         ///@see Assembler::ComputeDynamicInternalForceVector().
         Eigen::VectorXd ComputeInternalDynamicForces();
-
-        ///Compute the PML history vector using gauss-integration.
-        ///@return Vector with the PML Element history values.
-        ///@note The PML vector is none existent for this element.
-        ///@see Assembler::ComputePMLHistoryMatrix(), Integrator::ComputeEffectiveStiffness().
-        Eigen::VectorXd ComputePMLVector();
 
         ///Compute the surface forces acting on the element.
         ///@param surface Pointer to the Load object that contains this information.
