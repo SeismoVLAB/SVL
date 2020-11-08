@@ -90,6 +90,8 @@ Lin3DThinArea::GetInitialTangentStiffness(){
 //Returns the section strain at given position.
 Eigen::VectorXd 
 Lin3DThinArea::GetStrainAt(double x3, double x2){
+    UNUNSED_PARAMETER(x2);
+
     //Checks if coordinate is inside the section.
     if(abs(x3) > t/2.0){ x3 = t/2.0; }
 
@@ -108,6 +110,8 @@ Lin3DThinArea::GetStrainAt(double x3, double x2){
 //Returns the section stress at given position.
 Eigen::VectorXd 
 Lin3DThinArea::GetStressAt(double x3, double x2){
+    UNUNSED_PARAMETER(x2);
+
     //Checks if coordinate is inside the section.
     if(abs(x3) > t/2.0){ x3 = t/2.0; }
 
