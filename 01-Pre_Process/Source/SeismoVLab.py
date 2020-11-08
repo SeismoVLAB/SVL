@@ -645,55 +645,69 @@ def WriteElementPartition(SeismoVLabfile, Tags, Element, User):
                 Element[k]['NPOINTS'] = 3
             if Element[k]['NPOINTS'] < 3:
                 Element[k]['NPOINTS'] = 3
-            SeismoVLabfile.write("%d %1.5f %d\n" %(Element[k]['MATERIAL'], Element[k]['AREA'], Element[k]['NPOINTS']))
+            if 'QUADRATURE' not in Element[k]:
+                Element[k]['QUADRATURE'] = 'GAUSS'
+            SeismoVLabfile.write("%d %1.5f %s %d\n" %(Element[k]['MATERIAL'], Element[k]['AREA'], Element[k]['QUADRATURE'], Element[k]['NPOINTS']))
         elif name == 'LIN3DTRUSS3':
             nParaview += 4
             if 'NPOINTS' not in Element[k]:
                 Element[k]['NPOINTS'] = 3
             if Element[k]['NPOINTS'] < 3:
                 Element[k]['NPOINTS'] = 3
-            SeismoVLabfile.write("%d %1.5f %d\n" %(Element[k]['MATERIAL'], Element[k]['AREA'], Element[k]['NPOINTS']))
+            if 'QUADRATURE' not in Element[k]:
+                Element[k]['QUADRATURE'] = 'GAUSS'
+            SeismoVLabfile.write("%d %1.5f %s %d\n" %(Element[k]['MATERIAL'], Element[k]['AREA'], Element[k]['QUADRATURE'], Element[k]['NPOINTS']))
         elif name == 'LIN2DQUAD4':
             nParaview += 5
             if 'NPOINTS' not in Element[k]:
                 Element[k]['NPOINTS'] = 4
             if Element[k]['NPOINTS'] < 4:
                 Element[k]['NPOINTS'] = 4
-            SeismoVLabfile.write("%d %1.5f %d\n" %(Element[k]['MATERIAL'], Element[k]['THICKNESS'], Element[k]['NPOINTS']))
+            if 'QUADRATURE' not in Element[k]:
+                Element[k]['QUADRATURE'] = 'GAUSS'
+            SeismoVLabfile.write("%d %1.5f %s %d\n" %(Element[k]['MATERIAL'], Element[k]['THICKNESS'], Element[k]['QUADRATURE'], Element[k]['NPOINTS']))
         elif name == 'LIN2DQUAD8':
             nParaview += 9
             if 'NPOINTS' not in Element[k]:
                 Element[k]['NPOINTS'] = 9
             if Element[k]['NPOINTS'] < 9:
                 Element[k]['NPOINTS'] = 9
-            SeismoVLabfile.write("%d %1.5f %d\n" %(Element[k]['MATERIAL'], Element[k]['THICKNESS'], Element[k]['NPOINTS']))
+            if 'QUADRATURE' not in Element[k]:
+                Element[k]['QUADRATURE'] = 'GAUSS'
+            SeismoVLabfile.write("%d %1.5f %s %d\n" %(Element[k]['MATERIAL'], Element[k]['THICKNESS'], Element[k]['QUADRATURE'], Element[k]['NPOINTS']))
         elif name == 'PML2DQUAD4':
             nParaview += 5
             if 'NPOINTS' not in Element[k]:
                 Element[k]['NPOINTS'] = 4
             if Element[k]['NPOINTS'] < 4:
                 Element[k]['NPOINTS'] = 4
+            if 'QUADRATURE' not in Element[k]:
+                Element[k]['QUADRATURE'] = 'GAUSS'
             X0  = Element[k]['X0']
             DIR = Element[k]['NORMAL']
-            SeismoVLabfile.write("%d %1.5f %d %1.5f %E %1.5f %1.5f %1.5f %1.5f %d\n" %(Element[k]['MATERIAL'], Element[k]['THICKNESS'], Element[k]['DEGREE'], Element[k]['L'], Element[k]['R'], X0[0], X0[1], DIR[0], DIR[1], Element[k]['NPOINTS']))
+            SeismoVLabfile.write("%d %1.5f %d %1.5f %E %1.5f %1.5f %1.5f %1.5f %s %d\n" %(Element[k]['MATERIAL'], Element[k]['THICKNESS'], Element[k]['DEGREE'], Element[k]['L'], Element[k]['R'], X0[0], X0[1], DIR[0], DIR[1], Element[k]['QUADRATURE'], Element[k]['NPOINTS']))
         elif name == 'PML2DQUAD8':
             nParaview += 9
             if 'NPOINTS' not in Element[k]:
                 Element[k]['NPOINTS'] = 9
             if Element[k]['NPOINTS'] < 9:
                 Element[k]['NPOINTS'] = 9
+            if 'QUADRATURE' not in Element[k]:
+                Element[k]['QUADRATURE'] = 'GAUSS'
             X0  = Element[k]['X0']
             DIR = Element[k]['NORMAL']
-            SeismoVLabfile.write("%d %1.5f %d %1.5f %E %1.5f %1.5f %1.5f %1.5f %d\n" %(Element[k]['MATERIAL'], Element[k]['THICKNESS'], Element[k]['DEGREE'], Element[k]['L'], Element[k]['R'], X0[0], X0[1], DIR[0], DIR[1], Element[k]['NPOINTS']))
+            SeismoVLabfile.write("%d %1.5f %d %1.5f %E %1.5f %1.5f %1.5f %1.5f %s %d\n" %(Element[k]['MATERIAL'], Element[k]['THICKNESS'], Element[k]['DEGREE'], Element[k]['L'], Element[k]['R'], X0[0], X0[1], DIR[0], DIR[1], Element[k]['QUADRATURE'], Element[k]['NPOINTS']))
         elif  name == 'LIN2DFRAME2':
             nParaview += 3
             if 'NPOINTS' not in Element[k]:
                 Element[k]['NPOINTS'] = 3
             if Element[k]['NPOINTS'] < 3:
                 Element[k]['NPOINTS'] = 3
+            if 'QUADRATURE' not in Element[k]:
+                Element[k]['QUADRATURE'] = 'GAUSS'
             if 'FORMULATION' not in Element[k]:
                 Element[k]['FORMULATION'] = "Bernoulli"
-            SeismoVLabfile.write("%d %s %d\n" %(Element[k]['SECTION'], Element[k]['FORMULATION'], Element[k]['NPOINTS']))
+            SeismoVLabfile.write("%d %s %s %d\n" %(Element[k]['SECTION'], Element[k]['FORMULATION'], Element[k]['QUADRATURE'], Element[k]['NPOINTS']))
         elif  name == 'KIN2DFRAME2':
             nParaview += 3
             SeismoVLabfile.write("%d\n" % Element[k]['SECTION'])
@@ -703,37 +717,58 @@ def WriteElementPartition(SeismoVLabfile, Tags, Element, User):
                 Element[k]['NPOINTS'] = 3
             if Element[k]['NPOINTS'] < 3:
                 Element[k]['NPOINTS'] = 3
+            if 'QUADRATURE' not in Element[k]:
+                Element[k]['QUADRATURE'] = 'GAUSS'
             if 'FORMULATION' not in Element[k]:
                 Element[k]['FORMULATION'] = "Bernoulli"
-            SeismoVLabfile.write("%d %s %d\n" %(Element[k]['SECTION'], Element[k]['FORMULATION'], Element[k]['NPOINTS']))
+            SeismoVLabfile.write("%d %s %s %d\n" %(Element[k]['SECTION'], Element[k]['FORMULATION'], Element[k]['QUADRATURE'], Element[k]['NPOINTS']))
         elif name == 'LIN3DSHELL4':
             nParaview += 5
             if 'NPOINTS' not in Element[k]:
                 Element[k]['NPOINTS'] = 9
             if Element[k]['NPOINTS'] < 9:
                 Element[k]['NPOINTS'] = 9
-            SeismoVLabfile.write("%d %d\n" %(Element[k]['SECTION'], Element[k]['NPOINTS']))
+            if 'QUADRATURE' not in Element[k]:
+                Element[k]['QUADRATURE'] = 'GAUSS'
+            SeismoVLabfile.write("%d %s %d\n" %(Element[k]['SECTION'], Element[k]['QUADRATURE'], Element[k]['NPOINTS']))
         elif name == 'LIN3DHEXA8':
             nParaview += 9
             if 'NPOINTS' not in Element[k]:
                 Element[k]['NPOINTS'] = 8
             if Element[k]['NPOINTS'] < 8:
                 Element[k]['NPOINTS'] = 8
-            SeismoVLabfile.write("%d %d\n" %(Element[k]['MATERIAL'], Element[k]['NPOINTS']))
+            if 'QUADRATURE' not in Element[k]:
+                Element[k]['QUADRATURE'] = 'GAUSS'
+            SeismoVLabfile.write("%d %s %d\n" %(Element[k]['MATERIAL'], Element[k]['QUADRATURE'], Element[k]['NPOINTS']))
         elif name == 'KIN3DHEXA8':
             nParaview += 9
             if 'NPOINTS' not in Element[k]:
                 Element[k]['NPOINTS'] = 8
             if Element[k]['NPOINTS'] < 8:
                 Element[k]['NPOINTS'] = 8
-            SeismoVLabfile.write("%d %d\n" %(Element[k]['MATERIAL'], Element[k]['NPOINTS']))
+            if 'QUADRATURE' not in Element[k]:
+                Element[k]['QUADRATURE'] = 'GAUSS'
+            SeismoVLabfile.write("%d %s %d\n" %(Element[k]['MATERIAL'], Element[k]['QUADRATURE'], Element[k]['NPOINTS']))
+        elif name == 'PML3DHEXA8':
+            nParaview += 9
+            if 'NPOINTS' not in Element[k]:
+                Element[k]['NPOINTS'] = 8
+            if Element[k]['NPOINTS'] < 8:
+                Element[k]['NPOINTS'] = 8
+            if 'QUADRATURE' not in Element[k]:
+                Element[k]['QUADRATURE'] = 'GAUSS'
+            X0  = Element[k]['X0']
+            DIR = Element[k]['NORMAL']
+            SeismoVLabfile.write("%d %d %1.5f %E %1.5f %1.5f %1.5f %1.5f %1.5f %1.5f %s %d\n" %(Element[k]['MATERIAL'], Element[k]['DEGREE'], Element[k]['L'], Element[k]['R'], X0[0], X0[1], X0[2], DIR[0], DIR[1], DIR[2], Element[k]['QUADRATURE'], Element[k]['NPOINTS']))
         elif name == 'LIN3DHEXA20':
             nParaview += 21
             if 'NPOINTS' not in Element[k]:
                 Element[k]['NPOINTS'] = 27
             if Element[k]['NPOINTS'] < 27:
                 Element[k]['NPOINTS'] = 27
-            SeismoVLabfile.write("%d %d\n" %(Element[k]['MATERIAL'], Element[k]['NPOINTS']))
+            if 'QUADRATURE' not in Element[k]:
+                Element[k]['QUADRATURE'] = 'GAUSS'
+            SeismoVLabfile.write("%d %s %d\n" %(Element[k]['MATERIAL'], Element[k]['QUADRATURE'], Element[k]['NPOINTS']))
         elif  name == 'UNXBOUCWEN2DLINK':
             nParaview += 3
             SeismoVLabfile.write("%1.5f %1.5f %1.5f %1.5f %1.5f %E %E %E %1.5f %1.5f %d %d\n" %(Element[k]['ALPHA'], Element[k]['MU'], Element[k]['ETA'], Element[k]['BETA'], Element[k]['GAMMA'], Element[k]['TOL'], Element[k]['FY'], Element[k]['K0'], Element[k]['ALPHA1'], Element[k]['ALPHA2'], Element[k]['DIMENSION'], Element[k]['DIRECTION']))
@@ -752,14 +787,18 @@ def WriteElementPartition(SeismoVLabfile, Tags, Element, User):
                 Element[k]['NPOINTS'] = 4
             if Element[k]['NPOINTS'] < 4:
                 Element[k]['NPOINTS'] = 4
-            SeismoVLabfile.write("%d %1.5f %d %s %1.5f %1.5f %1.5f \n" %(Element[k]['MATERIAL'], Element[k]['THICKNESS'], Element[k]['NPOINTS'], Element[k]['TYPE'], Element[k]['ZREF'], Element[k]['CF1'], Element[k]['CF2']))
+            if 'QUADRATURE' not in Element[k]:
+                Element[k]['QUADRATURE'] = 'GAUSS'
+            SeismoVLabfile.write("%d %1.5f %s %d %s %1.5f %1.5f %1.5f \n" %(Element[k]['MATERIAL'], Element[k]['THICKNESS'], Element[k]['QUADRATURE'], Element[k]['NPOINTS'], Element[k]['TYPE'], Element[k]['ZREF'], Element[k]['CF1'], Element[k]['CF2']))
         elif name == 'TIEQLIN2DQUAD4':
             nParaview +=5
             if 'NPOINTS' not in Element[k]:
                 Element[k]['NPOINTS'] = 4
             if Element[k]['NPOINTS'] < 4:
                 Element[k]['NPOINTS'] = 4
-            SeismoVLabfile.write("%d %1.5f %d %s %1.5f %1.5f %1.5f %1.10f \n" %(Element[k]['MATERIAL'], Element[k]['THICKNESS'], Element[k]['NPOINTS'], Element[k]['TYPE'], Element[k]['ZREF'], Element[k]['CF1'], Element[k]['CF2'], Element[k]['EREF']))
+            if 'QUADRATURE' not in Element[k]:
+                Element[k]['QUADRATURE'] = 'GAUSS'
+            SeismoVLabfile.write("%d %1.5f %s %d %s %1.5f %1.5f %1.5f %1.10f \n" %(Element[k]['MATERIAL'], Element[k]['THICKNESS'], Element[k]['QUADRATURE'], Element[k]['NPOINTS'], Element[k]['TYPE'], Element[k]['ZREF'], Element[k]['CF1'], Element[k]['CF2'], Element[k]['EREF']))
         elif  name == 'NULL2DFRAME2':
             nParaview += 3
             SeismoVLabfile.write("\n")
