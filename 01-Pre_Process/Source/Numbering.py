@@ -332,12 +332,13 @@ def FindDefectiveNodes(User, Point, Constraint, Element):
             Point[mTag]['DEFECTIVE'] = False
 
     #Fix all Detected Defective Point
-    for nTag in Point:
-        if Point[nTag]['DEFECTIVE']:
-            nDOFs = Point[nTag]['NDOF']
-            Point[nTag]['FREE'] = np.full(nDOFs,  -1, dtype='int')
+    #TODO: Slave nodes with kinematic constraints and do not belong to elements should not be defective.
+    #for nTag in Point:
+    #    if Point[nTag]['DEFECTIVE']:
+    #        nDOFs = Point[nTag]['NDOF']
+    #        Point[nTag]['FREE'] = np.full(nDOFs,  -1, dtype='int')
 
-            print('\x1B[33m ALERT \x1B[0m: The Point[' + str(nTag) + '] does not belong to an element. The Point will be fixed.')
+    #        print('\x1B[33m ALERT \x1B[0m: The Point[' + str(nTag) + '] does not belong to an element. The Point will be fixed.')
 
     #Saves in User's file the Matrix Memory Storage 
     User['NLUMPED'    ] = nLumpedStorage
