@@ -5,17 +5,23 @@
 #include "Material.hpp"
 #include "PML3DHexa8.hpp"
 #include "GaussQuadrature.hpp"
+#include "LobattoQuadrature.hpp"
+#include "Definitions.hpp"
 
 //THIS IS THE VTK NUMBER FOR HEXA IN PARAVIEW
 const unsigned int VTKCELL = 12;
 
 //Overload constructor.
-PML3DHexa8::PML3DHexa8(const std::vector<unsigned int> nodes, std::unique_ptr<Material> &material, const std::vector<double> parameters, const unsigned int nGauss, bool massform) :
-Element("PML3DHexa8", nodes, 54, VTKCELL), MassForm(massform), m_pml(parameters[0]), L_pml(parameters[1]), R_pml(parameters[2]), x0_pml(parameters[3]), y0_pml(parameters[4]), z0_pml(parameters[5]), nx_pml(parameters[6]), ny_pml(parameters[7]), nz_pml(parameters[8]) {
+PML3DHexa8::PML3DHexa8(const std::vector<unsigned int> nodes, std::unique_ptr<Material> &material, const std::vector<double> parameters, const std::string quadrature, const unsigned int nGauss, bool massform) :
+Element("PML3DHexa8", nodes, 72, VTKCELL), MassForm(massform), m_pml(parameters[0]), L_pml(parameters[1]), R_pml(parameters[2]), x0_pml(parameters[3]), y0_pml(parameters[4]), z0_pml(parameters[5]), nx_pml(parameters[6]), ny_pml(parameters[7]), nz_pml(parameters[8]) {
     //The element nodes.
     theNodes.resize(8);
 
-    QuadraturePoints = std::make_unique<GaussQuadrature>("Hexa", nGauss);
+    //Numerical integration rule.
+    if(strcasecmp(quadrature.c_str(),"GAUSS") == 0)
+        QuadraturePoints = std::make_unique<GaussQuadrature>("Hexa", nGauss);
+    else if(strcasecmp(quadrature.c_str(),"LOBATTO") == 0)
+        QuadraturePoints = std::make_unique<LobattoQuadrature>("Hexa", nGauss);
 
 	//The element material.
     theMaterial.resize(nGauss);
@@ -25,6 +31,7 @@ Element("PML3DHexa8", nodes, 54, VTKCELL), MassForm(massform), m_pml(parameters[
 
 //Destructor.
 PML3DHexa8::~PML3DHexa8(){
+    //Does nothing.
 }
 
 //Save the material states in the element.
@@ -145,6 +152,9 @@ PML3DHexa8::GetStrainRate() const{
 //Gets the material strain in section at  coordinate (x3,x2).
 Eigen::MatrixXd 
 PML3DHexa8::GetStrainAt(double x3, double x2) const{
+    UNUNSED_PARAMETER(x3);
+    UNUNSED_PARAMETER(x2);
+
     //number of integration points.
     unsigned int nPoints = QuadraturePoints->GetNumberOfQuadraturePoints();
 
@@ -158,6 +168,9 @@ PML3DHexa8::GetStrainAt(double x3, double x2) const{
 //Gets the material stress in section at  coordinate (x3,x2).
 Eigen::MatrixXd 
 PML3DHexa8::GetStressAt(double x3, double x2) const{
+    UNUNSED_PARAMETER(x3);
+    UNUNSED_PARAMETER(x2);
+
     //number of integration points.
     unsigned int nPoints = QuadraturePoints->GetNumberOfQuadraturePoints();
 
@@ -171,6 +184,8 @@ PML3DHexa8::GetStressAt(double x3, double x2) const{
 //Gets the element internal response in VTK format.
 Eigen::VectorXd 
 PML3DHexa8::GetVTKResponse(std::string response) const{
+    UNUNSED_PARAMETER(response);
+
     //IMPORTANT: Since PML is a buffer for absorbing waves, we decided not to show results. 
     Eigen::VectorXd theResponse(6);
     theResponse.fill(0.0);
@@ -180,7 +195,6 @@ PML3DHexa8::GetVTKResponse(std::string response) const{
 
 Eigen::VectorXd
 PML3DHexa8::ComputePMLStretchingFactors(const double ri, const double si, const double ti, const double rho, const double mu, const double lambda) const {
-
 	//Gets the element coordinates in deformed configuration. 
 	Eigen::VectorXd X1 = theNodes[0]->GetCoordinates();
 	Eigen::VectorXd X2 = theNodes[1]->GetCoordinates();
@@ -192,14 +206,7 @@ PML3DHexa8::ComputePMLStretchingFactors(const double ri, const double si, const 
 	Eigen::VectorXd X8 = theNodes[7]->GetCoordinates();
 
 	Eigen::VectorXd X(24);
-	X << X1(0), X1(1), X1(2), 
-	     X2(0), X2(1), X2(2), 
-	     X3(0), X3(1), X3(2), 
-	     X4(0), X4(1), X4(2), 
-	     X5(0), X5(1), X5(2), 
-	     X6(0), X6(1), X6(2), 
-	     X7(0), X7(1), X7(2), 
-	     X8(0), X8(1), X8(2);
+	X << X1, X2, X3, X4, X5, X6, X7, X8;
 
 	Eigen::MatrixXd Hij = ComputeShapeFunctionMatrix(ri, si, ti);
 
@@ -210,7 +217,7 @@ PML3DHexa8::ComputePMLStretchingFactors(const double ri, const double si, const 
 	double z = XGauss(2);
 
 	//P wave velocity
-	double V_pml = sqrt((lambda+2.0*mu)/rho);
+	double V_pml = sqrt((lambda + 2.0*mu)/rho);
 	
 	//characteristic length
 	double b_pml = L_pml/10.0;
@@ -236,17 +243,13 @@ PML3DHexa8::ComputePMLStretchingFactors(const double ri, const double si, const 
 Eigen::MatrixXd 
 PML3DHexa8::ComputeMassMatrix(void){
 	//ux, uy, sxx, syy, sxy
-	Eigen::MatrixXd MassMatrix(54,54);
+	Eigen::MatrixXd MassMatrix(72,72);
 	MassMatrix.fill(0.0);
 
 	//Gets the quadrature information.
     Eigen::VectorXd wi;
     Eigen::MatrixXd xi;
     QuadraturePoints->GetQuadraturePoints("Hexa", wi, xi);
-
-	Eigen::MatrixXd Mu1u1(8,8), Mu2u2(8,8), Mu3u3(8,8);
-	Eigen::MatrixXd Ms11s11(8,8), Ms22s22(8,8), Ms33s33(8,8), Ms23s23(8,8), Ms13s13(8,8), Ms12s12(8,8);
-	Eigen::MatrixXd Ms11s22(8,8), Ms22s11(8,8), Ms11s33(8,8), Ms33s11(8,8), Ms22s33(8,8), Ms33s22(8,8);
 
 	//Numerical integration.
     for(unsigned int i = 0; i < wi.size(); i++){
@@ -283,40 +286,23 @@ PML3DHexa8::ComputeMassMatrix(void){
 
 		for (unsigned int j = 0; j < 8 ; j++) {
 			for (unsigned int k = 0; k < 8 ; k++) {
-				Mu1u1(j,k)   = rho*a*SF(j)*SF(k)*wi(i)*D;
-				Mu2u2(j,k)   = rho*a*SF(j)*SF(k)*wi(i)*D;
-				Mu3u3(j,k)   = rho*a*SF(j)*SF(k)*wi(i)*D;
+				MassMatrix(9*j  ,9*k  ) += rho*a*SF(j)*SF(k)*wi(i)*D;
+				MassMatrix(9*j+1,9*k+1) += rho*a*SF(j)*SF(k)*wi(i)*D;
+				MassMatrix(9*j+2,9*k+2) += rho*a*SF(j)*SF(k)*wi(i)*D;
+				MassMatrix(9*j+3,9*k+3) += -a*(lambda+mu)/mu/(3*lambda+2*mu)*SF(j)*SF(k)*wi(i)*D;
+				MassMatrix(9*j+4,9*k+4) += -a*(lambda+mu)/mu/(3*lambda+2*mu)*SF(j)*SF(k)*wi(i)*D;
+				MassMatrix(9*j+5,9*k+5) += -a*(lambda+mu)/mu/(3*lambda+2*mu)*SF(j)*SF(k)*wi(i)*D;
+				MassMatrix(9*j+6,9*k+6) += -a/mu*SF(j)*SF(k)*wi(i)*D;
+				MassMatrix(9*j+7,9*k+7) += -a/mu*SF(j)*SF(k)*wi(i)*D;
+				MassMatrix(9*j+8,9*k+8) += -a/mu*SF(j)*SF(k)*wi(i)*D;
 				
-				Ms11s11(j,k) = -a*(lambda+mu)/mu/(3*lambda+2*mu)*SF(j)*SF(k)*wi(i)*D;
-				Ms22s22(j,k) = -a*(lambda+mu)/mu/(3*lambda+2*mu)*SF(j)*SF(k)*wi(i)*D;
-				Ms33s33(j,k) = -a*(lambda+mu)/mu/(3*lambda+2*mu)*SF(j)*SF(k)*wi(i)*D;
-				Ms23s23(j,k) = -a/mu*SF(j)*SF(k)*wi(i)*D;
-				Ms13s13(j,k) = -a/mu*SF(j)*SF(k)*wi(i)*D;
-				Ms12s12(j,k) = -a/mu*SF(j)*SF(k)*wi(i)*D;
-				Ms11s22(j,k) = a*lambda/2/mu/(3*lambda+2*mu)*SF(j)*SF(k)*wi(i)*D;
-				Ms11s33(j,k) = a*lambda/2/mu/(3*lambda+2*mu)*SF(j)*SF(k)*wi(i)*D;
-				Ms22s33(j,k) = a*lambda/2/mu/(3*lambda+2*mu)*SF(j)*SF(k)*wi(i)*D;
-				Ms22s11(j,k) = a*lambda/2/mu/(3*lambda+2*mu)*SF(j)*SF(k)*wi(i)*D;
-				Ms33s11(j,k) = a*lambda/2/mu/(3*lambda+2*mu)*SF(j)*SF(k)*wi(i)*D;
-				Ms33s22(j,k) = a*lambda/2/mu/(3*lambda+2*mu)*SF(j)*SF(k)*wi(i)*D;
+				MassMatrix(9*j+3,9*k+4) += a*lambda/2/mu/(3*lambda+2*mu)*SF(j)*SF(k)*wi(i)*D;
+				MassMatrix(9*j+3,9*k+5) += a*lambda/2/mu/(3*lambda+2*mu)*SF(j)*SF(k)*wi(i)*D;
+				MassMatrix(9*j+4,9*k+5) += a*lambda/2/mu/(3*lambda+2*mu)*SF(j)*SF(k)*wi(i)*D;
 
-				MassMatrix(9*j  ,9*k  ) += Mu1u1(j,k)  ;
-				MassMatrix(9*j+1,9*k+1) += Mu2u2(j,k)  ;
-				MassMatrix(9*j+2,9*k+2) += Mu3u3(j,k)  ;
-				MassMatrix(9*j+3,9*k+3) += Ms11s11(j,k);
-				MassMatrix(9*j+4,9*k+4) += Ms22s22(j,k);
-				MassMatrix(9*j+5,9*k+5) += Ms33s33(j,k);
-				MassMatrix(9*j+6,9*k+6) += Ms12s12(j,k);
-				MassMatrix(9*j+7,9*k+7) += Ms23s23(j,k);
-				MassMatrix(9*j+8,9*k+8) += Ms13s13(j,k);
-				
-				MassMatrix(9*j+3,9*k+4) += Ms11s22(j,k);
-				MassMatrix(9*j+3,9*k+5) += Ms11s33(j,k);
-				MassMatrix(9*j+4,9*k+5) += Ms22s33(j,k);
-
-				MassMatrix(9*j+4,9*k+3) += Ms22s11(j,k);
-				MassMatrix(9*j+5,9*k+3) += Ms33s11(j,k);
-				MassMatrix(9*j+5,9*k+4) += Ms33s22(j,k);
+				MassMatrix(9*j+4,9*k+3) += a*lambda/2/mu/(3*lambda+2*mu)*SF(j)*SF(k)*wi(i)*D;
+				MassMatrix(9*j+5,9*k+3) += a*lambda/2/mu/(3*lambda+2*mu)*SF(j)*SF(k)*wi(i)*D;
+				MassMatrix(9*j+5,9*k+4) += a*lambda/2/mu/(3*lambda+2*mu)*SF(j)*SF(k)*wi(i)*D;
 			}
 		}
 	}
@@ -328,20 +314,13 @@ PML3DHexa8::ComputeMassMatrix(void){
 Eigen::MatrixXd 
 PML3DHexa8::ComputeStiffnessMatrix(void){
 	//Stiffness matrix definition:
-	Eigen::MatrixXd StiffnessMatrix(54,54);
+	Eigen::MatrixXd StiffnessMatrix(72,72);
 	StiffnessMatrix.fill(0.0);
 
 	//Gets the quadrature information.
     Eigen::VectorXd wi;
     Eigen::MatrixXd xi;
     QuadraturePoints->GetQuadraturePoints("Hexa", wi, xi);
-
-	Eigen::MatrixXd Ku1u1(8,8), Ku2u2(8,8), Ku3u3(8,8);
-	Eigen::MatrixXd Ks11s11(8,8), Ks22s22(8,8), Ks33s33(8,8), Ks12s12(8,8), Ks23s23(8,8), Ks13s13(8,8);
-	Eigen::MatrixXd Ks11s22(8,8), Ks11s33(8,8), Ks22s33(8,8), Ks22s11(8,8), Ks33s11(8,8), Ks33s22(8,8);
-	Eigen::MatrixXd Ku1s11(8,8), Ku1s12(8,8), Ku1s13(8,8), Ku2s22(8,8), Ku2s12(8,8), Ku2s23(8,8), Ku3s33(8,8), Ku3s13(8,8), Ku3s23(8,8); 
-	Eigen::MatrixXd Ks11u1(8,8), Ks12u1(8,8), Ks13u1(8,8), Ks22u2(8,8), Ks12u2(8,8), Ks23u2(8,8), Ks33u3(8,8), Ks13u3(8,8), Ks23u3(8,8); 
-
 
 	//Numerical integration.
     for(unsigned int i = 0; i < wi.size(); i++){
@@ -365,7 +344,7 @@ PML3DHexa8::ComputeStiffnessMatrix(void){
 		double by = abc_pml(4);
 		double bz = abc_pml(5);
 
-		double c  = ax*by*bz+bx*by*az+bx*ay*bz;
+		double c  = ax*by*bz + bx*by*az + bx*ay*bz;
 
 		double H11 = 1.0/8.0*(1.0 - ri)*(1.0 - si)*(1.0 - ti);
 		double H22 = 1.0/8.0*(1.0 + ri)*(1.0 - si)*(1.0 - ti);
@@ -382,7 +361,6 @@ PML3DHexa8::ComputeStiffnessMatrix(void){
 		double D = fabs(Jij.determinant());
 
 		Eigen::MatrixXd J = Jij.inverse();
-
 
 		//Strain-displacement matrix coefficients:
 		double B11 = -1.0/8.0*J(0,2)*(1.0 - ri)*(1.0 - si) - 1.0/8.0*J(0,1)*(1.0 - ri)*(1.0 - ti) - 1.0/8.0*J(0,0)*(1.0 - si)*(1.0 - ti);
@@ -426,82 +404,44 @@ PML3DHexa8::ComputeStiffnessMatrix(void){
 
 		for (unsigned int j = 0; j < 8 ; j++) {
 			for (unsigned int k = 0; k < 8 ; k++) {
-				Ku1u1(j,k)   = rho*c*SF(j)*SF(k)*wi(i)*D;
-				Ku2u2(j,k)   = rho*c*SF(j)*SF(k)*wi(i)*D;
-				Ku3u3(j,k)   = rho*c*SF(j)*SF(k)*wi(i)*D;
-
-				Ks11s11(j,k) = -c*(lambda+mu)/mu/(3*lambda+2*mu)*SF(j)*SF(k)*wi(i)*D;
-				Ks22s22(j,k) = -c*(lambda+mu)/mu/(3*lambda+2*mu)*SF(j)*SF(k)*wi(i)*D;
-				Ks33s33(j,k) = -c*(lambda+mu)/mu/(3*lambda+2*mu)*SF(j)*SF(k)*wi(i)*D;
-				Ks23s23(j,k) = -c/mu*SF(j)*SF(k)*wi(i)*D;
-				Ks13s13(j,k) = -c/mu*SF(j)*SF(k)*wi(i)*D;
-				Ks12s12(j,k) = -c/mu*SF(j)*SF(k)*wi(i)*D;
-				Ks11s22(j,k) = c*lambda/2/mu/(3*lambda+2*mu)*SF(j)*SF(k)*wi(i)*D;
-				Ks11s33(j,k) = c*lambda/2/mu/(3*lambda+2*mu)*SF(j)*SF(k)*wi(i)*D;
-				Ks22s33(j,k) = c*lambda/2/mu/(3*lambda+2*mu)*SF(j)*SF(k)*wi(i)*D;
-				Ks22s11(j,k) = c*lambda/2/mu/(3*lambda+2*mu)*SF(j)*SF(k)*wi(i)*D;
-				Ks33s11(j,k) = c*lambda/2/mu/(3*lambda+2*mu)*SF(j)*SF(k)*wi(i)*D;
-				Ks33s22(j,k) = c*lambda/2/mu/(3*lambda+2*mu)*SF(j)*SF(k)*wi(i)*D;
-
-				Ku1s11(j,k)  = dSFdx(j)*SF(k)*(ay*bz+az*by)*wi(i)*D; 
-				Ku1s12(j,k)  = dSFdy(j)*SF(k)*(ax*bz+az*bx)*wi(i)*D;
-				Ku1s13(j,k)  = dSFdz(j)*SF(k)*(ax*by+ay*bx)*wi(i)*D;
-				Ku2s22(j,k)  = dSFdy(j)*SF(k)*(ax*bz+az*bx)*wi(i)*D;
-				Ku2s12(j,k)  = dSFdx(j)*SF(k)*(ay*bz+az*by)*wi(i)*D;
-				Ku2s23(j,k)  = dSFdz(j)*SF(k)*(ax*by+ay*bx)*wi(i)*D;
-				Ku3s33(j,k)  = dSFdz(j)*SF(k)*(ax*by+ay*bx)*wi(i)*D;
-				Ku3s13(j,k)  = dSFdx(j)*SF(k)*(ay*bz+az*by)*wi(i)*D;
-				Ku3s23(j,k)  = dSFdy(j)*SF(k)*(ax*bz+az*bx)*wi(i)*D;
-
-				Ks11u1(j,k)  = dSFdx(k)*SF(j)*(ay*bz+az*by)*wi(i)*D; 
-				Ks12u1(j,k)  = dSFdy(k)*SF(j)*(ax*bz+az*bx)*wi(i)*D;
-				Ks13u1(j,k)  = dSFdz(k)*SF(j)*(ax*by+ay*bx)*wi(i)*D;
-				Ks22u2(j,k)  = dSFdy(k)*SF(j)*(ax*bz+az*bx)*wi(i)*D;
-				Ks12u2(j,k)  = dSFdx(k)*SF(j)*(ay*bz+az*by)*wi(i)*D;
-				Ks23u2(j,k)  = dSFdz(k)*SF(j)*(ax*by+ay*bx)*wi(i)*D;
-				Ks33u3(j,k)  = dSFdz(k)*SF(j)*(ax*by+ay*bx)*wi(i)*D;
-				Ks13u3(j,k)  = dSFdx(k)*SF(j)*(ay*bz+az*by)*wi(i)*D;
-				Ks23u3(j,k)  = dSFdy(k)*SF(j)*(ax*bz+az*bx)*wi(i)*D;
-
-				// u1 0, u2 1, u3 2, s11 3, s22 4, s33 5, s12 6, s23 7, s13 8
-
-				StiffnessMatrix(9*j  ,9*k  ) += Ku1u1(j,k)  ;
-				StiffnessMatrix(9*j+1,9*k+1) += Ku2u2(j,k)  ;
-				StiffnessMatrix(9*j+2,9*k+2) += Ku3u3(j,k)  ;
-				StiffnessMatrix(9*j+3,9*k+3) += Ks11s11(j,k);
-				StiffnessMatrix(9*j+4,9*k+4) += Ks22s22(j,k);
-				StiffnessMatrix(9*j+5,9*k+5) += Ks33s33(j,k);
-				StiffnessMatrix(9*j+6,9*k+6) += Ks12s12(j,k);
-				StiffnessMatrix(9*j+7,9*k+7) += Ks23s23(j,k);
-				StiffnessMatrix(9*j+8,9*k+8) += Ks13s13(j,k);
+				//The state vector: U = [u1, u2, u3, s11, s22, s33, s12, s23, s13]
+				StiffnessMatrix(9*j  ,9*k  ) += rho*c*SF(j)*SF(k)*wi(i)*D;
+				StiffnessMatrix(9*j+1,9*k+1) += rho*c*SF(j)*SF(k)*wi(i)*D;
+				StiffnessMatrix(9*j+2,9*k+2) += rho*c*SF(j)*SF(k)*wi(i)*D;
+				StiffnessMatrix(9*j+3,9*k+3) += -c*(lambda + mu)/mu/(3.0*lambda + 2.0*mu)*SF(j)*SF(k)*wi(i)*D;
+				StiffnessMatrix(9*j+4,9*k+4) += -c*(lambda + mu)/mu/(3.0*lambda + 2.0*mu)*SF(j)*SF(k)*wi(i)*D;
+				StiffnessMatrix(9*j+5,9*k+5) += -c*(lambda + mu)/mu/(3.0*lambda + 2.0*mu)*SF(j)*SF(k)*wi(i)*D;
+				StiffnessMatrix(9*j+6,9*k+6) += -c/mu*SF(j)*SF(k)*wi(i)*D;
+				StiffnessMatrix(9*j+7,9*k+7) += -c/mu*SF(j)*SF(k)*wi(i)*D;
+				StiffnessMatrix(9*j+8,9*k+8) += -c/mu*SF(j)*SF(k)*wi(i)*D;
 				
-				StiffnessMatrix(9*j+3,9*k+4) += Ks11s22(j,k);
-				StiffnessMatrix(9*j+3,9*k+5) += Ks11s33(j,k);
-				StiffnessMatrix(9*j+4,9*k+5) += Ks22s33(j,k);
+				StiffnessMatrix(9*j+3,9*k+4) += c*lambda/2.0/mu/(3.0*lambda + 2.0*mu)*SF(j)*SF(k)*wi(i)*D;
+				StiffnessMatrix(9*j+3,9*k+5) += c*lambda/2.0/mu/(3.0*lambda + 2.0*mu)*SF(j)*SF(k)*wi(i)*D;
+				StiffnessMatrix(9*j+4,9*k+5) += c*lambda/2.0/mu/(3.0*lambda + 2.0*mu)*SF(j)*SF(k)*wi(i)*D;
 
-				StiffnessMatrix(9*j+4,9*k+3) += Ks22s11(j,k);
-				StiffnessMatrix(9*j+5,9*k+3) += Ks33s11(j,k);
-				StiffnessMatrix(9*j+5,9*k+4) += Ks33s22(j,k);
+				StiffnessMatrix(9*j+4,9*k+3) += c*lambda/2.0/mu/(3.0*lambda + 2.0*mu)*SF(j)*SF(k)*wi(i)*D;
+				StiffnessMatrix(9*j+5,9*k+3) += c*lambda/2.0/mu/(3.0*lambda + 2.0*mu)*SF(j)*SF(k)*wi(i)*D;
+				StiffnessMatrix(9*j+5,9*k+4) += c*lambda/2.0/mu/(3.0*lambda + 2.0*mu)*SF(j)*SF(k)*wi(i)*D;
 
-				StiffnessMatrix(9*j  ,9*k+3) += Ku1s11(j,k);
-				StiffnessMatrix(9*j  ,9*k+6) += Ku1s12(j,k);
-				StiffnessMatrix(9*j  ,9*k+8) += Ku1s13(j,k);
-				StiffnessMatrix(9*j+1,9*k+4) += Ku2s22(j,k);
-				StiffnessMatrix(9*j+1,9*k+6) += Ku2s12(j,k);
-				StiffnessMatrix(9*j+1,9*k+7) += Ku2s23(j,k);
-				StiffnessMatrix(9*j+2,9*k+5) += Ku3s33(j,k);
-				StiffnessMatrix(9*j+2,9*k+8) += Ku3s13(j,k);
-				StiffnessMatrix(9*j+2,9*k+7) += Ku3s23(j,k);
+				StiffnessMatrix(9*j  ,9*k+3) += dSFdx(j)*SF(k)*(ay*bz+az*by)*wi(i)*D; 
+				StiffnessMatrix(9*j  ,9*k+6) += dSFdy(j)*SF(k)*(ax*bz+az*bx)*wi(i)*D;
+				StiffnessMatrix(9*j  ,9*k+8) += dSFdz(j)*SF(k)*(ax*by+ay*bx)*wi(i)*D;
+				StiffnessMatrix(9*j+1,9*k+4) += dSFdy(j)*SF(k)*(ax*bz+az*bx)*wi(i)*D;
+				StiffnessMatrix(9*j+1,9*k+6) += dSFdx(j)*SF(k)*(ay*bz+az*by)*wi(i)*D;
+				StiffnessMatrix(9*j+1,9*k+7) += dSFdz(j)*SF(k)*(ax*by+ay*bx)*wi(i)*D;
+				StiffnessMatrix(9*j+2,9*k+5) += dSFdz(j)*SF(k)*(ax*by+ay*bx)*wi(i)*D;
+				StiffnessMatrix(9*j+2,9*k+8) += dSFdx(j)*SF(k)*(ay*bz+az*by)*wi(i)*D;
+				StiffnessMatrix(9*j+2,9*k+7) += dSFdy(j)*SF(k)*(ax*bz+az*bx)*wi(i)*D;
 
-				StiffnessMatrix(9*j+3,9*k  ) += Ks11u1(j,k);
-				StiffnessMatrix(9*j+6,9*k  ) += Ks12u1(j,k);
-				StiffnessMatrix(9*j+8,9*k  ) += Ks13u1(j,k);
-				StiffnessMatrix(9*j+4,9*k+1) += Ks22u2(j,k);
-				StiffnessMatrix(9*j+6,9*k+1) += Ks12u2(j,k);
-				StiffnessMatrix(9*j+7,9*k+1) += Ks23u2(j,k);
-				StiffnessMatrix(9*j+5,9*k+2) += Ks33u3(j,k);
-				StiffnessMatrix(9*j+8,9*k+2) += Ks13u3(j,k);
-				StiffnessMatrix(9*j+7,9*k+2) += Ks23u3(j,k);
+				StiffnessMatrix(9*j+3,9*k  ) += dSFdx(k)*SF(j)*(ay*bz+az*by)*wi(i)*D; 
+				StiffnessMatrix(9*j+6,9*k  ) += dSFdy(k)*SF(j)*(ax*bz+az*bx)*wi(i)*D;
+				StiffnessMatrix(9*j+8,9*k  ) += dSFdz(k)*SF(j)*(ax*by+ay*bx)*wi(i)*D;
+				StiffnessMatrix(9*j+4,9*k+1) += dSFdy(k)*SF(j)*(ax*bz+az*bx)*wi(i)*D;
+				StiffnessMatrix(9*j+6,9*k+1) += dSFdx(k)*SF(j)*(ay*bz+az*by)*wi(i)*D;
+				StiffnessMatrix(9*j+7,9*k+1) += dSFdz(k)*SF(j)*(ax*by+ay*bx)*wi(i)*D;
+				StiffnessMatrix(9*j+5,9*k+2) += dSFdz(k)*SF(j)*(ax*by+ay*bx)*wi(i)*D;
+				StiffnessMatrix(9*j+8,9*k+2) += dSFdx(k)*SF(j)*(ay*bz+az*by)*wi(i)*D;
+				StiffnessMatrix(9*j+7,9*k+2) += dSFdy(k)*SF(j)*(ax*bz+az*bx)*wi(i)*D;
 			}
 		}
 	}
@@ -513,20 +453,13 @@ PML3DHexa8::ComputeStiffnessMatrix(void){
 Eigen::MatrixXd 
 PML3DHexa8::ComputeDampingMatrix(void){
 	//Stiffness matrix definition:
-	Eigen::MatrixXd DampingMatrix(54,54);
+	Eigen::MatrixXd DampingMatrix(72,72);
 	DampingMatrix.fill(0.0);
 
 	//Gets the quadrature information.
     Eigen::VectorXd wi;
     Eigen::MatrixXd xi;
     QuadraturePoints->GetQuadraturePoints("Hexa", wi, xi);
-
-	Eigen::MatrixXd Cu1u1(8,8), Cu2u2(8,8), Cu3u3(8,8);
-	Eigen::MatrixXd Cs11s11(8,8), Cs22s22(8,8), Cs33s33(8,8), Cs12s12(8,8), Cs23s23(8,8), Cs13s13(8,8);
-	Eigen::MatrixXd Cs11s22(8,8), Cs11s33(8,8), Cs22s33(8,8), Cs22s11(8,8), Cs33s11(8,8), Cs33s22(8,8);
-	Eigen::MatrixXd Cu1s11(8,8), Cu1s12(8,8), Cu1s13(8,8), Cu2s22(8,8), Cu2s12(8,8), Cu2s23(8,8), Cu3s33(8,8), Cu3s13(8,8), Cu3s23(8,8); 
-	Eigen::MatrixXd Cs11u1(8,8), Cs12u1(8,8), Cs13u1(8,8), Cs22u2(8,8), Cs12u2(8,8), Cs23u2(8,8), Cs23u3(8,8), Cs33u3(8,8), Cs13u3(8,8);
-
 
 	//Numerical integration.
     for(unsigned int i = 0; i < wi.size(); i++){
@@ -550,7 +483,7 @@ PML3DHexa8::ComputeDampingMatrix(void){
 		double by = abc_pml(4);
 		double bz = abc_pml(5);
 
-		double b  = ax*ay*bz+ax*by*az+bx*ay*az;
+		double b  = ax*ay*bz + ax*by*az + bx*ay*az;
 
 		double H11 = 1.0/8.0*(1.0 - ri)*(1.0 - si)*(1.0 - ti);
 		double H22 = 1.0/8.0*(1.0 + ri)*(1.0 - si)*(1.0 - ti);
@@ -567,7 +500,6 @@ PML3DHexa8::ComputeDampingMatrix(void){
 		double D = fabs(Jij.determinant());
 
 		Eigen::MatrixXd J = Jij.inverse();
-
 
 		//Strain-displacement matrix coefficients:
 		double B11 = -1.0/8.0*J(0,2)*(1.0 - ri)*(1.0 - si) - 1.0/8.0*J(0,1)*(1.0 - ri)*(1.0 - ti) - 1.0/8.0*J(0,0)*(1.0 - si)*(1.0 - ti);
@@ -611,82 +543,44 @@ PML3DHexa8::ComputeDampingMatrix(void){
 
 		for (unsigned int j = 0; j < 8 ; j++) {
 			for (unsigned int k = 0; k < 8 ; k++) {
-				Cu1u1(j,k)   = rho*b*SF(j)*SF(k)*wi(i)*D;
-				Cu2u2(j,k)   = rho*b*SF(j)*SF(k)*wi(i)*D;
-				Cu3u3(j,k)   = rho*b*SF(j)*SF(k)*wi(i)*D;
-
-				Cs11s11(j,k) = -b*(lambda+mu)/mu/(3*lambda+2*mu)*SF(j)*SF(k)*wi(i)*D;
-				Cs22s22(j,k) = -b*(lambda+mu)/mu/(3*lambda+2*mu)*SF(j)*SF(k)*wi(i)*D;
-				Cs33s33(j,k) = -b*(lambda+mu)/mu/(3*lambda+2*mu)*SF(j)*SF(k)*wi(i)*D;
-				Cs23s23(j,k) = -b/mu*SF(j)*SF(k)*wi(i)*D;
-				Cs13s13(j,k) = -b/mu*SF(j)*SF(k)*wi(i)*D;
-				Cs12s12(j,k) = -b/mu*SF(j)*SF(k)*wi(i)*D;
-				Cs11s22(j,k) = b*lambda/2/mu/(3*lambda+2*mu)*SF(j)*SF(k)*wi(i)*D;
-				Cs11s33(j,k) = b*lambda/2/mu/(3*lambda+2*mu)*SF(j)*SF(k)*wi(i)*D;
-				Cs22s33(j,k) = b*lambda/2/mu/(3*lambda+2*mu)*SF(j)*SF(k)*wi(i)*D;
-				Cs22s11(j,k) = b*lambda/2/mu/(3*lambda+2*mu)*SF(j)*SF(k)*wi(i)*D;
-				Cs33s11(j,k) = b*lambda/2/mu/(3*lambda+2*mu)*SF(j)*SF(k)*wi(i)*D;
-				Cs33s22(j,k) = b*lambda/2/mu/(3*lambda+2*mu)*SF(j)*SF(k)*wi(i)*D;
-
-				Cu1s11(j,k)  = dSFdx(j)*SF(k)*(ay*az+az*ay)*wi(i)*D; 
-				Cu1s12(j,k)  = dSFdy(j)*SF(k)*(ax*az+az*ax)*wi(i)*D;
-				Cu1s13(j,k)  = dSFdz(j)*SF(k)*(ax*ay+ay*ax)*wi(i)*D;
-				Cu2s22(j,k)  = dSFdy(j)*SF(k)*(ax*az+az*ax)*wi(i)*D;
-				Cu2s12(j,k)  = dSFdx(j)*SF(k)*(ay*az+az*ay)*wi(i)*D;
-				Cu2s23(j,k)  = dSFdz(j)*SF(k)*(ax*ay+ay*ax)*wi(i)*D;
-				Cu3s33(j,k)  = dSFdz(j)*SF(k)*(ax*ay+ay*ax)*wi(i)*D;
-				Cu3s13(j,k)  = dSFdx(j)*SF(k)*(ay*az+az*ay)*wi(i)*D;
-				Cu3s23(j,k)  = dSFdy(j)*SF(k)*(ax*az+az*ax)*wi(i)*D;
-
-				Cs11u1(j,k)  = dSFdx(k)*SF(j)*(ay*az+az*ay)*wi(i)*D; 
-				Cs12u1(j,k)  = dSFdy(k)*SF(j)*(ax*az+az*ax)*wi(i)*D;
-				Cs13u1(j,k)  = dSFdz(k)*SF(j)*(ax*ay+ay*ax)*wi(i)*D;
-				Cs22u2(j,k)  = dSFdy(k)*SF(j)*(ax*az+az*ax)*wi(i)*D;
-				Cs12u2(j,k)  = dSFdx(k)*SF(j)*(ay*az+az*ay)*wi(i)*D;
-				Cs23u2(j,k)  = dSFdz(k)*SF(j)*(ax*ay+ay*ax)*wi(i)*D;
-				Cs33u3(j,k)  = dSFdz(k)*SF(j)*(ax*ay+ay*ax)*wi(i)*D;
-				Cs13u3(j,k)  = dSFdx(k)*SF(j)*(ay*az+az*ay)*wi(i)*D;
-				Cs23u3(j,k)  = dSFdy(k)*SF(j)*(ax*az+az*ax)*wi(i)*D;
-
-				// u1 0, u2 1, u3 2, s11 3, s22 4, s33 5, s12 6, s23 7, s13 8
-
-				DampingMatrix(9*j  ,9*k  ) += Cu1u1(j,k)  ;
-				DampingMatrix(9*j+1,9*k+1) += Cu2u2(j,k)  ;
-				DampingMatrix(9*j+2,9*k+2) += Cu3u3(j,k)  ;
-				DampingMatrix(9*j+3,9*k+3) += Cs11s11(j,k);
-				DampingMatrix(9*j+4,9*k+4) += Cs22s22(j,k);
-				DampingMatrix(9*j+5,9*k+5) += Cs33s33(j,k);
-				DampingMatrix(9*j+6,9*k+6) += Cs12s12(j,k);
-				DampingMatrix(9*j+7,9*k+7) += Cs23s23(j,k);
-				DampingMatrix(9*j+8,9*k+8) += Cs13s13(j,k);
+				//The state vector: U = [u1, u2, u3, s11, s22, s33, s12, s23, s13]
+				DampingMatrix(9*j  ,9*k  ) += rho*b*SF(j)*SF(k)*wi(i)*D;
+				DampingMatrix(9*j+1,9*k+1) += rho*b*SF(j)*SF(k)*wi(i)*D;
+				DampingMatrix(9*j+2,9*k+2) += rho*b*SF(j)*SF(k)*wi(i)*D;
+				DampingMatrix(9*j+3,9*k+3) += -b*(lambda + mu)/mu/(3.0*lambda + 2.0*mu)*SF(j)*SF(k)*wi(i)*D;
+				DampingMatrix(9*j+4,9*k+4) += -b*(lambda + mu)/mu/(3.0*lambda + 2.0*mu)*SF(j)*SF(k)*wi(i)*D;
+				DampingMatrix(9*j+5,9*k+5) += -b*(lambda + mu)/mu/(3.0*lambda + 2.0*mu)*SF(j)*SF(k)*wi(i)*D;
+				DampingMatrix(9*j+6,9*k+6) += -b/mu*SF(j)*SF(k)*wi(i)*D;
+				DampingMatrix(9*j+7,9*k+7) += -b/mu*SF(j)*SF(k)*wi(i)*D;
+				DampingMatrix(9*j+8,9*k+8) += -b/mu*SF(j)*SF(k)*wi(i)*D;
 				
-				DampingMatrix(9*j+3,9*k+4) += Cs11s22(j,k);
-				DampingMatrix(9*j+3,9*k+5) += Cs11s33(j,k);
-				DampingMatrix(9*j+4,9*k+5) += Cs22s33(j,k);
+				DampingMatrix(9*j+3,9*k+4) += b*lambda/2.0/mu/(3.0*lambda + 2.0*mu)*SF(j)*SF(k)*wi(i)*D;
+				DampingMatrix(9*j+3,9*k+5) += b*lambda/2.0/mu/(3.0*lambda + 2.0*mu)*SF(j)*SF(k)*wi(i)*D;
+				DampingMatrix(9*j+4,9*k+5) += b*lambda/2.0/mu/(3.0*lambda + 2.0*mu)*SF(j)*SF(k)*wi(i)*D;
 
-				DampingMatrix(9*j+4,9*k+3) += Cs22s11(j,k);
-				DampingMatrix(9*j+5,9*k+3) += Cs33s11(j,k);
-				DampingMatrix(9*j+5,9*k+4) += Cs33s22(j,k);
+				DampingMatrix(9*j+4,9*k+3) += b*lambda/2.0/mu/(3.0*lambda + 2.0*mu)*SF(j)*SF(k)*wi(i)*D;
+				DampingMatrix(9*j+5,9*k+3) += b*lambda/2.0/mu/(3.0*lambda + 2.0*mu)*SF(j)*SF(k)*wi(i)*D;
+				DampingMatrix(9*j+5,9*k+4) += b*lambda/2.0/mu/(3.0*lambda + 2.0*mu)*SF(j)*SF(k)*wi(i)*D;
 
-				DampingMatrix(9*j  ,9*k+3) += Cu1s11(j,k);
-				DampingMatrix(9*j  ,9*k+6) += Cu1s12(j,k);
-				DampingMatrix(9*j  ,9*k+8) += Cu1s13(j,k);
-				DampingMatrix(9*j+1,9*k+4) += Cu2s22(j,k);
-				DampingMatrix(9*j+1,9*k+6) += Cu2s12(j,k);
-				DampingMatrix(9*j+1,9*k+7) += Cu2s23(j,k);
-				DampingMatrix(9*j+2,9*k+5) += Cu3s33(j,k);
-				DampingMatrix(9*j+2,9*k+8) += Cu3s13(j,k);
-				DampingMatrix(9*j+2,9*k+7) += Cu3s23(j,k);
+				DampingMatrix(9*j  ,9*k+3) += dSFdx(j)*SF(k)*(ay*az)*wi(i)*D; 
+				DampingMatrix(9*j  ,9*k+6) += dSFdy(j)*SF(k)*(ax*az)*wi(i)*D;
+				DampingMatrix(9*j  ,9*k+8) += dSFdz(j)*SF(k)*(ax*ay)*wi(i)*D;
+				DampingMatrix(9*j+1,9*k+4) += dSFdy(j)*SF(k)*(ax*az)*wi(i)*D;
+				DampingMatrix(9*j+1,9*k+6) += dSFdx(j)*SF(k)*(ay*az)*wi(i)*D;
+				DampingMatrix(9*j+1,9*k+7) += dSFdz(j)*SF(k)*(ax*ay)*wi(i)*D;
+				DampingMatrix(9*j+2,9*k+5) += dSFdz(j)*SF(k)*(ax*ay)*wi(i)*D;
+				DampingMatrix(9*j+2,9*k+8) += dSFdx(j)*SF(k)*(ay*az)*wi(i)*D;
+				DampingMatrix(9*j+2,9*k+7) += dSFdy(j)*SF(k)*(ax*az)*wi(i)*D;
 
-				DampingMatrix(9*j+3,9*k  ) += Cs11u1(j,k);
-				DampingMatrix(9*j+6,9*k  ) += Cs12u1(j,k);
-				DampingMatrix(9*j+8,9*k  ) += Cs13u1(j,k);
-				DampingMatrix(9*j+4,9*k+1) += Cs22u2(j,k);
-				DampingMatrix(9*j+6,9*k+1) += Cs12u2(j,k);
-				DampingMatrix(9*j+7,9*k+1) += Cs23u2(j,k);
-				DampingMatrix(9*j+5,9*k+2) += Cs33u3(j,k);
-				DampingMatrix(9*j+8,9*k+2) += Cs13u3(j,k);
-				DampingMatrix(9*j+7,9*k+2) += Cs23u3(j,k);
+				DampingMatrix(9*j+3,9*k  ) += dSFdx(k)*SF(j)*(ay*az)*wi(i)*D; 
+				DampingMatrix(9*j+6,9*k  ) += dSFdy(k)*SF(j)*(ax*az)*wi(i)*D;
+				DampingMatrix(9*j+8,9*k  ) += dSFdz(k)*SF(j)*(ax*ay)*wi(i)*D;
+				DampingMatrix(9*j+4,9*k+1) += dSFdy(k)*SF(j)*(ax*az)*wi(i)*D;
+				DampingMatrix(9*j+6,9*k+1) += dSFdx(k)*SF(j)*(ay*az)*wi(i)*D;
+				DampingMatrix(9*j+7,9*k+1) += dSFdz(k)*SF(j)*(ax*ay)*wi(i)*D;
+				DampingMatrix(9*j+5,9*k+2) += dSFdz(k)*SF(j)*(ax*ay)*wi(i)*D;
+				DampingMatrix(9*j+8,9*k+2) += dSFdx(k)*SF(j)*(ay*az)*wi(i)*D;
+				DampingMatrix(9*j+7,9*k+2) += dSFdy(k)*SF(j)*(ax*az)*wi(i)*D;
 			}
 		}
 	}
@@ -697,19 +591,14 @@ PML3DHexa8::ComputeDampingMatrix(void){
 //Compute the PML history matrix for Perfectly-Matched Layer (PML).
 Eigen::MatrixXd 
 PML3DHexa8::ComputePMLMatrix(){
-    Eigen::MatrixXd Kpml(54,54);
-	Kpml.fill(0.0);
+	//Impedance buffer matrix definition:
+    Eigen::MatrixXd ImpedanceMatrix(72,72);
+	ImpedanceMatrix.fill(0.0);
 
 	//Gets the quadrature information.
     Eigen::VectorXd wi;
     Eigen::MatrixXd xi;
     QuadraturePoints->GetQuadraturePoints("Hexa", wi, xi);
-
-	Eigen::MatrixXd Gu1u1(8,8), Gu2u2(8,8), Gu3u3(8,8);
-	Eigen::MatrixXd Gs11s11(8,8), Gs22s22(8,8), Gs33s33(8,8), Gs12s12(8,8), Gs23s23(8,8), Gs13s13(8,8);
-	Eigen::MatrixXd Gs11s22(8,8), Gs11s33(8,8), Gs22s33(8,8), Gs22s11(8,8), Gs33s11(8,8), Gs33s22(8,8);
-	Eigen::MatrixXd Gu1s11(8,8), Gu1s12(8,8), Gu1s13(8,8), Gu2s22(8,8), Gu2s12(8,8), Gu2s23(8,8), Gu3s33(8,8), Gu3s13(8,8), Gu3s23(8,8); 
-	Eigen::MatrixXd Gs11u1(8,8), Gs12u1(8,8), Gs13u1(8,8), Gs22u2(8,8), Gs12u2(8,8), Gs23u2(8,8), Gs33u3(8,8), Gs13u3(8,8), Gs23u3(8,8);
 
 	//Numerical integration.
     for(unsigned int i = 0; i < wi.size(); i++){
@@ -720,15 +609,16 @@ PML3DHexa8::ComputePMLMatrix(){
         double E      = theMaterial[i]->GetElasticityModulus();
         double lambda = E*nu/(1.0 + nu)/(1.0 - 2.0*nu);
 
+        //Gets the integration point coordinates.
 		double ri = xi(i,0);
 		double si = xi(i,1);
 		double ti = xi(i,2);
 
 		Eigen::VectorXd abc_pml = ComputePMLStretchingFactors(ri, si, ti, rho, mu, lambda);
 
-		double ax = abc_pml(0);
-		double ay = abc_pml(1);
-		double az = abc_pml(2);
+		//double ax = abc_pml(0);
+		//double ay = abc_pml(1);
+		//double az = abc_pml(2);
 		double bx = abc_pml(3);
 		double by = abc_pml(4);
 		double bz = abc_pml(5);
@@ -751,7 +641,6 @@ PML3DHexa8::ComputePMLMatrix(){
 
 		Eigen::MatrixXd J = Jij.inverse();
 
-
 		//Strain-displacement matrix coefficients:
 		double B11 = -1.0/8.0*J(0,2)*(1.0 - ri)*(1.0 - si) - 1.0/8.0*J(0,1)*(1.0 - ri)*(1.0 - ti) - 1.0/8.0*J(0,0)*(1.0 - si)*(1.0 - ti);
 		double B21 = -1.0/8.0*J(0,2)*(1.0 + ri)*(1.0 - si) - 1.0/8.0*J(0,1)*(1.0 + ri)*(1.0 - ti) + 1.0/8.0*J(0,0)*(1.0 - si)*(1.0 - ti);
@@ -794,94 +683,57 @@ PML3DHexa8::ComputePMLMatrix(){
 
 		for (unsigned int j = 0; j < 8 ; j++) {
 			for (unsigned int k = 0; k < 8 ; k++) {
-				Gu1u1(j,k)   = rho*d*SF(j)*SF(k)*wi(i)*D;
-				Gu2u2(j,k)   = rho*d*SF(j)*SF(k)*wi(i)*D;
-				Gu3u3(j,k)   = rho*d*SF(j)*SF(k)*wi(i)*D;
+				//The state vector: U = [u1, u2, u3, s11, s22, s33, s12, s23, s13]
+				ImpedanceMatrix(9*j  ,9*k  ) += rho*d*SF(j)*SF(k)*wi(i)*D;
+				ImpedanceMatrix(9*j+1,9*k+1) += rho*d*SF(j)*SF(k)*wi(i)*D;
+				ImpedanceMatrix(9*j+2,9*k+2) += rho*d*SF(j)*SF(k)*wi(i)*D;
 
-				Gs11s11(j,k) = -d*(lambda+mu)/mu/(3*lambda+2*mu)*SF(j)*SF(k)*wi(i)*D;
-				Gs22s22(j,k) = -d*(lambda+mu)/mu/(3*lambda+2*mu)*SF(j)*SF(k)*wi(i)*D;
-				Gs33s33(j,k) = -d*(lambda+mu)/mu/(3*lambda+2*mu)*SF(j)*SF(k)*wi(i)*D;
-				Gs23s23(j,k) = -d/mu*SF(j)*SF(k)*wi(i)*D;
-				Gs13s13(j,k) = -d/mu*SF(j)*SF(k)*wi(i)*D;
-				Gs12s12(j,k) = -d/mu*SF(j)*SF(k)*wi(i)*D;
-				Gs11s22(j,k) = d*lambda/2/mu/(3*lambda+2*mu)*SF(j)*SF(k)*wi(i)*D;
-				Gs11s33(j,k) = d*lambda/2/mu/(3*lambda+2*mu)*SF(j)*SF(k)*wi(i)*D;
-				Gs22s33(j,k) = d*lambda/2/mu/(3*lambda+2*mu)*SF(j)*SF(k)*wi(i)*D;
-				Gs22s11(j,k) = d*lambda/2/mu/(3*lambda+2*mu)*SF(j)*SF(k)*wi(i)*D;
-				Gs33s11(j,k) = d*lambda/2/mu/(3*lambda+2*mu)*SF(j)*SF(k)*wi(i)*D;
-				Gs33s22(j,k) = d*lambda/2/mu/(3*lambda+2*mu)*SF(j)*SF(k)*wi(i)*D;
-
-				Gu1s11(j,k)  = dSFdx(j)*SF(k)*(by*bz+bz*by)*wi(i)*D; 
-				Gu1s12(j,k)  = dSFdy(j)*SF(k)*(bx*bz+bz*bx)*wi(i)*D;
-				Gu1s13(j,k)  = dSFdz(j)*SF(k)*(bx*by+by*bx)*wi(i)*D;
-				Gu2s22(j,k)  = dSFdy(j)*SF(k)*(bx*bz+bz*bx)*wi(i)*D;
-				Gu2s12(j,k)  = dSFdx(j)*SF(k)*(by*bz+bz*by)*wi(i)*D;
-				Gu2s23(j,k)  = dSFdz(j)*SF(k)*(bx*by+by*bx)*wi(i)*D;
-				Gu3s33(j,k)  = dSFdz(j)*SF(k)*(bx*by+by*bx)*wi(i)*D;
-				Gu3s13(j,k)  = dSFdx(j)*SF(k)*(by*bz+bz*by)*wi(i)*D;
-				Gu3s23(j,k)  = dSFdy(j)*SF(k)*(bx*bz+bz*bx)*wi(i)*D;
-
-				Gs11u1(j,k)  = dSFdx(k)*SF(j)*(by*bz+bz*by)*wi(i)*D; 
-				Gs12u1(j,k)  = dSFdy(k)*SF(j)*(bx*bz+bz*bx)*wi(i)*D;
-				Gs13u1(j,k)  = dSFdz(k)*SF(j)*(bx*by+by*bx)*wi(i)*D;
-				Gs22u2(j,k)  = dSFdy(k)*SF(j)*(bx*bz+bz*bx)*wi(i)*D;
-				Gs12u2(j,k)  = dSFdx(k)*SF(j)*(by*bz+bz*by)*wi(i)*D;
-				Gs23u2(j,k)  = dSFdz(k)*SF(j)*(bx*by+by*bx)*wi(i)*D;
-				Gs33u3(j,k)  = dSFdz(k)*SF(j)*(bx*by+by*bx)*wi(i)*D;
-				Gs13u3(j,k)  = dSFdx(k)*SF(j)*(by*bz+bz*by)*wi(i)*D;
-				Gs23u3(j,k)  = dSFdy(k)*SF(j)*(bx*bz+bz*bx)*wi(i)*D;
-
-				// u1 0, u2 1, u3 2, s11 3, s22 4, s33 5, s12 6, s23 7, s13 8
-
-				Kpml(9*j  ,9*k  ) += Gu1u1(j,k)  ;
-				Kpml(9*j+1,9*k+1) += Gu2u2(j,k)  ;
-				Kpml(9*j+2,9*k+2) += Gu3u3(j,k)  ;
-				Kpml(9*j+3,9*k+3) += Gs11s11(j,k);
-				Kpml(9*j+4,9*k+4) += Gs22s22(j,k);
-				Kpml(9*j+5,9*k+5) += Gs33s33(j,k);
-				Kpml(9*j+6,9*k+6) += Gs12s12(j,k);
-				Kpml(9*j+7,9*k+7) += Gs23s23(j,k);
-				Kpml(9*j+8,9*k+8) += Gs13s13(j,k);
+				ImpedanceMatrix(9*j+3,9*k+3) += -d*(lambda + mu)/mu/(3.0*lambda + 2.0*mu)*SF(j)*SF(k)*wi(i)*D;
+				ImpedanceMatrix(9*j+4,9*k+4) += -d*(lambda + mu)/mu/(3.0*lambda + 2.0*mu)*SF(j)*SF(k)*wi(i)*D;
+				ImpedanceMatrix(9*j+5,9*k+5) += -d*(lambda + mu)/mu/(3.0*lambda + 2.0*mu)*SF(j)*SF(k)*wi(i)*D;
+				ImpedanceMatrix(9*j+6,9*k+6) += -d/mu*SF(j)*SF(k)*wi(i)*D;
+				ImpedanceMatrix(9*j+7,9*k+7) += -d/mu*SF(j)*SF(k)*wi(i)*D;
+				ImpedanceMatrix(9*j+8,9*k+8) += -d/mu*SF(j)*SF(k)*wi(i)*D;
 				
-				Kpml(9*j+3,9*k+4) += Gs11s22(j,k);
-				Kpml(9*j+3,9*k+5) += Gs11s33(j,k);
-				Kpml(9*j+4,9*k+5) += Gs22s33(j,k);
+				ImpedanceMatrix(9*j+3,9*k+4) += d*lambda/2.0/mu/(3.0*lambda + 2.0*mu)*SF(j)*SF(k)*wi(i)*D;
+				ImpedanceMatrix(9*j+3,9*k+5) += d*lambda/2.0/mu/(3.0*lambda + 2.0*mu)*SF(j)*SF(k)*wi(i)*D;
+				ImpedanceMatrix(9*j+4,9*k+5) += d*lambda/2.0/mu/(3.0*lambda + 2.0*mu)*SF(j)*SF(k)*wi(i)*D;
 
-				Kpml(9*j+4,9*k+3) += Gs22s11(j,k);
-				Kpml(9*j+5,9*k+3) += Gs33s11(j,k);
-				Kpml(9*j+5,9*k+4) += Gs33s22(j,k);
+				ImpedanceMatrix(9*j+4,9*k+3) += d*lambda/2.0/mu/(3.0*lambda + 2.0*mu)*SF(j)*SF(k)*wi(i)*D;
+				ImpedanceMatrix(9*j+5,9*k+3) += d*lambda/2.0/mu/(3.0*lambda + 2.0*mu)*SF(j)*SF(k)*wi(i)*D;
+				ImpedanceMatrix(9*j+5,9*k+4) += d*lambda/2.0/mu/(3.0*lambda + 2.0*mu)*SF(j)*SF(k)*wi(i)*D;
 
-				Kpml(9*j  ,9*k+3) += Gu1s11(j,k);
-				Kpml(9*j  ,9*k+6) += Gu1s12(j,k);
-				Kpml(9*j  ,9*k+8) += Gu1s13(j,k);
-				Kpml(9*j+1,9*k+4) += Gu2s22(j,k);
-				Kpml(9*j+1,9*k+6) += Gu2s12(j,k);
-				Kpml(9*j+1,9*k+7) += Gu2s23(j,k);
-				Kpml(9*j+2,9*k+5) += Gu3s33(j,k);
-				Kpml(9*j+2,9*k+8) += Gu3s13(j,k);
-				Kpml(9*j+2,9*k+7) += Gu3s23(j,k);
+				ImpedanceMatrix(9*j  ,9*k+3) += dSFdx(j)*SF(k)*(by*bz)*wi(i)*D; 
+				ImpedanceMatrix(9*j  ,9*k+6) += dSFdy(j)*SF(k)*(bx*bz)*wi(i)*D;
+				ImpedanceMatrix(9*j  ,9*k+8) += dSFdz(j)*SF(k)*(bx*by)*wi(i)*D;
+				ImpedanceMatrix(9*j+1,9*k+4) += dSFdy(j)*SF(k)*(bx*bz)*wi(i)*D;
+				ImpedanceMatrix(9*j+1,9*k+6) += dSFdx(j)*SF(k)*(by*bz)*wi(i)*D;
+				ImpedanceMatrix(9*j+1,9*k+7) += dSFdz(j)*SF(k)*(bx*by)*wi(i)*D;
+				ImpedanceMatrix(9*j+2,9*k+5) += dSFdz(j)*SF(k)*(bx*by)*wi(i)*D;
+				ImpedanceMatrix(9*j+2,9*k+8) += dSFdx(j)*SF(k)*(by*bz)*wi(i)*D;
+				ImpedanceMatrix(9*j+2,9*k+7) += dSFdy(j)*SF(k)*(bx*bz)*wi(i)*D;
 
-				Kpml(9*j+3,9*k  ) += Gs11u1(j,k);
-				Kpml(9*j+6,9*k  ) += Gs12u1(j,k);
-				Kpml(9*j+8,9*k  ) += Gs13u1(j,k);
-				Kpml(9*j+4,9*k+1) += Gs22u2(j,k);
-				Kpml(9*j+6,9*k+1) += Gs12u2(j,k);
-				Kpml(9*j+7,9*k+1) += Gs23u2(j,k);
-				Kpml(9*j+5,9*k+2) += Gs33u3(j,k);
-				Kpml(9*j+8,9*k+2) += Gs13u3(j,k);
-				Kpml(9*j+7,9*k+2) += Gs23u3(j,k);
+				ImpedanceMatrix(9*j+3,9*k  ) += dSFdx(k)*SF(j)*(by*bz)*wi(i)*D; 
+				ImpedanceMatrix(9*j+6,9*k  ) += dSFdy(k)*SF(j)*(bx*bz)*wi(i)*D;
+				ImpedanceMatrix(9*j+8,9*k  ) += dSFdz(k)*SF(j)*(bx*by)*wi(i)*D;
+				ImpedanceMatrix(9*j+4,9*k+1) += dSFdy(k)*SF(j)*(bx*bz)*wi(i)*D;
+				ImpedanceMatrix(9*j+6,9*k+1) += dSFdx(k)*SF(j)*(by*bz)*wi(i)*D;
+				ImpedanceMatrix(9*j+7,9*k+1) += dSFdz(k)*SF(j)*(bx*by)*wi(i)*D;
+				ImpedanceMatrix(9*j+5,9*k+2) += dSFdz(k)*SF(j)*(bx*by)*wi(i)*D;
+				ImpedanceMatrix(9*j+8,9*k+2) += dSFdx(k)*SF(j)*(by*bz)*wi(i)*D;
+				ImpedanceMatrix(9*j+7,9*k+2) += dSFdy(k)*SF(j)*(bx*bz)*wi(i)*D;
 			}
 		}
 	}
 
-    return Kpml;
+    return ImpedanceMatrix;
 }
 
 //Compute the internal forces acting on the element.
 Eigen::VectorXd 
 PML3DHexa8::ComputeInternalForces(void){
 	//Stiffness matrix definition:
-	Eigen::VectorXd InternalForces(54);
+	Eigen::VectorXd InternalForces(72);
 	InternalForces.fill(0.0) ;
 
 	//Gets the element coordinates in deformed configuration. 
@@ -894,12 +746,12 @@ PML3DHexa8::ComputeInternalForces(void){
 	Eigen::VectorXd U7 = theNodes[6]->GetDisplacements() + theNodes[6]->GetIncrementalDisplacements();
 	Eigen::VectorXd U8 = theNodes[7]->GetDisplacements() + theNodes[7]->GetIncrementalDisplacements();
 
-	Eigen::VectorXd nodalDisplacement(54);
+	Eigen::VectorXd nodalDisplacement(72);
 	nodalDisplacement << U1, U2, U3, U4, U5, U6, U7, U8;
 
 	Eigen::MatrixXd K = ComputeStiffnessMatrix();
 
-	InternalForces    = K*nodalDisplacement     ;
+	InternalForces = K*nodalDisplacement;
 
 	return InternalForces;
 }
@@ -912,12 +764,15 @@ PML3DHexa8::ComputeInternalDynamicForces(){
 
     if( HasFixedNode(theNodes) ){
         //Allocate memory for velocity/acceleraton. 
-        Eigen::VectorXd V(54); 
-        Eigen::VectorXd A(54);
+        Eigen::VectorXd V(72); 
+        Eigen::VectorXd A(72);
 
         //Fills the response vectors with velocity/acceleraton values.
-        V << theNodes[0]->GetVelocities(), theNodes[1]->GetVelocities(), theNodes[2]->GetVelocities(), theNodes[3]->GetVelocities();
-        A << theNodes[0]->GetAccelerations(), theNodes[1]->GetAccelerations(), theNodes[2]->GetAccelerations(), theNodes[3]->GetAccelerations();
+        V << theNodes[0]->GetVelocities(), theNodes[1]->GetVelocities(), theNodes[2]->GetVelocities(), theNodes[3]->GetVelocities(), 
+             theNodes[4]->GetVelocities(), theNodes[5]->GetVelocities(), theNodes[6]->GetVelocities(), theNodes[7]->GetVelocities();
+
+        A << theNodes[0]->GetAccelerations(), theNodes[1]->GetAccelerations(), theNodes[2]->GetAccelerations(), theNodes[3]->GetAccelerations(), 
+             theNodes[4]->GetAccelerations(), theNodes[5]->GetAccelerations(), theNodes[6]->GetAccelerations(), theNodes[7]->GetAccelerations();
 
         //Compute the inertial/viscous/elastic dynamic force contribution.
         InternalForces = ComputeInternalForces() + ComputeDampingMatrix()*V + ComputeMassMatrix()*A;
@@ -926,24 +781,14 @@ PML3DHexa8::ComputeInternalDynamicForces(){
     return InternalForces;
 }
 
-//-------------------------------------------------------------------------------
-//Compute the PML history vector using gauss-integration.
-Eigen::VectorXd 
-PML3DHexa8::ComputePMLVector(){
-    Eigen::VectorXd Fpml(54);
-    Fpml.fill(0.0);
-
-    //HERE ELNAZ YOU IMPLEMENT THE U-bar vector
-
-    return Fpml;
-}
-//-------------------------------------------------------------------------------
-
 //Compute the body forces acting on the element.
 Eigen::VectorXd 
 PML3DHexa8::ComputeBodyForces(const std::shared_ptr<Load> &bodyLoad, unsigned int k){
+    UNUNSED_PARAMETER(k);
+    UNUNSED_PARAMETER(bodyLoad);
+
 	//Local body load vector:
-	Eigen::VectorXd bodyForces(54);
+	Eigen::VectorXd bodyForces(72);
 	bodyForces.fill(0.0);
 
 	return bodyForces;
@@ -952,8 +797,11 @@ PML3DHexa8::ComputeBodyForces(const std::shared_ptr<Load> &bodyLoad, unsigned in
 //Compute the surface forces acting on the element.
 Eigen::VectorXd 
 PML3DHexa8::ComputeSurfaceForces(const std::shared_ptr<Load> &surface, unsigned int face){
+    UNUNSED_PARAMETER(face);
+    UNUNSED_PARAMETER(surface);
+
     //PML surface forces are not supported, i.e., makes no sense.
-    Eigen::VectorXd surfaceForces(54);
+    Eigen::VectorXd surfaceForces(72);
     surfaceForces.fill(0.0);
 
     return surfaceForces;
@@ -962,7 +810,11 @@ PML3DHexa8::ComputeSurfaceForces(const std::shared_ptr<Load> &surface, unsigned 
 //Compute the domain reduction forces acting on the element.
 Eigen::VectorXd 
 PML3DHexa8::ComputeDomainReductionForces(const std::shared_ptr<Load> &drm, unsigned int k){
-	Eigen::VectorXd DRMForces(54);
+    UNUNSED_PARAMETER(k);
+    UNUNSED_PARAMETER(drm);
+
+    //PML is not supposed to generate DRM forces.
+	Eigen::VectorXd DRMForces(72);
 	DRMForces.fill(0.0);
 
 	return DRMForces;
@@ -982,14 +834,14 @@ PML3DHexa8::ComputeStrain(const Eigen::MatrixXd &Bij) const{
 	Eigen::VectorXd U8 = theNodes[7]->GetDisplacements() + theNodes[7]->GetIncrementalDisplacements();
 
 	Eigen::VectorXd nodalDisplacement(24);
-	nodalDisplacement << U1(0), U1(1),U1(2),
-						 U2(0), U2(1),U2(2),
-						 U3(0), U3(1),U3(2),
-						 U4(0), U4(1),U4(2),
-						 U5(0), U5(1),U5(2),
-						 U6(0), U6(1),U6(2),
-						 U7(0), U7(1),U7(2),
-						 U8(0), U8(1),U8(2);
+	nodalDisplacement << U1(0), U1(1), U1(2),
+						 U2(0), U2(1), U2(2),
+						 U3(0), U3(1), U3(2),
+						 U4(0), U4(1), U4(2),
+						 U5(0), U5(1), U5(2),
+						 U6(0), U6(1), U6(2),
+						 U7(0), U7(1), U7(2),
+						 U8(0), U8(1), U8(2);
 
     //Strain vector:
 	Eigen::VectorXd Strain(6); 
@@ -1014,9 +866,6 @@ PML3DHexa8::ComputeStrainRate(const Eigen::MatrixXd &Bij) const{
 //Computes the jacobian of the transformation. 
 Eigen::MatrixXd 
 PML3DHexa8::ComputeJacobianMatrix(const double ri, const double si, const double ti) const{
-	//Jacobia Matrix definition:
-	Eigen::MatrixXd Jij;
-
 	//Gets the element coordinates in deformed configuration. 
 	Eigen::VectorXd X1 = theNodes[0]->GetCoordinates();
 	Eigen::VectorXd X2 = theNodes[1]->GetCoordinates();
@@ -1038,8 +887,8 @@ PML3DHexa8::ComputeJacobianMatrix(const double ri, const double si, const double
 	double J32 = -1.0/8.0*(1.0 - ri)*(1.0 - si)*X1(1) - 1.0/8.0*(1.0 + ri)*(1.0 - si)*X2(1) - 1.0/8.0*(1.0 + ri)*(1.0 + si)*X3(1) - 1.0/8.0*(1.0 - ri)*(1.0 + si)*X4(1) + 1.0/8.0*(1.0 - ri)*(1.0 - si)*X5(1) + 1.0/8.0*(1.0 + ri)*(1.0 - si)*X6(1) + 1.0/8.0*(1.0 + ri)*(1.0 + si)*X7(1) + 1.0/8.0*(1.0 - ri)*(1.0 + si)*X8(1);
 	double J33 = -1.0/8.0*(1.0 - ri)*(1.0 - si)*X1(2) - 1.0/8.0*(1.0 + ri)*(1.0 - si)*X2(2) - 1.0/8.0*(1.0 + ri)*(1.0 + si)*X3(2) - 1.0/8.0*(1.0 - ri)*(1.0 + si)*X4(2) + 1.0/8.0*(1.0 - ri)*(1.0 - si)*X5(2) + 1.0/8.0*(1.0 + ri)*(1.0 - si)*X6(2) + 1.0/8.0*(1.0 + ri)*(1.0 + si)*X7(2) + 1.0/8.0*(1.0 - ri)*(1.0 + si)*X8(2);
 
-	//Jacobian matrix:
-	Jij.resize(3,3);
+	//Jacobia Matrix definition:
+	Eigen::MatrixXd Jij(3,3);
 	Jij << J11, J12, J13,
 		   J21, J22, J23,
 		   J31, J32, J33;
@@ -1050,9 +899,6 @@ PML3DHexa8::ComputeJacobianMatrix(const double ri, const double si, const double
 //Compute Shape Function at Gauss Point:
 Eigen::MatrixXd 
 PML3DHexa8::ComputeShapeFunctionMatrix(const double ri, const double si, const double ti) const{
-	//Shape function matrix definition:
-	Eigen::MatrixXd Hij;
-
 	//Shape function coefficients:
 	double H11 = 1.0/8.0*(1.0 - ri)*(1.0 - si)*(1.0 - ti);
 	double H22 = 1.0/8.0*(1.0 + ri)*(1.0 - si)*(1.0 - ti);
@@ -1064,7 +910,7 @@ PML3DHexa8::ComputeShapeFunctionMatrix(const double ri, const double si, const d
 	double H88 = 1.0/8.0*(1.0 - ri)*(1.0 + si)*(1.0 + ti);
 
 	//Shape function matrix:
-	Hij.resize(3,24);
+	Eigen::MatrixXd Hij(3,24);
 	Hij << H11, 0.0, 0.0, H22, 0.0, 0.0, H33, 0.0, 0.0, H44, 0.0, 0.0, H55, 0.0, 0.0, H66, 0.0, 0.0, H77, 0.0, 0.0, H88, 0.0, 0.0,
 		   0.0, H11, 0.0, 0.0, H22, 0.0, 0.0, H33, 0.0, 0.0, H44, 0.0, 0.0, H55, 0.0, 0.0, H66, 0.0, 0.0, H77, 0.0, 0.0, H88, 0.0,
 		   0.0, 0.0, H11, 0.0, 0.0, H22, 0.0, 0.0, H33, 0.0, 0.0, H44, 0.0, 0.0, H55, 0.0, 0.0, H66, 0.0, 0.0, H77, 0.0, 0.0, H88;
@@ -1075,9 +921,6 @@ PML3DHexa8::ComputeShapeFunctionMatrix(const double ri, const double si, const d
 //Evaluates the lumped-mass matrix matrix at a given Gauss point.
 Eigen::MatrixXd 
 PML3DHexa8::ComputeStrainDisplacementMatrix(const double ri, const double si, const double ti, const Eigen::MatrixXd &Jij) const{
-	//Deformation matrix definition:
-	Eigen::MatrixXd Bij;
-
 	//Inverse jacobian matrix:
 	Eigen::MatrixXd J = Jij.inverse();
 
@@ -1109,8 +952,8 @@ PML3DHexa8::ComputeStrainDisplacementMatrix(const double ri, const double si, co
 	double B73 =  1.0/8.0*J(2,2)*(1.0 + ri)*(1.0 + si) + 1.0/8.0*J(2,1)*(1.0 + ri)*(1.0 + ti) + 1.0/8.0*J(2,0)*(1.0 + si)*(1.0 + ti);
 	double B83 =  1.0/8.0*J(2,2)*(1.0 - ri)*(1.0 + si) + 1.0/8.0*J(2,1)*(1.0 - ri)*(1.0 + ti) - 1.0/8.0*J(2,0)*(1.0 + si)*(1.0 + ti);
 
-	//Shape function matrix:
-	Bij.resize(6,24);
+	//Deformation matrix definition:
+	Eigen::MatrixXd Bij(6,24);
 	Bij <<  B11, 0.0, 0.0, B21, 0.0, 0.0, B31, 0.0, 0.0, B41, 0.0, 0.0, B51, 0.0, 0.0, B61, 0.0, 0.0, B71, 0.0, 0.0, B81, 0.0, 0.0,
 		    0.0, B12, 0.0, 0.0, B22, 0.0, 0.0, B32, 0.0, 0.0, B42, 0.0, 0.0, B52, 0.0, 0.0, B62, 0.0, 0.0, B72, 0.0, 0.0, B82, 0.0,
 		    0.0, 0.0, B13, 0.0, 0.0, B23, 0.0, 0.0, B33, 0.0, 0.0, B43, 0.0, 0.0, B53, 0.0, 0.0, B63, 0.0, 0.0, B73, 0.0, 0.0, B83,

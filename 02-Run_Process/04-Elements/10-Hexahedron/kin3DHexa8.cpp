@@ -4,19 +4,23 @@
 #include "Material.hpp"
 #include "kin3DHexa8.hpp"
 #include "GaussQuadrature.hpp"
+#include "LobattoQuadrature.hpp"
 #include "Definitions.hpp"
 
 //Define VTK cell value for Paraview:
 const unsigned int VTKCELL = 12;
 
 //Overload constructor.
-kin3DHexa8::kin3DHexa8(const std::vector<unsigned int> nodes, std::unique_ptr<Material> &material, const unsigned int nGauss, bool massform) :
+kin3DHexa8::kin3DHexa8(const std::vector<unsigned int> nodes, std::unique_ptr<Material> &material, const std::string quadrature, const unsigned int nGauss, bool massform) :
 Element("kin3DHexa8", nodes, 24, VTKCELL), MassForm(massform) {
     //The element nodes.
     theNodes.resize(8);
 
     //Numerical integration rule.
-    QuadraturePoints = std::make_unique<GaussQuadrature>("Hexa", nGauss);
+    if(strcasecmp(quadrature.c_str(),"GAUSS") == 0)
+        QuadraturePoints = std::make_unique<GaussQuadrature>("Hexa", nGauss);
+    else if(strcasecmp(quadrature.c_str(),"LOBATTO") == 0)
+        QuadraturePoints = std::make_unique<LobattoQuadrature>("Hexa", nGauss);
 
     //The element material. 
     theMaterial.resize(nGauss);
@@ -183,6 +187,9 @@ kin3DHexa8::GetStrainRate() const{
 //Gets the material strain in section at  coordinate (x3,x2).
 Eigen::MatrixXd 
 kin3DHexa8::GetStrainAt(double x3, double x2) const{
+    UNUNSED_PARAMETER(x3);
+    UNUNSED_PARAMETER(x2);
+
     //number of integration points.
     unsigned int nPoints = QuadraturePoints->GetNumberOfQuadraturePoints();
 
@@ -196,6 +203,9 @@ kin3DHexa8::GetStrainAt(double x3, double x2) const{
 //Gets the material stress in section at  coordinate (x3,x2).
 Eigen::MatrixXd 
 kin3DHexa8::GetStressAt(double x3, double x2) const{
+    UNUNSED_PARAMETER(x3);
+    UNUNSED_PARAMETER(x2);
+
     //number of integration points.
     unsigned int nPoints = QuadraturePoints->GetNumberOfQuadraturePoints();
 
@@ -420,14 +430,6 @@ kin3DHexa8::ComputeInternalDynamicForces(){
     }
 
     return InternalForces;
-}
-
-//Compute the PML history vector using gauss-integration.
-Eigen::VectorXd 
-kin3DHexa8::ComputePMLVector(){
-    //Empty PML vector.
-    Eigen::VectorXd Fpml;
-    return Fpml;
 }
 
 //Compute the surface forces acting on the element.
@@ -801,6 +803,11 @@ kin3DHexa8::ComputeStrain(const double ri, const double si, const double ti, con
 //Update strain rate in the element.
 Eigen::VectorXd 
 kin3DHexa8::ComputeStrainRate(const double ri, const double si, const double ti, const Eigen::MatrixXd &Bij) const{
+    UNUNSED_PARAMETER(ri);
+    UNUNSED_PARAMETER(si);
+    UNUNSED_PARAMETER(ti);
+    UNUNSED_PARAMETER(Bij);
+
     //TODO: Compute strain rate.
     //Strain vector definition:
     Eigen::VectorXd strainrate(6);

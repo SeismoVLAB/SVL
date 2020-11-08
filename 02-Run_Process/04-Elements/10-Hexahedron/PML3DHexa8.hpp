@@ -21,9 +21,7 @@
 //   Domniki M. Asimaki  (domniki@caltech.edu)
 //
 // References : 
-//  [1] Kucukcoban, S., and Loukas F. Kallivokas. "A symmetric hybrid formulation 
-//      for transient wave simulations in PML-truncated heterogeneous media." Wave 
-//      Motion 50.1 (2013): 57-79.
+//  [1] Fathi, A., Poursartip, B., & Kallivokas, L. F. (2015). Time‐domain hybrid formulations for wave simulations in three‐dimensional PML‐truncated heterogeneous media. International Journal for Numerical Methods in Engineering, 101(3), 165-198.
 //
 // Description:
 ///This file contains the "PML3DHexa8" linearized four-node perfectly matched 
@@ -46,8 +44,8 @@
 #include "QuadratureRule.hpp"
 #include "Damping.hpp"
 
-/// @author    Elnaz Esmaeilzadeh Seylabi (elnaze@unr.edu)
-/// @date      September 13, 2020
+/// @author    Elnaz Seylabi (elnaze@unr.edu)
+/// @date      November 05, 2020
 /// @version   1.0
 /// @file      PML3DHexa8.hpp
 /// @class     PML3DHexa8
@@ -60,11 +58,12 @@ class PML3DHexa8 : public Element{
         ///@param nodes The Node connectivity array of this Element.
         ///@param material Pointer to the Material that this Element is made out of.
         ///@param parameters The list of PML parameters.
+        ///@param quadrature The integration rule to be employed.
         ///@param nGauss Number of Gauss points for Element integration.
         ///@param massform The mass formulation to compute the mass matrix.
         ///@note More details can be found at @ref linkPML3DHexa8.
         ///@see PML3DHexa8::theNodes, PML3DHexa8::theMaterial, PML3DHexa8::QuadraturePoints.
-        PML3DHexa8(const std::vector<unsigned int> nodes, std::unique_ptr<Material> &material, const std::vector<double> parameters, const unsigned int nGauss=8, bool massform=false);
+        PML3DHexa8(const std::vector<unsigned int> nodes, std::unique_ptr<Material> &material, const std::vector<double> parameters, const std::string quadrature="GAUSS", const unsigned int nGauss=8, bool massform=false);
 
         ///Destroys this PML3DHexa8 object.
         ~PML3DHexa8();
@@ -162,12 +161,6 @@ class PML3DHexa8 : public Element{
         ///@note The internal force vector can be revisited in @ref linkElement.
         ///@see Assembler::ComputeDynamicInternalForceVector().
         Eigen::VectorXd ComputeInternalDynamicForces();
-
-        ///Compute the PML history vector using gauss-integration.
-        ///@return Vector with the PML Element history values.
-        ///@note The PML vector is none existent for this element.
-        ///@see Assembler::ComputePMLHistoryMatrix(), Integrator::ComputeEffectiveStiffness().
-        Eigen::VectorXd ComputePMLVector();
 
         ///Compute the surface forces acting on the element.
         ///@param surface Pointer to the Load object that contains this information.
@@ -278,6 +271,8 @@ class PML3DHexa8 : public Element{
         ///@return Vector with the stretching parameters.
         Eigen::VectorXd ComputePMLStretchingFactors(const double ri, const double si, const double ti, const double rho, const double mu, const double lambda) const;
 
+        ///Compute the PML history matrix for Perfectly-Matched Layer (PML).
+        ///@return Matrix with the PML history components.
         Eigen::MatrixXd ComputePMLMatrix() const;
 };
 

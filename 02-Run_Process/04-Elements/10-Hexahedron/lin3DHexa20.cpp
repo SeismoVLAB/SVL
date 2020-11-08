@@ -4,19 +4,23 @@
 #include "Material.hpp"
 #include "lin3DHexa20.hpp"
 #include "GaussQuadrature.hpp"
+#include "LobattoQuadrature.hpp"
 #include "Definitions.hpp"
 
 //Define VTK cell value for Paraview:
 const unsigned int VTKCELL = 25;
 
 //Overload constructor.
-lin3DHexa20::lin3DHexa20(const std::vector<unsigned int> nodes, std::unique_ptr<Material> &material, const unsigned int nGauss, bool massform) :
+lin3DHexa20::lin3DHexa20(const std::vector<unsigned int> nodes, std::unique_ptr<Material> &material, const std::string quadrature, const unsigned int nGauss, bool massform) :
 Element("lin3DHexa20", nodes, 60, VTKCELL), MassForm(massform){
     //The element nodes.
     theNodes.resize(20);
 
     //Numerical integration rule.
-    QuadraturePoints = std::make_unique<GaussQuadrature>("Hexa", nGauss);
+    if(strcasecmp(quadrature.c_str(),"GAUSS") == 0)
+        QuadraturePoints = std::make_unique<GaussQuadrature>("Hexa", nGauss);
+    else if(strcasecmp(quadrature.c_str(),"LOBATTO") == 0)
+        QuadraturePoints = std::make_unique<LobattoQuadrature>("Hexa", nGauss);
 
     //The element material. 
     theMaterial.resize(nGauss);
@@ -167,6 +171,9 @@ lin3DHexa20::GetStrainRate() const{
 //Gets the material strain in section at  coordinate (x3,x2).
 Eigen::MatrixXd 
 lin3DHexa20::GetStrainAt(double x3, double x2) const{
+    UNUNSED_PARAMETER(x2);
+    UNUNSED_PARAMETER(x3);
+
     //number of integration points.
     unsigned int nPoints = QuadraturePoints->GetNumberOfQuadraturePoints();
 
@@ -180,6 +187,9 @@ lin3DHexa20::GetStrainAt(double x3, double x2) const{
 //Gets the material stress in section at  coordinate (x3,x2).
 Eigen::MatrixXd 
 lin3DHexa20::GetStressAt(double x3, double x2) const{
+    UNUNSED_PARAMETER(x2);
+    UNUNSED_PARAMETER(x3);
+
     //number of integration points.
     unsigned int nPoints = QuadraturePoints->GetNumberOfQuadraturePoints();
 
@@ -400,14 +410,6 @@ lin3DHexa20::ComputeInternalDynamicForces(){
     }
 
     return InternalForces;
-}
-
-//Compute the PML history vector using gauss-integration.
-Eigen::VectorXd 
-lin3DHexa20::ComputePMLVector(){
-    //Empty PML vector.
-    Eigen::VectorXd Fpml;
-    return Fpml;
 }
 
 //Compute the surface forces acting on the element.
@@ -756,6 +758,8 @@ lin3DHexa20::ComputeStrain(const Eigen::MatrixXd &Bij) const{
 //Update strain rate in the element.
 Eigen::VectorXd 
 lin3DHexa20::ComputeStrainRate(const Eigen::MatrixXd &Bij) const{
+    UNUNSED_PARAMETER(Bij);
+
      //TODO: Compute strain rate.
     //Strain vector definition:
     Eigen::VectorXd strainrate(6);

@@ -57,11 +57,12 @@ class lin3DHexa8 : public Element{
         ///Creates a lin3DHexa8 in a finite element Mesh.
         ///@param nodes The Node connectivity array of this Element.
         ///@param material Pointer to the Material that this Element is made out of.
+        ///@param quadrature The integration rule to be employed.
         ///@param nGauss Number of Gauss points for Element integration.
         ///@param massform The mass formulation to compute the mass matrix.
         ///@note More details can be found at @ref linklin3DHexa8.
         ///@see lin3DHexa8::theNodes, lin3DHexa8::theMaterial, lin3DHexa8::QuadraturePoints.
-        lin3DHexa8(const std::vector<unsigned int> nodes, std::unique_ptr<Material> &material, const unsigned int nGauss=8, bool massform=false);
+        lin3DHexa8(const std::vector<unsigned int> nodes, std::unique_ptr<Material> &material, const std::string quadrature="GAUSS", const unsigned int nGauss=8, bool massform=false);
 
         ///Destroys this lin3DHexa8 object.
         ~lin3DHexa8();
@@ -159,12 +160,6 @@ class lin3DHexa8 : public Element{
         ///@note The internal force vector can be revisited in @ref linkElement.
         ///@see Assembler::ComputeDynamicInternalForceVector().
         Eigen::VectorXd ComputeInternalDynamicForces();
-
-        ///Compute the PML history vector using gauss-integration.
-        ///@return Vector with the PML Element history values.
-        ///@note The PML vector is none existent for this element.
-        ///@see Assembler::ComputePMLHistoryMatrix(), Integrator::ComputeEffectiveStiffness().
-        Eigen::VectorXd ComputePMLVector();
 
         ///Compute the surface forces acting on the element.
         ///@param surface Pointer to the Load object that contains this information.
