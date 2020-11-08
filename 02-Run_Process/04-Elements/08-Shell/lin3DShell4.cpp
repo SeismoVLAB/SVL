@@ -3,6 +3,7 @@
 #include "Section.hpp"
 #include "lin3DShell4.hpp"
 #include "GaussQuadrature.hpp"
+#include "LobattoQuadrature.hpp"
 #include "Definitions.hpp"
 
 //Define constant tolerance value:
@@ -12,13 +13,16 @@ const double TOL = 0.9999995;
 const unsigned int VTKCELL = 9;
 
 //Overload constructor.
-lin3DShell4::lin3DShell4(const std::vector<unsigned int> nodes, std::unique_ptr<Section> &section, const unsigned int nGauss, bool massform) :
+lin3DShell4::lin3DShell4(const std::vector<unsigned int> nodes, std::unique_ptr<Section> &section, const std::string quadrature, const unsigned int nGauss, bool massform) :
 Element("lin3DShell4", nodes, 24, VTKCELL), MassForm(massform) {
     //The element nodes.
     theNodes.resize(4);
 
     //Numerical integration rule.
-    QuadraturePoints = std::make_unique<GaussQuadrature>("Quad", nGauss);
+    if(strcasecmp(quadrature.c_str(),"GAUSS") == 0)
+        QuadraturePoints = std::make_unique<GaussQuadrature>("Quad", nGauss);
+    else if(strcasecmp(quadrature.c_str(),"LOBATTO") == 0)
+        QuadraturePoints = std::make_unique<LobattoQuadrature>("Quad", nGauss);
 
     //The element material. 
     theSection.resize(nGauss);
@@ -149,6 +153,8 @@ lin3DShell4::GetStrainRate() const{
 //Gets the material strain in section at  coordinate (x3,x2).
 Eigen::MatrixXd 
 lin3DShell4::GetStrainAt(double x3, double x2) const{
+    UNUNSED_PARAMETER(x2);
+
     //number of integration points.
     unsigned int nPoints = QuadraturePoints->GetNumberOfQuadraturePoints();
 
@@ -163,6 +169,8 @@ lin3DShell4::GetStrainAt(double x3, double x2) const{
 //Gets the material stress in section at  coordinate (x3,x2).
 Eigen::MatrixXd 
 lin3DShell4::GetStressAt(double x3, double x2) const{
+    UNUNSED_PARAMETER(x2);
+
     //number of integration points.
     unsigned int nPoints = QuadraturePoints->GetNumberOfQuadraturePoints();
 
@@ -395,17 +403,11 @@ lin3DShell4::ComputeInternalDynamicForces(){
     return InternalForces;
 }
 
-//Compute the PML history vector using gauss-integration.
-Eigen::VectorXd 
-lin3DShell4::ComputePMLVector(){
-    //Empty PML vector.
-    Eigen::VectorXd Fpml;
-    return Fpml;
-}
-
 //Compute the surface forces acting on the element.
 Eigen::VectorXd 
 lin3DShell4::ComputeSurfaceForces(const std::shared_ptr<Load> &surfaceLoad, unsigned int face){
+    UNUNSED_PARAMETER(face);
+
     //Gets Node Local coordinates.
     Eigen::MatrixXd xyloc = ComputeLocalCoordinates();
 
@@ -501,6 +503,9 @@ lin3DShell4::ComputeBodyForces(const std::shared_ptr<Load> &bodyLoad, unsigned i
 //Compute the domain reduction forces acting on the element.
 Eigen::VectorXd 
 lin3DShell4::ComputeDomainReductionForces(const std::shared_ptr<Load> &drm, unsigned int k){
+    UNUNSED_PARAMETER(k);
+    UNUNSED_PARAMETER(drm);
+
     //TODO: Domain reduction forces are not implemented for shell.
     Eigen::VectorXd DRMForces(24);
     DRMForces.fill(0.0);

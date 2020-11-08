@@ -58,10 +58,11 @@ class lin3DShell4 : public Element{
         ///@param nodes The Node connectivity array of this Element.
         ///@param section Pointer to the Section that this Element is made out of.
         ///@param nGauss Numner of Gauss-integration points.
+        ///@param quadrature The integration rule to be employed.
         ///@param massform The mass formulation to compute the mass matrix.
         ///@note More details can be found at @ref linklin3DShell4.
         ///@see lin3DShell4::theNodes, lin3DShell4::theMaterial, lin3DShell4::QuadraturePoints.
-        lin3DShell4(const std::vector<unsigned int> nodes, std::unique_ptr<Section> &section, const unsigned int nGauss=9, bool massform=true);
+        lin3DShell4(const std::vector<unsigned int> nodes, std::unique_ptr<Section> &section, const std::string quadrature="GAUSS", const unsigned int nGauss=9, bool massform=true);
 
         ///Destroys this lin3DShell4 object.
         ~lin3DShell4();
@@ -159,12 +160,6 @@ class lin3DShell4 : public Element{
         ///@note The internal force vector can be revisited in @ref linkElement.
         ///@see Assembler::ComputeDynamicInternalForceVector().
         Eigen::VectorXd ComputeInternalDynamicForces();
-
-        ///Compute the PML history vector using gauss-integration.
-        ///@return Vector with the PML Element history values.
-        ///@note The PML vector is none existent for this element.
-        ///@see Assembler::ComputePMLHistoryMatrix(), Integrator::ComputeEffectiveStiffness().
-        Eigen::VectorXd ComputePMLVector();
 
         ///Compute the surface forces acting on the element.
         ///@param surface Pointer to the Load object that contains this information.
