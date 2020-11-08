@@ -6,6 +6,7 @@ typedef Eigen::Triplet<double> T;
 //Overload constructor.
 Mesh::Mesh() { 
     //Initialize global variables.
+    PMLStorage = 1;
     LumpedStorage = 0;
     ConsistentStorage = 0;
     numberOfConstrainedDofs = 0;
@@ -30,6 +31,11 @@ Mesh::Initialize(){
         unsigned int numDofs = Elements[Tag]->GetNumberOfDegreeOfFreedom();
         LumpedStorage += numDofs;
         ConsistentStorage += numDofs*numDofs;
+
+        //Computes maximum memory allocation for PML sparse matrix.
+        std::string name = Elements[Tag]->GetName();
+        if( (strcasecmp(name.c_str(),"PML3DHexa8") == 0) || (strcasecmp(name.c_str(),"PML3DHexa20") == 0) )
+            PMLStorage += numDofs*numDofs;
     }
 
     //Computes the number of constraints components.
