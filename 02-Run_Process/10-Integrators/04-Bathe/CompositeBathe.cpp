@@ -72,6 +72,16 @@ CompositeBathe::GetAccelerations(){
     return A;
 }
 
+//Gets the perfectly-matched layer history vector.
+Eigen::VectorXd& 
+CompositeBathe::GetPMLHistoryVector(){
+    //Starts profiling this funtion.
+    PROFILE_FUNCTION();
+
+    //Empty PML history vector (not used).
+    return Ubar;
+}
+
 //Computes a new time step.
 bool 
 CompositeBathe::ComputeNewStep(std::shared_ptr<Mesh> &mesh, unsigned int k){
@@ -155,6 +165,10 @@ CompositeBathe::ComputeReactionForce(std::shared_ptr<Mesh> &mesh, unsigned int k
 //Gets the incremental nodal support motion vector.
 Eigen::VectorXd 
 CompositeBathe::ComputeSupportMotionVector(std::shared_ptr<Mesh> &mesh, double factor, unsigned int k){
+    UNUNSED_PARAMETER(k);
+    UNUNSED_PARAMETER(mesh);
+    UNUNSED_PARAMETER(factor);
+
     //Starts profiling this function.
     PROFILE_FUNCTION();
 
@@ -168,6 +182,8 @@ CompositeBathe::ComputeSupportMotionVector(std::shared_ptr<Mesh> &mesh, double f
 //Gets the effective force associated to this integrator.
 void
 CompositeBathe::ComputeEffectiveForce(std::shared_ptr<Mesh> &mesh, Eigen::VectorXd &Feff, double factor, unsigned int k){
+    UNUNSED_PARAMETER(factor);
+
     //Starts profiling this function.
     PROFILE_FUNCTION();
 

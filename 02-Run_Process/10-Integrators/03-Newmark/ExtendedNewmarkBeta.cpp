@@ -59,15 +59,6 @@ ExtendedNewmarkBeta::SetAlgorithm(std::shared_ptr<Algorithm> &algorithm){
     theAlgorithm = algorithm;
 }
 
-//Gets the PML history vector.
-Eigen::VectorXd& 
-ExtendedNewmarkBeta::GetPMLHistoryVector(){
-    //Starts profiling this funtion.
-    PROFILE_FUNCTION();
-
-    return Ubar;
-} 
-
 //Gets the displacement vector.
 Eigen::VectorXd& 
 ExtendedNewmarkBeta::GetDisplacements(){
@@ -95,6 +86,15 @@ ExtendedNewmarkBeta::GetAccelerations(){
     return A;
 }
 
+//Gets the PML history vector.
+Eigen::VectorXd& 
+ExtendedNewmarkBeta::GetPMLHistoryVector(){
+    //Starts profiling this funtion.
+    PROFILE_FUNCTION();
+
+    return Ubar;
+}
+
 //Computes a new time step.
 bool 
 ExtendedNewmarkBeta::ComputeNewStep(std::shared_ptr<Mesh> &mesh, unsigned int k){
@@ -112,9 +112,13 @@ ExtendedNewmarkBeta::ComputeNewStep(std::shared_ptr<Mesh> &mesh, unsigned int k)
 
     //Obtains the displacement increment from algorithm.
     Eigen::VectorXd dU = Total2FreeMatrix*(p->GetDisplacementIncrement());
+    Eigen::VectorXd DU = dU + SupportMotion;
+
+    //The PML time history state variables.
+    Ubar = Ubar + dt*U + dt/3.0*DU + dt*dt/6.0*V;
 
     //Update displacement states.
-    U += (dU + SupportMotion);
+    U += DU;
 
     //Update acceleration states.
     A = 4.0/dt/dt*dU - 4.0/dt*V - A;
@@ -147,6 +151,8 @@ ExtendedNewmarkBeta::ComputeReactionForce(std::shared_ptr<Mesh> &mesh, unsigned 
 //Gets the incremental nodal support motion vector.
 Eigen::VectorXd 
 ExtendedNewmarkBeta::ComputeSupportMotionVector(std::shared_ptr<Mesh> &mesh, double factor, unsigned int k){
+    UNUNSED_PARAMETER(factor);
+
     //Starts profiling this function.
     PROFILE_FUNCTION();
 
@@ -162,6 +168,8 @@ ExtendedNewmarkBeta::ComputeSupportMotionVector(std::shared_ptr<Mesh> &mesh, dou
 //Gets the effective force associated to this integrator.
 void
 ExtendedNewmarkBeta::ComputeEffectiveForce(std::shared_ptr<Mesh> &mesh, Eigen::VectorXd &Feff, double factor, unsigned int k){
+    UNUNSED_PARAMETER(factor);
+
     //Starts profiling this function.
     PROFILE_FUNCTION();
 
@@ -178,7 +186,7 @@ ExtendedNewmarkBeta::ComputeEffectiveForce(std::shared_ptr<Mesh> &mesh, Eigen::V
     Eigen::VectorXd Fext = theAssembler->ComputeExternalForceVector(mesh, k);
 
     //Computes the effective force vector.
-    Fext = Fext - Fint + M*(4.0/dt*V + A - 4.0/dt/dt*dU) + C*(V - 2.0/dt*dU);
+    Fext = Fext - Fint - G*(Ubar + dt*U + dt*dt/6.0*V) + C*V + M*(4.0/dt*V + A);
 
     //Impose boundary conditions on effective force vector.
     Feff = Total2FreeMatrix.transpose()*Fext;
@@ -194,7 +202,7 @@ ExtendedNewmarkBeta::ComputeEffectiveStiffness(std::shared_ptr<Mesh> &mesh, Eige
     K = theAssembler->ComputeStiffnessMatrix(mesh);
 
     //Assemble the effective stiffness matrix.
-    K = K + 4.0/dt/dt*M + 2.0/dt*C;
+    K = K + 4.0/dt/dt*M + 2.0/dt*C + dt/3.0*G;
 
     //Impose boundary conditions on effective stiffness matrix.
     Keff = Eigen::SparseMatrix<double>(Total2FreeMatrix.transpose())*K*Total2FreeMatrix;

@@ -91,6 +91,11 @@ class QuasiStatic : public Integrator{
         ///@note More details can be found at @ref linkQuasiStatic.
         Eigen::VectorXd& GetAccelerations();
 
+        ///Gets the PML history vector.
+        ///@return Vector with the displacement states at current time step.
+        ///@note More details can be found at @ref linkExtendedNewmarkBeta.
+        Eigen::VectorXd& GetPMLHistoryVector();  
+
         ///Computes a new time step.
         ///@param mesh The finite element Mesh object.
         ///@param k The time step number to be solved.
@@ -135,6 +140,9 @@ class QuasiStatic : public Integrator{
 
         ///Total initial/previous displacements.
         Eigen::VectorXd U;
+
+        ///Total previous pml history values.
+        Eigen::VectorXd Ubar;
 
         ///Model stiffness matrix.
         Eigen::SparseMatrix<double> K; 

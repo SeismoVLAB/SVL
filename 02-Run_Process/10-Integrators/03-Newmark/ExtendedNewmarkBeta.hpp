@@ -21,17 +21,16 @@
 //   Domniki M. Asimaki  (domniki@caltech.edu)
 //
 // References : 
-//   [1] Finite Element Procedures, Bathe, K.J., Chapter 6: pages 780-782. 
-//       Prentice-Hall, 1996. 
-//   [2] Consistent Finite-Element Response Sensitivity Analysis, J. P. Conte  
-//       and P. K. Vijalapura  and M. Meghella, Journal of Engineering Mechanics, 
-//       volume 129 (12), 1380-1393, 2003.
+//   [1] Fathi, A., Poursartip, B., & Kallivokas, L. F. (2015). Time‐domain hybrid 
+//       formulations for wave simulations in three‐dimensional PML‐truncated 
+//       heterogeneous media. International Journal for Numerical Methods in 
+//       Engineering, 101(3), 165-198.
 //
 // Description:
-///This file contains the "NewmarkBeta" integration declaration, the rouine 
-///inncludes any damping and inertial forces present in the analysis, also 
-///this integrator is meant to be used in dynamic analysis with linear or 
-///non-linear algorithms. 
+///This file contains the "ExtendedNewmarkBeta" integration declaration, the 
+///routine includes any damping and inertial forces present in the analysis, 
+///also this integrator is meant to be used when PML 3D are present since a 
+///third order differential equation is solved.
 //------------------------------------------------------------------------------
 
 #ifndef _EXTENDEDNEWMARKBETA_HPP_
@@ -84,12 +83,7 @@ class ExtendedNewmarkBeta : public Integrator{
         ///Gets the displacement vector.
         ///@return Vector with the displacement states at current time step.
         ///@note More details can be found at @ref linkNewmarkBeta.
-        Eigen::VectorXd& GetDisplacements();  
-
-        ///Gets the PML history vector.
-        ///@return Vector with the displacement states at current time step.
-        ///@note More details can be found at @ref linkNewmarkBeta.
-        Eigen::VectorXd& GetPMLHistoryVector();   
+        Eigen::VectorXd& GetDisplacements();   
 
         ///Gets the velocity vector.
         ///@return Vector with the velocity states at current time step.
@@ -100,6 +94,11 @@ class ExtendedNewmarkBeta : public Integrator{
         ///@return Vector with the acceleration states at current time step.
         ///@note More details can be found at @ref linkNewmarkBeta.
         Eigen::VectorXd& GetAccelerations();
+
+        ///Gets the PML history vector.
+        ///@return Vector with the displacement states at current time step.
+        ///@note More details can be found at @ref linkExtendedNewmarkBeta.
+        Eigen::VectorXd& GetPMLHistoryVector();  
 
         ///Computes a new time step.
         ///@param mesh The finite element Mesh object.
@@ -152,7 +151,7 @@ class ExtendedNewmarkBeta : public Integrator{
         ///Total previous acceleration.
         Eigen::VectorXd A;
 
-        ///Total previous pml history.
+        ///Total previous pml history values.
         Eigen::VectorXd Ubar;
 
         ///Model mass matrix.

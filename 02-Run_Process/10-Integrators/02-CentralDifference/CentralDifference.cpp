@@ -88,6 +88,16 @@ CentralDifference::GetAccelerations(){
     return A;
 }
 
+//Gets the perfectly-matched layer history vector.
+Eigen::VectorXd& 
+CentralDifference::GetPMLHistoryVector(){
+    //Starts profiling this funtion.
+    PROFILE_FUNCTION();
+
+    //Empty PML history vector (not used).
+    return Ubar;
+}
+
 //Computes a new time step.
 bool 
 CentralDifference::ComputeNewStep(std::shared_ptr<Mesh> &mesh, unsigned int k){
@@ -141,6 +151,8 @@ CentralDifference::ComputeReactionForce(std::shared_ptr<Mesh> &mesh, unsigned in
 //Gets the incremental nodal support motion vector.
 Eigen::VectorXd 
 CentralDifference::ComputeSupportMotionVector(std::shared_ptr<Mesh> &mesh, double factor, unsigned int k){
+    UNUNSED_PARAMETER(factor);
+
     //Starts profiling this function.
     PROFILE_FUNCTION();
 
@@ -156,6 +168,8 @@ CentralDifference::ComputeSupportMotionVector(std::shared_ptr<Mesh> &mesh, doubl
 //Gets the effective force associated to this integrator.
 void
 CentralDifference::ComputeEffectiveForce(std::shared_ptr<Mesh> &mesh, Eigen::VectorXd &Feff, double factor, unsigned int k){
+    UNUNSED_PARAMETER(factor);
+
     //Starts profiling this function.
     PROFILE_FUNCTION();
 
@@ -175,6 +189,8 @@ CentralDifference::ComputeEffectiveForce(std::shared_ptr<Mesh> &mesh, Eigen::Vec
 //Gets the effective stiffness assiciated to this integrator.
 void
 CentralDifference::ComputeEffectiveStiffness(std::shared_ptr<Mesh> &mesh, Eigen::SparseMatrix<double> &Keff){
+    UNUNSED_PARAMETER(mesh);
+
     //Starts profiling this function.
     PROFILE_FUNCTION();
 

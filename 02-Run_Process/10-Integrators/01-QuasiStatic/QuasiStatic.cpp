@@ -75,6 +75,16 @@ QuasiStatic::GetAccelerations(){
     return U;
 }
 
+//Gets the perfectly-matched layer history vector.
+Eigen::VectorXd& 
+QuasiStatic::GetPMLHistoryVector(){
+    //Starts profiling this funtion.
+    PROFILE_FUNCTION();
+
+    //Empty PML history vector (not used).
+    return Ubar;
+}
+
 //Computes a new time step.
 bool 
 QuasiStatic::ComputeNewStep(std::shared_ptr<Mesh> &mesh, unsigned int k){
@@ -118,6 +128,8 @@ QuasiStatic::ComputeReactionForce(std::shared_ptr<Mesh> &mesh, unsigned int k){
 //Gets the incremental nodal support motion vector.
 Eigen::VectorXd 
 QuasiStatic::ComputeSupportMotionVector(std::shared_ptr<Mesh> &mesh, double factor, unsigned int k){
+    UNUNSED_PARAMETER(k);
+
     //Starts profiling this function.
     PROFILE_FUNCTION();
 

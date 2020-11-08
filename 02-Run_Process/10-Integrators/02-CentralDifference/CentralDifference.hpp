@@ -93,6 +93,11 @@ class CentralDifference : public Integrator{
         ///@note More details can be found at @ref linkCentralDifference.
         Eigen::VectorXd& GetAccelerations();
 
+        ///Gets the PML history vector.
+        ///@return Vector with the displacement states at current time step.
+        ///@note More details can be found at @ref linkExtendedNewmarkBeta.
+        Eigen::VectorXd& GetPMLHistoryVector();  
+
         ///Computes a new time step.
         ///@param mesh The finite element Mesh object.
         ///@param k The time step number to be solved.
@@ -146,6 +151,9 @@ class CentralDifference : public Integrator{
 
         ///Total previous displacements (t - dt).
         Eigen::VectorXd Up;
+
+        ///Total previous pml history values.
+        Eigen::VectorXd Ubar;
 
         ///Model mass matrix.
         Eigen::SparseMatrix<double> M; 

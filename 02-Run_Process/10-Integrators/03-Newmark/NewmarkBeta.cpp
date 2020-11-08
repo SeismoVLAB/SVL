@@ -81,6 +81,16 @@ NewmarkBeta::GetAccelerations(){
     return A;
 }
 
+//Gets the perfectly-matched layer history vector.
+Eigen::VectorXd& 
+NewmarkBeta::GetPMLHistoryVector(){
+    //Starts profiling this funtion.
+    PROFILE_FUNCTION();
+
+    //Empty PML history vector (not used).
+    return Ubar;
+}
+
 //Computes a new time step.
 bool 
 NewmarkBeta::ComputeNewStep(std::shared_ptr<Mesh> &mesh, unsigned int k){
@@ -133,6 +143,8 @@ NewmarkBeta::ComputeReactionForce(std::shared_ptr<Mesh> &mesh, unsigned int k){
 //Gets the incremental nodal support motion vector.
 Eigen::VectorXd 
 NewmarkBeta::ComputeSupportMotionVector(std::shared_ptr<Mesh> &mesh, double factor, unsigned int k){
+    UNUNSED_PARAMETER(factor);
+
     //Starts profiling this function.
     PROFILE_FUNCTION();
 
@@ -148,6 +160,8 @@ NewmarkBeta::ComputeSupportMotionVector(std::shared_ptr<Mesh> &mesh, double fact
 //Gets the effective force associated to this integrator.
 void
 NewmarkBeta::ComputeEffectiveForce(std::shared_ptr<Mesh> &mesh, Eigen::VectorXd &Feff, double factor, unsigned int k){
+    UNUNSED_PARAMETER(factor);
+
     //Starts profiling this function.
     PROFILE_FUNCTION();
 

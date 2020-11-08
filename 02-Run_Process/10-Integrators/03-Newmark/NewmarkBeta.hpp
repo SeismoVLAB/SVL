@@ -96,6 +96,11 @@ class NewmarkBeta : public Integrator{
         ///@note More details can be found at @ref linkNewmarkBeta.
         Eigen::VectorXd& GetAccelerations();
 
+        ///Gets the PML history vector.
+        ///@return Vector with the displacement states at current time step.
+        ///@note More details can be found at @ref linkExtendedNewmarkBeta.
+        Eigen::VectorXd& GetPMLHistoryVector();  
+
         ///Computes a new time step.
         ///@param mesh The finite element Mesh object.
         ///@param k The time step number to be solved.
@@ -146,6 +151,9 @@ class NewmarkBeta : public Integrator{
 
         ///Total previous acceleration.
         Eigen::VectorXd A;
+
+        ///Total previous pml history values.
+        Eigen::VectorXd Ubar;
 
         ///Model mass matrix.
         Eigen::SparseMatrix<double> M; 
