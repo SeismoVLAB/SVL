@@ -115,6 +115,9 @@ Lin2DCircularTube::GetInitialTangentStiffness(){
 //Returns the section strain at given position.
 Eigen::VectorXd 
 Lin2DCircularTube::GetStrainAt(double x3, double x2){
+    UNUNSED_PARAMETER(x3);
+    UNUNSED_PARAMETER(x2);
+
     //TODO: Compute the strain at point, needs shear value. 
     Eigen::VectorXd theStrain(3);
     theStrain.fill(0.0);
@@ -125,6 +128,9 @@ Lin2DCircularTube::GetStrainAt(double x3, double x2){
 //Returns the section stress at given position.
 Eigen::VectorXd 
 Lin2DCircularTube::GetStressAt(double x3, double x2){
+    UNUNSED_PARAMETER(x3);
+    UNUNSED_PARAMETER(x2);
+
     //TODO: Compute the strain at point, needs shear value. 
     // Sigma = [Sxx, 0.0, txy]
     Eigen::VectorXd theStress(3);
