@@ -18,6 +18,10 @@ Fixed(isFixed), NumberOfDegreeOfFreedom(numberDofs), Coordinates(coordinates){
     Velocities.fill(0.0);
     Accelerations.fill(0.0);
     IncrementalDisplacements.fill(0.0);
+
+    //The node's history vector for PML 3D.
+    PMLIntegratedVector.resize(numberDofs);
+    PMLIntegratedVector.fill(0.0);
 }
 
 //Default Destructor.
@@ -93,6 +97,12 @@ Node::SetDomainReductionMotion(Eigen::MatrixXd &Uo){
     DomainReductionMotion = Uo;
 }
 
+//Sets the nodel absorbent integrated history values.
+void 
+Node::SetPMLVector(Eigen::VectorXd &Ub){
+    PMLIntegratedVector = Ub;
+}
+
 //Sets the domain-reduction nodal displacements.
 void 
 Node::SetSupportMotion(unsigned int k, std::vector<double> &Uo){
@@ -156,6 +166,12 @@ Node::GetInertialForces() const{
     }
 
     return Mass;
+}
+
+//Gets the current PML history vector of this node.
+Eigen::VectorXd 
+Node::GetPMLVector() const{
+    return PMLIntegratedVector;
 }
 
 //Returns the current incremental displacement of this node.

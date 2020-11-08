@@ -49,6 +49,8 @@ class Node{
         ///Creates a Node in a finite element Mesh.
         ///@param numberDofs Number of degree-of-freedom for this node.
         ///@param coordinates Matrix that specifies the coordinat of this node.
+        ///@param isFixed Whether the node is fixed or free.
+        ///@param isAbsorbent Whether the node is belongs is absorbent (PML 3D).
         ///@note More details can be found at @ref linkNode.
         ///@see Node::Coordinates Node::NumberOfDegreeOfFreedom.
         Node(unsigned int numberDofs, Eigen::VectorXd coordinates, bool isFixed);
@@ -60,6 +62,10 @@ class Node{
         ///Whether the node is fixed or free.
         ///@see Node::Fixed.
         bool IsFixed() const;
+
+        ///Whether the node is absorbent.
+        ///@see Node::Absorbent.
+        bool IsAbsorbent() const;
 
         ///Set the node's mass at each degree of freedom.
         ///@param mass Vector of masses.
@@ -115,6 +121,11 @@ class Node{
         ///@see Node::DomainReductionMotion.
         void SetDomainReductionMotion(Eigen::MatrixXd &Uo);
 
+        ///Sets the nodel absorbent integrated history values.
+        ///@param Ub Vector of integrated (states) history values.
+        ///@see Node::PMLIntegratedVector Node::GetPMLVector.
+        void SetPMLVector(Eigen::VectorXd &Ub);
+
         ///Sets the displacements support motion associated with this Node.
         ///@param k Integer that represents the degree-of-freedom where the displacement is imposed.
         ///@param Uo Vector of displacements in time.
@@ -157,6 +168,11 @@ class Node{
         ///@return Vector with the inertial forces for each degree-of-freedom.
         ///@see Node::Mass.
         Eigen::VectorXd GetInertialForces() const;
+
+        ///Gets the current PML history vector of this node.
+        ///@return Vector with the integrated PML states at each degree-of-freedom.
+        ///@see Node::PMLIntegratedVector Node::SetPMLVector.
+        Eigen::VectorXd GetPMLVector() const;
 
         ///Gets the current incremental displacement of this node.
         ///@return Vector with the incremental displacements for each degree-of-freedom.
@@ -223,6 +239,9 @@ class Node{
 
         ///The reaction forces of this node.
         Eigen::VectorXd Reaction;
+
+        ///The 3D perfectly-meatched history verctor.
+        Eigen::VectorXd PMLIntegratedVector;
 
         ///The free-degree-of-freedom list.
         std::vector<int> FreeDegreeOfFreedom;
