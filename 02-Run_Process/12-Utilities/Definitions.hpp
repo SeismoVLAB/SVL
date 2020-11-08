@@ -39,6 +39,8 @@
 /// @file      Definitions.hpp
 /// @see       Utilities.hpp
 
+#define UNUNSED_PARAMETER(x) (void)x
+
 ///The processor number.
 extern int rank;
 
@@ -59,5 +61,8 @@ extern unsigned int numberOfTotalDofs;
 
 ///Total number of constrained-degree-of-freedom.
 extern unsigned int numberOfConstrainedDofs;
+
+//Maximum memory for PML 3D storage sparse matrix.
+extern unsigned int PMLStorage;
 
 #endif
