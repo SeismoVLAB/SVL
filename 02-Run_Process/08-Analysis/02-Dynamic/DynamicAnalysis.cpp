@@ -67,6 +67,7 @@ DynamicAnalysis::UpdateDomain(unsigned int k){
     Eigen::VectorXd U = theIntegrator->GetDisplacements();
     Eigen::VectorXd V = theIntegrator->GetVelocities();
     Eigen::VectorXd A = theIntegrator->GetAccelerations();
+    Eigen::VectorXd Ub = theIntegrator->GetPMLHistoryVector();
 
     //Gets all nodes from the mesh.
     std::map<unsigned int, std::shared_ptr<Node> >  Nodes = theMesh->GetNodes();
@@ -95,6 +96,18 @@ DynamicAnalysis::UpdateDomain(unsigned int k){
         Nodes[Tag]->SetVelocities(Vij);
         Nodes[Tag]->SetAccelerations(Aij);
         Nodes[Tag]->SetIncrementalDisplacements(dUij);
+
+        //Sets the PML history states.
+        if(Ub.size() > 0){
+            //Creates the PML node history vector.
+            Eigen::VectorXd Ubar(nTotalDofs); Ubar.fill(0.0);
+
+            //Constructucts the node PML history vector.
+            for(unsigned int j = 0; j < nTotalDofs; j++)
+                Ubar(j) = Ub(TotalDofs[j]);
+
+            Nodes[Tag]->SetPMLVector(Ubar);
+        }
     }
 
     //Gets all elements from the mesh.
