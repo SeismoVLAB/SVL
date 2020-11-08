@@ -127,6 +127,9 @@ kin2DTruss2::GetStrainRate() const{
 //Gets the material strain in section at  coordinate (x3,x2).
 Eigen::MatrixXd 
 kin2DTruss2::GetStrainAt(double x3, double x2) const{
+    UNUNSED_PARAMETER(x3);
+    UNUNSED_PARAMETER(x2);
+
     //Stress at coordinate is define within section.
     Eigen::MatrixXd theStrain(1, 3);
     theStrain.fill(0.0);
@@ -137,6 +140,9 @@ kin2DTruss2::GetStrainAt(double x3, double x2) const{
 //Gets the material stress in section at  coordinate (x3,x2).
 Eigen::MatrixXd 
 kin2DTruss2::GetStressAt(double x3, double x2) const{
+    UNUNSED_PARAMETER(x3);
+    UNUNSED_PARAMETER(x2);
+
     //Stress at coordinate is define within section.
     Eigen::MatrixXd theStress(1, 3);
     theStress.fill(0.0);
@@ -303,17 +309,11 @@ kin2DTruss2::ComputeInternalDynamicForces(){
     return InternalForces;
 }
 
-//Compute the PML history vector using gauss-integration.
-Eigen::VectorXd 
-kin2DTruss2::ComputePMLVector(){
-    //Empty PML vector.
-    Eigen::VectorXd Fpml;
-    return Fpml;
-}
-
 //Compute the surface forces acting on the element.
 Eigen::VectorXd 
 kin2DTruss2::ComputeSurfaceForces(const std::shared_ptr<Load> &surfaceLoad, unsigned int face){
+    UNUNSED_PARAMETER(face);
+
     //Local surface load vector:
     Eigen::VectorXd surfaceForces(4);
 
@@ -374,6 +374,9 @@ kin2DTruss2::ComputeBodyForces(const std::shared_ptr<Load> &bodyLoad, unsigned i
 //Compute the domain reduction forces acting on the element.
 Eigen::VectorXd 
 kin2DTruss2::ComputeDomainReductionForces(const std::shared_ptr<Load> &drm, unsigned int k){
+    UNUNSED_PARAMETER(k);
+    UNUNSED_PARAMETER(drm);
+
     //TODO: Domain reduction forces are not implemented for Truss.
     Eigen::VectorXd DRMForces(4);
     DRMForces.fill(0.0);

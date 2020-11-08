@@ -3,6 +3,7 @@
 #include "Material.hpp"
 #include "lin3DTruss3.hpp"
 #include "GaussQuadrature.hpp"
+#include "LobattoQuadrature.hpp"
 #include "Definitions.hpp"
 
 //Define constant tolerance value:
@@ -12,13 +13,16 @@ const double TOL = 0.9999995;
 const unsigned int VTKCELL = 21;
 
 //Overload constructor.
-lin3DTruss3::lin3DTruss3(const std::vector<unsigned int> nodes, std::unique_ptr<Material> &material, const double area, const unsigned int nGauss, bool massform) :
+lin3DTruss3::lin3DTruss3(const std::vector<unsigned int> nodes, std::unique_ptr<Material> &material, const double area, const std::string quadrature, const unsigned int nGauss, bool massform) :
 Element("lin3DTruss3", nodes, 9, VTKCELL), A(area), MassForm(massform){
     //The element nodes.
     theNodes.resize(3);
 
     //Numerical integration rule.
-    QuadraturePoints = std::make_unique<GaussQuadrature>("Line", nGauss);
+    if(strcasecmp(quadrature.c_str(),"GAUSS") == 0)
+        QuadraturePoints = std::make_unique<GaussQuadrature>("Line", nGauss);
+    else if(strcasecmp(quadrature.c_str(),"LOBATTO") == 0)
+        QuadraturePoints = std::make_unique<LobattoQuadrature>("Line", nGauss);
 
     //The element material. 
     theMaterial.resize(nGauss);
@@ -169,6 +173,9 @@ lin3DTruss3::GetStrainRate() const{
 //Gets the material strain in section at  coordinate (x3,x2).
 Eigen::MatrixXd 
 lin3DTruss3::GetStrainAt(double x3, double x2) const{
+    UNUNSED_PARAMETER(x3);
+    UNUNSED_PARAMETER(x2);
+
     //number of integration points.
     unsigned int nPoints = QuadraturePoints->GetNumberOfQuadraturePoints();
 
@@ -182,6 +189,9 @@ lin3DTruss3::GetStrainAt(double x3, double x2) const{
 //Gets the material stress in section at  coordinate (x3,x2).
 Eigen::MatrixXd 
 lin3DTruss3::GetStressAt(double x3, double x2) const{
+    UNUNSED_PARAMETER(x3);
+    UNUNSED_PARAMETER(x2);
+
     //number of integration points.
     unsigned int nPoints = QuadraturePoints->GetNumberOfQuadraturePoints();
 
@@ -417,17 +427,11 @@ lin3DTruss3::ComputeInternalDynamicForces(){
     return InternalForces;
 }
 
-//Compute the PML history vector using gauss-integration.
-Eigen::VectorXd 
-lin3DTruss3::ComputePMLVector(){
-    //Empty PML vector.
-    Eigen::VectorXd Fpml;
-    return Fpml;
-}
-
 //Compute the surface forces acting on the element.
 Eigen::VectorXd 
 lin3DTruss3::ComputeSurfaceForces(const std::shared_ptr<Load> &surfaceLoad, unsigned int face){
+    UNUNSED_PARAMETER(face);
+
     //Local surface load vector:
     Eigen::VectorXd surfaceForces(9);
 
@@ -495,6 +499,9 @@ lin3DTruss3::ComputeBodyForces(const std::shared_ptr<Load> &bodyLoad, unsigned i
 //Compute the domain reduction forces acting on the element.
 Eigen::VectorXd 
 lin3DTruss3::ComputeDomainReductionForces(const std::shared_ptr<Load> &drm, unsigned int k){
+    UNUNSED_PARAMETER(k);
+    UNUNSED_PARAMETER(drm);
+
     //TODO: Domain reduction forces are not implemented for Truss.
     Eigen::VectorXd DRMForces(9);
     DRMForces.fill(0.0);

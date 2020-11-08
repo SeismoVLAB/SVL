@@ -58,11 +58,12 @@ class lin3DTruss3 : public Element{
         ///@param nodes The Node connectivity array of this Element.
         ///@param material Pointer to the Material that this Element is made out of.
         ///@param area The cross-section area.
+        ///@param quadrature The integration rule to be employed.
         ///@param nGauss Number of Gauss points for Element integration.
         ///@param massform The mass formulation to compute the mass matrix.
         ///@note More details can be found at @ref linklin3DTruss3.
         ///@see lin3DTruss3::theNodes, lin3DTruss3::theMaterial, lin3DTruss3::QuadraturePoints.
-        lin3DTruss3(const std::vector<unsigned int> nodes, std::unique_ptr<Material> &material, const double area, const unsigned int nGauss, bool massform=false);
+        lin3DTruss3(const std::vector<unsigned int> nodes, std::unique_ptr<Material> &material, const double area, const std::string quadrature="GAUSS", const unsigned int nGauss=3, bool massform=false);
 
         ///Destroys this lin3DTruss3 object.
         ~lin3DTruss3();
@@ -160,12 +161,6 @@ class lin3DTruss3 : public Element{
         ///@note The internal force vector can be revisited in @ref linkElement.
         ///@see Assembler::ComputeDynamicInternalForceVector().
         Eigen::VectorXd ComputeInternalDynamicForces();
-
-        ///Compute the PML history vector using gauss-integration.
-        ///@return Vector with the PML Element history values.
-        ///@note The PML vector is none existent for this element.
-        ///@see Assembler::ComputePMLHistoryMatrix(), Integrator::ComputeEffectiveStiffness().
-        Eigen::VectorXd ComputePMLVector();
 
         ///Compute the surface forces acting on the element.
         ///@param surface Pointer to the Load object that contains this information.
