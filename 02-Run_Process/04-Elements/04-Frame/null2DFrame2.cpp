@@ -106,6 +106,9 @@ null2DFrame2::GetStrainRate() const{
 //Gets the material strain in section at  coordinate (x3,x2).
 Eigen::MatrixXd 
 null2DFrame2::GetStrainAt(double x3, double x2) const{
+    UNUNSED_PARAMETER(x2);
+    UNUNSED_PARAMETER(x3);
+
     //Considers one integration point.
     Eigen::MatrixXd theStrain(1, 3);
     theStrain.fill(0.0);
@@ -116,6 +119,9 @@ null2DFrame2::GetStrainAt(double x3, double x2) const{
 //Gets the material stress in section at  coordinate (x3,x2).
 Eigen::MatrixXd 
 null2DFrame2::GetStressAt(double x3, double x2) const{
+    UNUNSED_PARAMETER(x2);
+    UNUNSED_PARAMETER(x3);
+
     //Considers one integration point.
     Eigen::MatrixXd theStress(1, 3);
     theStress.fill(0.0);
@@ -125,7 +131,9 @@ null2DFrame2::GetStressAt(double x3, double x2) const{
 
 //Gets the element internal response in VTK format.
 Eigen::VectorXd 
-null2DFrame2::GetVTKResponse(std::string response) const{   
+null2DFrame2::GetVTKResponse(std::string response) const{ 
+    UNUNSED_PARAMETER(response);
+  
     //The VTK response vector.
     Eigen::VectorXd theResponse(6);
     theResponse.fill(0.0);
@@ -192,17 +200,12 @@ null2DFrame2::ComputeInternalDynamicForces(){
     return InternalForces;
 }
 
-//Compute the PML history vector using gauss-integration.
-Eigen::VectorXd 
-null2DFrame2::ComputePMLVector(){
-    //Empty PML vector.
-    Eigen::VectorXd Fpml;
-    return Fpml;
-}
-
 //Compute the surface forces acting on the element.
 Eigen::VectorXd 
 null2DFrame2::ComputeSurfaceForces(const std::shared_ptr<Load> &surfaceLoad, unsigned int face){
+    UNUNSED_PARAMETER(face);
+    UNUNSED_PARAMETER(surfaceLoad);
+
     //Local surface load vector:
     Eigen::VectorXd surfaceForces(6);
     surfaceForces.fill(0.0);
@@ -213,6 +216,9 @@ null2DFrame2::ComputeSurfaceForces(const std::shared_ptr<Load> &surfaceLoad, uns
 //Compute the body forces acting on the element.
 Eigen::VectorXd 
 null2DFrame2::ComputeBodyForces(const std::shared_ptr<Load> &bodyLoad, unsigned int k){
+    UNUNSED_PARAMETER(k);
+    UNUNSED_PARAMETER(bodyLoad);
+
     //Local body load vector:
     Eigen::VectorXd bodyForces(6);
     bodyForces.fill(0.0);
@@ -223,6 +229,9 @@ null2DFrame2::ComputeBodyForces(const std::shared_ptr<Load> &bodyLoad, unsigned 
 //Compute the domain reduction forces acting on the element.
 Eigen::VectorXd 
 null2DFrame2::ComputeDomainReductionForces(const std::shared_ptr<Load> &drm, unsigned int k){
+    UNUNSED_PARAMETER(k);
+    UNUNSED_PARAMETER(drm);
+
     //TODO: Domain reduction forces not implemented for frame.
     Eigen::VectorXd DRMForces(6);
     DRMForces.fill(0.0);
