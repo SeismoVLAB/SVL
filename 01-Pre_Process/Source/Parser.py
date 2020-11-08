@@ -840,6 +840,8 @@ def GetElementInformation(fileHandler, User, Element):
                     element['SECTION'] = int(token[1])
                 elif token[0].upper() == '-NP':
                     element['NPOINTS'] = int(token[1])
+                elif token[0].upper() == '-RULE':
+                    element['QUADRATURE'] = token[1]
                 elif token[0].upper() == '-TH':
                     element['THICKNESS'] = float(token[1])
                 elif token[0].upper() == '-A':
