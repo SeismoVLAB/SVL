@@ -66,7 +66,9 @@ int main(int argc, char **argv){
     Stop = CommandLine(argc, argv, Folder, File);
 
     //Initialize the profiler.
+    #if PROFILING
     Profiler::Get().BeginSession("Profile", Folder);
+    #endif
 
     //Check command line arguments is valid.
     if(!Stop){
@@ -86,7 +88,9 @@ int main(int argc, char **argv){
     }
 
     //Finilize the profiler.
+    #if PROFILING
     Profiler::Get().EndSession();
+    #endif
 
     //Finilize MPI library.
     PetscFinalize();
