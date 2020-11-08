@@ -60,7 +60,8 @@ class TIEQlin2DQuad4 : public Element{
         ///Creates a TIEQlin2DQuad4 in a finite element Mesh.
         ///@param nodes The Node connectivity array of this Element.
         ///@param material Pointer to the Material that this Element is made out of.
-        ///@param th The thickness of the lin2DQuad4 Element.
+        ///@param quadrature The integration rule to be employed.
+        ///@param nGauss Number of Gauss points for Element integration.
         ///@param nGauss Number of Gauss points for Element integration.
         ///@param massform The mass formulation to compute the mass matrix.
         ///@param type The type of modulus reduction and damping curve.
@@ -70,7 +71,7 @@ class TIEQlin2DQuad4 : public Element{
         ///@param eref Reference shear strain metric to read G/Gmax and damping curves.
         ///@note More details can be found at @ref linkTIEQlin2DQuad4.
         ///@see TIEQlin2DQuad4::theNodes, TIEQlin2DQuad4::theMaterial, TIEQlin2DQuad4::QuadraturePoints.
-        TIEQlin2DQuad4(const std::vector<unsigned int> nodes, std::unique_ptr<Material> &material, const double th, const unsigned int nGauss=4, bool massform=true, const std::string Type="DARENDELI", const double zref=0.0, const double cf1=0.0, const double cf2=0.0, const double eref=0.0);
+        TIEQlin2DQuad4(const std::vector<unsigned int> nodes, std::unique_ptr<Material> &material, const double th, const std::string quadrature="GAUSS", const unsigned int nGauss=4, bool massform=true, const std::string Type="DARENDELI", const double zref=0.0, const double cf1=0.0, const double cf2=0.0, const double eref=0.0);
 
         ///Destroys this TIEQlin2DQuad4 object.
         ~TIEQlin2DQuad4();
@@ -168,12 +169,6 @@ class TIEQlin2DQuad4 : public Element{
         ///@note The internal force vector can be revisited in @ref linkElement.
         ///@see Assembler::ComputeDynamicInternalForceVector().
         Eigen::VectorXd ComputeInternalDynamicForces();
-
-        ///Compute the PML history vector using gauss-integration.
-        ///@return Vector with the PML Element history values.
-        ///@note The PML vector is none existent for this element.
-        ///@see Assembler::ComputePMLHistoryMatrix(), Integrator::ComputeEffectiveStiffness().
-        Eigen::VectorXd ComputePMLVector();
 
         ///Compute the surface forces acting on the element.
         ///@param surface Pointer to the Load object that contains this information.

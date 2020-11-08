@@ -4,19 +4,23 @@
 #include "Material.hpp"
 #include "kin2DQuad4.hpp"
 #include "GaussQuadrature.hpp"
+#include "LobattoQuadrature.hpp"
 #include "Definitions.hpp"
 
 //Define VTK cell value for Paraview:
 const unsigned int VTKCELL = 9;
 
 //Overload constructor.
-kin2DQuad4::kin2DQuad4(const std::vector<unsigned int> nodes, std::unique_ptr<Material> &material, const double th, const unsigned int nGauss, bool massform) :
+kin2DQuad4::kin2DQuad4(const std::vector<unsigned int> nodes, std::unique_ptr<Material> &material, const double th, const std::string quadrature, const unsigned int nGauss, bool massform) :
 Element("kin2DQuad4", nodes, 8, VTKCELL), t(th), MassForm(massform) {
     //The element nodes.
     theNodes.resize(4);
 
     //Numerical integration rule.
-    QuadraturePoints = std::make_unique<GaussQuadrature>("Quad", nGauss);
+    if(strcasecmp(quadrature.c_str(),"GAUSS") == 0)
+        QuadraturePoints = std::make_unique<GaussQuadrature>("Quad", nGauss);
+    else if(strcasecmp(quadrature.c_str(),"LOBATTO") == 0)
+        QuadraturePoints = std::make_unique<LobattoQuadrature>("Quad", nGauss);
 
     //The element material. 
     theMaterial.resize(nGauss);
@@ -185,6 +189,9 @@ kin2DQuad4::GetStrainRate() const{
 //Gets the material strain in section at  coordinate (x3,x2).
 Eigen::MatrixXd 
 kin2DQuad4::GetStrainAt(double x3, double x2) const{
+    UNUNSED_PARAMETER(x3);
+    UNUNSED_PARAMETER(x2);
+
     //number of integration points.
     unsigned int nPoints = QuadraturePoints->GetNumberOfQuadraturePoints();
 
@@ -198,6 +205,9 @@ kin2DQuad4::GetStrainAt(double x3, double x2) const{
 //Gets the material stress in section at  coordinate (x3,x2).
 Eigen::MatrixXd 
 kin2DQuad4::GetStressAt(double x3, double x2) const{
+    UNUNSED_PARAMETER(x3);
+    UNUNSED_PARAMETER(x2);
+
     //number of integration points.
     unsigned int nPoints = QuadraturePoints->GetNumberOfQuadraturePoints();
 
@@ -417,14 +427,6 @@ kin2DQuad4::ComputeInternalDynamicForces(){
     }
 
     return InternalForces;
-}
-
-//Compute the PML history vector using gauss-integration.
-Eigen::VectorXd 
-kin2DQuad4::ComputePMLVector(){
-    //Empty PML vector.
-    Eigen::VectorXd Fpml;
-    return Fpml;
 }
 
 //Compute the surface forces acting on the element.
@@ -664,6 +666,10 @@ kin2DQuad4::ComputeStrain(const double ri, const double si, const Eigen::MatrixX
 //Update strain rate in the element.
 Eigen::VectorXd 
 kin2DQuad4::ComputeStrainRate(const double ri, const double si, const Eigen::MatrixXd &Bij) const{
+    UNUNSED_PARAMETER(ri);
+    UNUNSED_PARAMETER(si);
+    UNUNSED_PARAMETER(Bij);
+
     //TODO: Compute strain rate.
     //Strain vector definition:
     Eigen::VectorXd strainrate(3);

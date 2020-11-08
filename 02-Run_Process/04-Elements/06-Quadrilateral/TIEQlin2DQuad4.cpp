@@ -5,18 +5,23 @@
 #include "Material.hpp"
 #include "TIEQlin2DQuad4.hpp"
 #include "GaussQuadrature.hpp"
+#include "LobattoQuadrature.hpp"
+#include "Definitions.hpp"
 
 //Define VTK cell value for Paraview:
 const unsigned int VTKCELL = 9;
 
 //Overload constructor.
-TIEQlin2DQuad4::TIEQlin2DQuad4(const std::vector<unsigned int> nodes, std::unique_ptr<Material> &material, const double th, const unsigned int nGauss, bool massform, const std::string Type, const double zref, const double cf1, const double cf2, const double eref) :
+TIEQlin2DQuad4::TIEQlin2DQuad4(const std::vector<unsigned int> nodes, std::unique_ptr<Material> &material, const double th, const std::string quadrature, const unsigned int nGauss, bool massform, const std::string Type, const double zref, const double cf1, const double cf2, const double eref) :
 Element("TIEQlin2DQuad4", nodes, 8, VTKCELL), t(th), MassForm(massform), cf1(cf1), cf2(cf2), zref(zref), eref(eref), Type(Type) {
     //The element nodes.
     theNodes.resize(4);
 
     //Numerical integration rule.
-    QuadraturePoints = std::make_unique<GaussQuadrature>("Quad", nGauss);
+    if(strcasecmp(quadrature.c_str(),"GAUSS") == 0)
+        QuadraturePoints = std::make_unique<GaussQuadrature>("Quad", nGauss);
+    else if(strcasecmp(quadrature.c_str(),"LOBATTO") == 0)
+        QuadraturePoints = std::make_unique<LobattoQuadrature>("Quad", nGauss);
 
     //The element material. 
     theMaterial.resize(nGauss);
@@ -81,7 +86,7 @@ TIEQlin2DQuad4::UpdateState(){
 
         Eigen::VectorXd EqLinParam = ComputeGGmaxDamping(vs,z,rho);
 
-        double GGmax = EqLinParam(0);
+        //double GGmax = EqLinParam(0);  [-Wunused-variable]
 
         theMaterial[k]->UpdateState(strain, 1);
     }
@@ -201,6 +206,9 @@ TIEQlin2DQuad4::GetStrainRate() const{
 //Gets the material strain in section at  coordinate (x3,x2).
 Eigen::MatrixXd 
 TIEQlin2DQuad4::GetStrainAt(double x3, double x2) const{
+    UNUNSED_PARAMETER(x3);
+    UNUNSED_PARAMETER(x2);
+
     //number of integration points.
     unsigned int nPoints = QuadraturePoints->GetNumberOfQuadraturePoints();
 
@@ -214,6 +222,9 @@ TIEQlin2DQuad4::GetStrainAt(double x3, double x2) const{
 //Gets the material stress in section at  coordinate (x3,x2).
 Eigen::MatrixXd 
 TIEQlin2DQuad4::GetStressAt(double x3, double x2) const{
+    UNUNSED_PARAMETER(x3);
+    UNUNSED_PARAMETER(x2);
+
     //number of integration points.
     unsigned int nPoints = QuadraturePoints->GetNumberOfQuadraturePoints();
 
@@ -484,14 +495,6 @@ TIEQlin2DQuad4::ComputeInternalDynamicForces(){
     return InternalForces;
 }
 
-//Compute the PML history vector using gauss-integration.
-Eigen::VectorXd 
-TIEQlin2DQuad4::ComputePMLVector(){
-    //Empty PML vector.
-    Eigen::VectorXd Fpml;
-    return Fpml;
-}
-
 //Compute the surface forces acting on the element.
 Eigen::VectorXd 
 TIEQlin2DQuad4::ComputeSurfaceForces(const std::shared_ptr<Load> &surfaceLoad, unsigned int face){
@@ -686,6 +689,8 @@ TIEQlin2DQuad4::ComputeStrain(const Eigen::MatrixXd &Bij) const{
 //Update strain rate in the element.
 Eigen::VectorXd 
 TIEQlin2DQuad4::ComputeStrainRate(const Eigen::MatrixXd &Bij) const{
+    UNUNSED_PARAMETER(Bij);
+
     //TODO: Compute strain rate.
     //Strain vector definition:
     Eigen::VectorXd strainrate(3);

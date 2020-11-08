@@ -58,11 +58,12 @@ class kin2DQuad4 : public Element{
         ///@param nodes The Node connectivity array of this Element.
         ///@param material Pointer to the Material that this Element is made out of.
         ///@param th The thickness of the lin2DQuad4 Element.
+        ///@param quadrature The integration rule to be employed.
         ///@param nGauss Number of Gauss points for Element integration.
         ///@param massform The mass formulation to compute the mass matrix.
         ///@note More details can be found at @ref linkkin2DQuad4.
         ///@see kin2DQuad4::theNodes, kin2DQuad4::theMaterial, kin2DQuad4::QuadraturePoints.
-        kin2DQuad4(const std::vector<unsigned int> nodes, std::unique_ptr<Material> &material, const double th, const unsigned int nGauss=4, bool massform=false);
+        kin2DQuad4(const std::vector<unsigned int> nodes, std::unique_ptr<Material> &material, const double th, const std::string quadrature="GAUSS", const unsigned int nGauss=4, bool massform=false);
 
         ///Destroys this kin2DQuad4 object.
         ~kin2DQuad4();
@@ -160,12 +161,6 @@ class kin2DQuad4 : public Element{
         ///@note The internal force vector can be revisited in @ref linkElement.
         ///@see Assembler::ComputeDynamicInternalForceVector().
         Eigen::VectorXd ComputeInternalDynamicForces();
-
-        ///Compute the PML history vector using gauss-integration.
-        ///@return Vector with the PML Element history values.
-        ///@note The PML vector is none existent for this element.
-        ///@see Assembler::ComputePMLHistoryMatrix(), Integrator::ComputeEffectiveStiffness().
-        Eigen::VectorXd ComputePMLVector();
 
         ///Compute the surface forces acting on the element.
         ///@param surface Pointer to the Load object that contains this information.

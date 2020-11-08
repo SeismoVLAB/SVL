@@ -4,19 +4,23 @@
 #include "Material.hpp"
 #include "PML2DQuad4.hpp"
 #include "GaussQuadrature.hpp"
+#include "LobattoQuadrature.hpp"
 #include "Definitions.hpp"
 
 //Define VTK cell value for Paraview:
 const unsigned int VTKCELL = 9;
 
 //Overload constructor.
-PML2DQuad4::PML2DQuad4(const std::vector<unsigned int> nodes, std::unique_ptr<Material> &material, const std::vector<double> parameters, const unsigned int nGauss, bool massform) :
+PML2DQuad4::PML2DQuad4(const std::vector<unsigned int> nodes, std::unique_ptr<Material> &material, const std::vector<double> parameters, const std::string quadrature, const unsigned int nGauss, bool massform) :
 Element("PML2DQuad4", nodes, 20, VTKCELL), t(parameters[0]), MassForm(massform), m_pml(parameters[1]), L_pml(parameters[2]), R_pml(parameters[3]), x0_pml(parameters[4]), y0_pml(parameters[5]), nx_pml(parameters[6]), ny_pml(parameters[7]) {
     //The element nodes.
     theNodes.resize(4);
 
     //Numerical integration rule.
-    QuadraturePoints = std::make_unique<GaussQuadrature>("Quad", nGauss);
+    if(strcasecmp(quadrature.c_str(),"GAUSS") == 0)
+        QuadraturePoints = std::make_unique<GaussQuadrature>("Quad", nGauss);
+    else if(strcasecmp(quadrature.c_str(),"LOBATTO") == 0)
+        QuadraturePoints = std::make_unique<LobattoQuadrature>("Quad", nGauss);
 
     //The element material. 
     theMaterial.resize(nGauss);
@@ -167,6 +171,9 @@ PML2DQuad4::GetStrainRate() const{
 //Gets the material strain in section at  coordinate (x3,x2).
 Eigen::MatrixXd 
 PML2DQuad4::GetStrainAt(double x3, double x2) const{
+    UNUNSED_PARAMETER(x3);
+    UNUNSED_PARAMETER(x2);
+
     //number of integration points.
     unsigned int nPoints = QuadraturePoints->GetNumberOfQuadraturePoints();
 
@@ -180,6 +187,9 @@ PML2DQuad4::GetStrainAt(double x3, double x2) const{
 //Gets the material stress in section at  coordinate (x3,x2).
 Eigen::MatrixXd 
 PML2DQuad4::GetStressAt(double x3, double x2) const{
+    UNUNSED_PARAMETER(x3);
+    UNUNSED_PARAMETER(x2);
+
     //number of integration points.
     unsigned int nPoints = QuadraturePoints->GetNumberOfQuadraturePoints();
 
@@ -193,6 +203,8 @@ PML2DQuad4::GetStressAt(double x3, double x2) const{
 //Gets the element internal response in VTK format.
 Eigen::VectorXd 
 PML2DQuad4::GetVTKResponse(std::string response) const{
+    UNUNSED_PARAMETER(response);
+
     //IMPORTANT: Since PML is a buffer for absorbing waves, we decided not to show results. 
     Eigen::VectorXd theResponse(6);
     theResponse.fill(0.0);
@@ -475,17 +487,12 @@ PML2DQuad4::ComputeInternalDynamicForces(){
     return InternalForces;
 }
 
-//Compute the PML history vector using gauss-integration.
-Eigen::VectorXd 
-PML2DQuad4::ComputePMLVector(){
-    //Empty PML vector.
-    Eigen::VectorXd Fpml;
-    return Fpml;
-}
-
 //Compute the surface forces acting on the element.
 Eigen::VectorXd 
 PML2DQuad4::ComputeSurfaceForces(const std::shared_ptr<Load> &surface, unsigned int face){
+    UNUNSED_PARAMETER(face);
+    UNUNSED_PARAMETER(surface);
+
     //PML surface forces are not supported, i.e., makes no sense.
     Eigen::VectorXd surfaceForces(20);
     surfaceForces.fill(0.0);
@@ -496,6 +503,9 @@ PML2DQuad4::ComputeSurfaceForces(const std::shared_ptr<Load> &surface, unsigned 
 //Compute the body forces acting on the element.
 Eigen::VectorXd 
 PML2DQuad4::ComputeBodyForces(const std::shared_ptr<Load> &bodyLoad, unsigned int k){
+    UNUNSED_PARAMETER(k);
+    UNUNSED_PARAMETER(bodyLoad);
+
     //PML body forces are not supported, i.e., makes no sense.
     Eigen::VectorXd bodyForces(20);
     bodyForces.fill(0.0);
@@ -506,6 +516,9 @@ PML2DQuad4::ComputeBodyForces(const std::shared_ptr<Load> &bodyLoad, unsigned in
 //Compute the domain reduction forces acting on the element.
 Eigen::VectorXd 
 PML2DQuad4::ComputeDomainReductionForces(const std::shared_ptr<Load> &drm, unsigned int k){
+    UNUNSED_PARAMETER(k);
+    UNUNSED_PARAMETER(drm);
+
     //DRM method in PML domain is not supported, i.e., makes no sense.
     Eigen::VectorXd DRMForces(20);
     DRMForces.fill(0.0);
@@ -535,6 +548,8 @@ PML2DQuad4::ComputeStrain(const Eigen::MatrixXd &Bij) const{
 //Update strain rate in the element.
 Eigen::VectorXd 
 PML2DQuad4::ComputeStrainRate(const Eigen::MatrixXd &Bij) const{
+    UNUNSED_PARAMETER(Bij);
+
     //TODO: Compute strain rate.
     //Strain vector definition:
     Eigen::VectorXd strainrate(3);
