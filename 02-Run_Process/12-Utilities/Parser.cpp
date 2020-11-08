@@ -48,6 +48,7 @@
 #include "lin3DShell4.hpp"
 #include "lin3DHexa8.hpp"
 #include "kin3DHexa8.hpp"
+#include "PML3DHexa8.hpp"
 #include "lin3DHexa20.hpp"
 #include "EQlin2DQuad4.hpp"
 #include "TIEQlin2DQuad4.hpp"
@@ -69,6 +70,7 @@
 #include "NewmarkBeta.hpp"
 #include "CompositeBathe.hpp"
 #include "CentralDifference.hpp"
+#include "ExtendedNewmarkBeta.hpp"
 
 #include "EigenSolver.hpp"
 #include "MumpsSolver.hpp"
@@ -431,6 +433,7 @@ Parser::CreateElement(std::ifstream& InputFile, std::shared_ptr<Mesh> &theMesh, 
     std::vector<unsigned int> nodes;
 
     //Element parse variables.
+    std::string Quadrature;
     unsigned int Tag, matID, secID, nGauss;
 
     //Parser the element component.
@@ -471,18 +474,18 @@ Parser::CreateElement(std::ifstream& InputFile, std::shared_ptr<Mesh> &theMesh, 
     else if(strcasecmp(elemName.c_str(),"lin2DTruss3") == 0){        
         nodes.resize(3);
         parameters.resize(1);
-        InputFile >> nodes[0] >> nodes[1] >> nodes[2] >> matID >> parameters[0] >> nGauss;
+        InputFile >> nodes[0] >> nodes[1] >> nodes[2] >> matID >> parameters[0] >> Quadrature >> nGauss;
 
         //Instantiate the lin2DTruss3 element.
-        theElement = std::make_shared<lin2DTruss3>(nodes, theMesh->GetMaterial(matID), parameters[0], nGauss, MassForm);
+        theElement = std::make_shared<lin2DTruss3>(nodes, theMesh->GetMaterial(matID), parameters[0], Quadrature, nGauss, MassForm);
     }
     else if(strcasecmp(elemName.c_str(),"lin3DTruss3") == 0){        
         nodes.resize(3);
         parameters.resize(1);
-        InputFile >> nodes[0] >> nodes[1] >> nodes[2] >> matID >> parameters[0] >> nGauss;
+        InputFile >> nodes[0] >> nodes[1] >> nodes[2] >> matID >> parameters[0] >> Quadrature >> nGauss;
 
         //Instantiate the lin3DTruss3 element.
-        theElement = std::make_shared<lin3DTruss3>(nodes, theMesh->GetMaterial(matID), parameters[0], nGauss, MassForm);
+        theElement = std::make_shared<lin3DTruss3>(nodes, theMesh->GetMaterial(matID), parameters[0], Quadrature, nGauss, MassForm);
     }
     else if(strcasecmp(elemName.c_str(),"ZeroLength1D") == 0){
         nodes.resize(2);
@@ -532,7 +535,7 @@ Parser::CreateElement(std::ifstream& InputFile, std::shared_ptr<Mesh> &theMesh, 
     else if(strcasecmp(elemName.c_str(),"lin2DFrame2") == 0){
         nodes.resize(2);
         std::string Formulation;
-        InputFile >> nodes[0] >> nodes[1] >> secID >> Formulation >> nGauss;
+        InputFile >> nodes[0] >> nodes[1] >> secID >> Formulation >> Quadrature >> nGauss;
 
         //Frame element formulation.
         bool Condition = false;
@@ -540,7 +543,7 @@ Parser::CreateElement(std::ifstream& InputFile, std::shared_ptr<Mesh> &theMesh, 
             Condition = true;
                 
         //Instantiate the lin2DFrame2 element.
-        theElement = std::make_shared<lin2DFrame2>(nodes, theMesh->GetSection(secID), MassForm, Condition, nGauss);
+        theElement = std::make_shared<lin2DFrame2>(nodes, theMesh->GetSection(secID), MassForm, Condition, Quadrature, nGauss);
     }
     else if(strcasecmp(elemName.c_str(),"kin2DFrame2") == 0){
         nodes.resize(2);
@@ -553,7 +556,7 @@ Parser::CreateElement(std::ifstream& InputFile, std::shared_ptr<Mesh> &theMesh, 
     else if(strcasecmp(elemName.c_str(),"lin3DFrame2") == 0){
         nodes.resize(2);
         std::string Formulation;
-        InputFile >> nodes[0] >> nodes[1] >> secID >> Formulation >> nGauss;
+        InputFile >> nodes[0] >> nodes[1] >> secID >> Formulation >> Quadrature >> nGauss;
 
         //Frame element formulation.
         bool Condition = false;
@@ -561,75 +564,83 @@ Parser::CreateElement(std::ifstream& InputFile, std::shared_ptr<Mesh> &theMesh, 
             Condition = true;
 
         //Instantiate the lin3DFrame2 element.
-        theElement = std::make_shared<lin3DFrame2>(nodes, theMesh->GetSection(secID), MassForm, Condition, nGauss);
+        theElement = std::make_shared<lin3DFrame2>(nodes, theMesh->GetSection(secID), MassForm, Condition, Quadrature, nGauss);
     }
     else if(strcasecmp(elemName.c_str(),"lin2DQuad4") == 0){
         nodes.resize(4);
         parameters.resize(1);
-        InputFile >> nodes[0] >> nodes[1] >> nodes[2] >> nodes[3] >> matID >> parameters[0]  >> nGauss;
+        InputFile >> nodes[0] >> nodes[1] >> nodes[2] >> nodes[3] >> matID >> parameters[0] >> Quadrature  >> nGauss;
 
         //Instantiate the lin2DQuad4 element.
-        theElement = std::make_shared<lin2DQuad4>(nodes, theMesh->GetMaterial(matID), parameters[0], nGauss, MassForm);
+        theElement = std::make_shared<lin2DQuad4>(nodes, theMesh->GetMaterial(matID), parameters[0], Quadrature, nGauss, MassForm);
     }
     else if(strcasecmp(elemName.c_str(),"lin2DQuad8") == 0){
         nodes.resize(8);
         parameters.resize(1);
-        InputFile >> nodes[0] >> nodes[1] >> nodes[2] >> nodes[3] >> nodes[4] >> nodes[5] >> nodes[6] >> nodes[7] >> matID >> parameters[0]  >> nGauss;
+        InputFile >> nodes[0] >> nodes[1] >> nodes[2] >> nodes[3] >> nodes[4] >> nodes[5] >> nodes[6] >> nodes[7] >> matID >> parameters[0] >> Quadrature  >> nGauss;
 
         //Instantiate the lin2DQuad8 element.
-        theElement = std::make_shared<lin2DQuad8>(nodes, theMesh->GetMaterial(matID), parameters[0], nGauss, MassForm);
+        theElement = std::make_shared<lin2DQuad8>(nodes, theMesh->GetMaterial(matID), parameters[0], Quadrature, nGauss, MassForm);
     }
     else if(strcasecmp(elemName.c_str(),"PML2DQuad4") == 0){
         nodes.resize(4);
         parameters.resize(8);
-        InputFile >> nodes[0] >> nodes[1] >> nodes[2] >> nodes[3] >> matID >> parameters[0] >> parameters[1] >> parameters[2] >> parameters[3] >> parameters[4] >> parameters[5] >> parameters[6] >> parameters[7] >> nGauss;
+        InputFile >> nodes[0] >> nodes[1] >> nodes[2] >> nodes[3] >> matID >> parameters[0] >> parameters[1] >> parameters[2] >> parameters[3] >> parameters[4] >> parameters[5] >> parameters[6] >> parameters[7] >> Quadrature >> nGauss;
 
         //Instantiate the PML2DQuad4 element.
-        theElement = std::make_shared<PML2DQuad4>(nodes, theMesh->GetMaterial(matID), parameters, nGauss, MassForm);
+        theElement = std::make_shared<PML2DQuad4>(nodes, theMesh->GetMaterial(matID), parameters, Quadrature, nGauss, MassForm);
     }
     else if(strcasecmp(elemName.c_str(),"PML2DQuad8") == 0){
         nodes.resize(8);
         parameters.resize(8);
-        InputFile >> nodes[0] >> nodes[1] >> nodes[2] >> nodes[3] >> nodes[4] >> nodes[5] >> nodes[6] >> nodes[7] >> matID >> parameters[0] >> parameters[1] >> parameters[2] >> parameters[3] >> parameters[4] >> parameters[5] >> parameters[6] >> parameters[7] >> nGauss;
+        InputFile >> nodes[0] >> nodes[1] >> nodes[2] >> nodes[3] >> nodes[4] >> nodes[5] >> nodes[6] >> nodes[7] >> matID >> parameters[0] >> parameters[1] >> parameters[2] >> parameters[3] >> parameters[4] >> parameters[5] >> parameters[6] >> parameters[7] >> Quadrature >> nGauss;
 
         //Instantiate the PML2DQuad4 element.
-        theElement = std::make_shared<PML2DQuad8>(nodes, theMesh->GetMaterial(matID), parameters, nGauss, MassForm);
+        theElement = std::make_shared<PML2DQuad8>(nodes, theMesh->GetMaterial(matID), parameters, Quadrature, nGauss, MassForm);
     }
     else if(strcasecmp(elemName.c_str(),"kin2DQuad4") == 0){
         nodes.resize(4);
         parameters.resize(1);
-        InputFile >> nodes[0] >> nodes[1] >> nodes[2] >> nodes[3] >> matID >> parameters[0]  >> nGauss;
+        InputFile >> nodes[0] >> nodes[1] >> nodes[2] >> nodes[3] >> matID >> parameters[0] >> Quadrature  >> nGauss;
 
         //Instantiate the kin2DQuad4 element.
-        theElement = std::make_shared<kin2DQuad4>(nodes, theMesh->GetMaterial(matID), parameters[0], nGauss, MassForm);
+        theElement = std::make_shared<kin2DQuad4>(nodes, theMesh->GetMaterial(matID), parameters[0], Quadrature, nGauss, MassForm);
     }
     else if(strcasecmp(elemName.c_str(),"lin3DShell4") == 0){
         nodes.resize(4);
-        InputFile >> nodes[0] >> nodes[1] >> nodes[2] >> nodes[3] >> secID >> nGauss;
+        InputFile >> nodes[0] >> nodes[1] >> nodes[2] >> nodes[3] >> secID >> Quadrature >> nGauss;
             
         //Instantiate the lin3DShell4 element.
-        theElement = std::make_shared<lin3DShell4>(nodes, theMesh->GetSection(secID), nGauss, MassForm);
+        theElement = std::make_shared<lin3DShell4>(nodes, theMesh->GetSection(secID), Quadrature, nGauss, MassForm);
     }
     else if(strcasecmp(elemName.c_str(),"lin3DHexa8") == 0){
         nodes.resize(8);
-        InputFile >> nodes[0] >> nodes[1] >> nodes[2] >> nodes[3] >> nodes[4] >> nodes[5] >> nodes[6] >> nodes[7] >> matID >> nGauss;
+        InputFile >> nodes[0] >> nodes[1] >> nodes[2] >> nodes[3] >> nodes[4] >> nodes[5] >> nodes[6] >> nodes[7] >> matID >> Quadrature >> nGauss;
 
         //Instantiate the lin3DHexa8 element.
-        theElement = std::make_shared<lin3DHexa8>(nodes, theMesh->GetMaterial(matID), nGauss, MassForm);
+        theElement = std::make_shared<lin3DHexa8>(nodes, theMesh->GetMaterial(matID), Quadrature, nGauss, MassForm);
     }
     else if(strcasecmp(elemName.c_str(),"kin3DHexa8") == 0){
         nodes.resize(8);
-        InputFile >> nodes[0] >> nodes[1] >> nodes[2] >> nodes[3] >> nodes[4] >> nodes[5] >> nodes[6] >> nodes[7] >> matID >> nGauss;
+        InputFile >> nodes[0] >> nodes[1] >> nodes[2] >> nodes[3] >> nodes[4] >> nodes[5] >> nodes[6] >> nodes[7] >> matID >> Quadrature >> nGauss;
 
         //Instantiate the kin3DHexa8 element.
-        theElement = std::make_shared<kin3DHexa8>(nodes, theMesh->GetMaterial(matID), nGauss, MassForm);
+        theElement = std::make_shared<kin3DHexa8>(nodes, theMesh->GetMaterial(matID), Quadrature, nGauss, MassForm);
+    }
+    else if(strcasecmp(elemName.c_str(),"PML3DHexa8") == 0){
+        nodes.resize(8);
+        parameters.resize(9);
+        InputFile >> nodes[0] >> nodes[1] >> nodes[2] >> nodes[3] >> nodes[4] >> nodes[5] >> nodes[6] >> nodes[7] >> matID >> parameters[0] >> parameters[1] >> parameters[2] >> parameters[3] >> parameters[4] >> parameters[5] >> parameters[6] >> parameters[7] >> parameters[8] >> Quadrature >> nGauss;
+
+        //Instantiate the PML2DQuad4 element.
+        theElement = std::make_shared<PML3DHexa8>(nodes, theMesh->GetMaterial(matID), parameters, Quadrature, nGauss, MassForm);
     }
     else if(strcasecmp(elemName.c_str(),"lin3DHexa20") == 0){
         nodes.resize(20);
-        InputFile >> nodes[0] >> nodes[1] >> nodes[2] >> nodes[3] >> nodes[4] >> nodes[5] >> nodes[6] >> nodes[7] >> nodes[8] >> nodes[9] >> nodes[10] >> nodes[11] >> nodes[12] >> nodes[13] >> nodes[14] >> nodes[15] >> nodes[16] >> nodes[17] >> nodes[18] >> nodes[19] >> matID >> nGauss;
+        InputFile >> nodes[0] >> nodes[1] >> nodes[2] >> nodes[3] >> nodes[4] >> nodes[5] >> nodes[6] >> nodes[7] >> nodes[8] >> nodes[9] >> nodes[10] >> nodes[11] >> nodes[12] >> nodes[13] >> nodes[14] >> nodes[15] >> nodes[16] >> nodes[17] >> nodes[18] >> nodes[19] >> matID >> Quadrature >> nGauss;
 
         //Instantiate the lin3DHexa20 element.
-        theElement = std::make_shared<lin3DHexa20>(nodes, theMesh->GetMaterial(matID), nGauss, MassForm);
+        theElement = std::make_shared<lin3DHexa20>(nodes, theMesh->GetMaterial(matID), Quadrature, nGauss, MassForm);
     }
     else if(strcasecmp(elemName.c_str(),"TIEQlin2DQuad4") == 0){
         std::string eType;
@@ -637,10 +648,10 @@ Parser::CreateElement(std::ifstream& InputFile, std::shared_ptr<Mesh> &theMesh, 
 
         nodes.resize(4);
         parameters.resize(1);
-        InputFile >> nodes[0] >> nodes[1] >> nodes[2] >> nodes[3] >> matID >> parameters[0] >> nGauss >> eType >> zref >> cf1 >> cf2 >> eref;
+        InputFile >> nodes[0] >> nodes[1] >> nodes[2] >> nodes[3] >> matID >> parameters[0] >> Quadrature >> nGauss >> eType >> zref >> cf1 >> cf2 >> eref;
 
         //Instantiate the TIEQlin2DQuad4 element.
-        theElement = std::make_shared<TIEQlin2DQuad4>(nodes, theMesh->GetMaterial(matID), parameters[0], nGauss, MassForm, eType, zref, cf1, cf2, eref);
+        theElement = std::make_shared<TIEQlin2DQuad4>(nodes, theMesh->GetMaterial(matID), parameters[0], Quadrature, nGauss, MassForm, eType, zref, cf1, cf2, eref);
     }
     else if(strcasecmp(elemName.c_str(),"EQlin2DQuad4") == 0){
         std::string eType;
@@ -648,10 +659,10 @@ Parser::CreateElement(std::ifstream& InputFile, std::shared_ptr<Mesh> &theMesh, 
 
         nodes.resize(4);
         parameters.resize(1);
-        InputFile >> nodes[0] >> nodes[1] >> nodes[2] >> nodes[3] >> matID >> parameters[0]  >> nGauss >> eType >> zref >> cf1 >> cf2;
+        InputFile >> nodes[0] >> nodes[1] >> nodes[2] >> nodes[3] >> matID >> parameters[0] >> Quadrature  >> nGauss >> eType >> zref >> cf1 >> cf2;
 
         //Instantiate the EQlin2DQuad4 element.
-        theElement = std::make_shared<EQlin2DQuad4>(nodes, theMesh->GetMaterial(matID), parameters[0], nGauss, MassForm, eType, zref, cf1, cf2);
+        theElement = std::make_shared<EQlin2DQuad4>(nodes, theMesh->GetMaterial(matID), parameters[0], Quadrature, nGauss, MassForm, eType, zref, cf1, cf2);
     }
     else if(strcasecmp(elemName.c_str(),"null2DFrame2") == 0){
         nodes.resize(2);
@@ -1173,6 +1184,9 @@ Parser::CreateAnalysis(std::ifstream& InputFile, std::shared_ptr<Mesh> &theMesh,
     }
     else if(strcasecmp(integrator.c_str(),"CENTRALDIFFERENCE") == 0){
         theIntegrator = std::make_shared<CentralDifference>(theMesh, dt, mtol, ktol, ftol);
+    }
+    else if(strcasecmp(integrator.c_str(),"EXTENDEDNEWMARK") == 0){
+        theIntegrator = std::make_shared<ExtendedNewmarkBeta>(theMesh, dt, mtol, ktol, ftol);
     }
 
     //Creates Circular dependency between algotithm and integrator.
