@@ -24,3 +24,6 @@ unsigned int numberOfTotalDofs;
 
 //Total number of constrained-degree-of-freedom.
 unsigned int numberOfConstrainedDofs;
+
+//Maximum memory for PML 3D storage sparse matrix.
+unsigned int PMLStorage;
