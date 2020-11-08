@@ -169,7 +169,7 @@ Assembler::ComputePMLHistoryMatrix(std::shared_ptr<Mesh> &mesh){
 
     //Sparse matrix format.
     std::vector<T> tripletList;
-    tripletList.reserve(ConsistentStorage);
+    tripletList.reserve(PMLStorage);
     
     //Gets element information from the mesh.
     std::map<unsigned int, std::shared_ptr<Element> > Elements = mesh->GetElements();
@@ -187,7 +187,7 @@ Assembler::ComputePMLHistoryMatrix(std::shared_ptr<Mesh> &mesh){
         Eigen::MatrixXd Kpml = Elements[Tag]->ComputePMLMatrix();
 
         //Assemble contribution of each element in mesh.
-        if(Kpml.rows() > 0){
+        if(Kpml.size() > 0){
             for(unsigned int j = 0; j < dofs.size(); j++){
                 for(unsigned int i = 0; i < dofs.size(); i++){
                     if(fabs(Kpml(i,j)) > StiffnessTolerance){
@@ -487,23 +487,21 @@ Assembler::ComputePMLHistoryVector(std::shared_ptr<Mesh> &mesh){
     HistoryVector.fill(0.0);
 
     //Gets element information from the mesh.
-    std::map<unsigned int, std::shared_ptr<Element> > Elements = mesh->GetElements();
+    std::map<unsigned int, std::shared_ptr<Node> > Nodes = mesh->GetNodes();
 
-    for(auto it : Elements){
+    for(auto it : Nodes){
         auto &Tag = it.first;
 
         //Gets the element degree-of-freedom connectivity.
-        std::vector<unsigned int> dofs = Elements[Tag]->GetTotalDegreeOfFreedom();
+        std::vector<int> dofs = Nodes[Tag]->GetTotalDegreeOfFreedom();
 
         //Gets the Stiffness matrix in global coordinates:
-        Eigen::VectorXd Fpml = Elements[Tag]->ComputePMLVector();
+        Eigen::VectorXd Fpml = Nodes[Tag]->GetPMLVector();
 
         //Assemble contribution of each PML in mesh.
-        if(Fpml.size() > 0){
-            for(unsigned int j = 0; j < dofs.size(); j++){
-                if(fabs(Fpml(j)) > ForceTolerance){
-                    HistoryVector(dofs[j]) += Fpml(j);
-                }
+        for(unsigned int j = 0; j < dofs.size(); j++){
+            if(fabs(Fpml(j)) > ForceTolerance){
+                HistoryVector(dofs[j]) += Fpml(j);
             }
         }
     }
