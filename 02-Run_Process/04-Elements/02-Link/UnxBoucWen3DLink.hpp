@@ -160,12 +160,6 @@ class UnxBoucWen3DLink : public Element{
         ///@see Assembler::ComputeDynamicInternalForceVector().
         Eigen::VectorXd ComputeInternalDynamicForces();
 
-        ///Compute the PML history vector using gauss-integration.
-        ///@return Vector with the PML Element history values.
-        ///@note The PML vector is none existent for this element.
-        ///@see Assembler::ComputePMLHistoryMatrix(), Integrator::ComputeEffectiveStiffness().
-        Eigen::VectorXd ComputePMLVector();
-
         ///Compute the surface forces acting on the element.
         ///@param surface Pointer to the Load object that contains this information.
         ///@param k The time step at which the surface load is evaluated.

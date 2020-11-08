@@ -104,6 +104,7 @@ UnxBoucWen3DLink::SetDomain(std::map<unsigned int, std::shared_ptr<Node> > &node
 void 
 UnxBoucWen3DLink::SetDamping(const std::shared_ptr<Damping> &damping){
     //does nothing.
+    UNUNSED_PARAMETER(damping);
 }
 
 //Gets the list of total-degree of freedom of this element.
@@ -159,6 +160,9 @@ UnxBoucWen3DLink::GetStrainRate() const{
 //Gets the material strain in section at  coordinate (x3,x2).
 Eigen::MatrixXd 
 UnxBoucWen3DLink::GetStrainAt(double x3, double x2) const{
+    UNUNSED_PARAMETER(x3);
+    UNUNSED_PARAMETER(x2);
+
     //Stress at coordinate is define within section.
     Eigen::MatrixXd theStrain(1, 6); 
     theStrain.fill(0.0);
@@ -169,6 +173,9 @@ UnxBoucWen3DLink::GetStrainAt(double x3, double x2) const{
 //Gets the material stress in section at  coordinate (x3,x2).
 Eigen::MatrixXd 
 UnxBoucWen3DLink::GetStressAt(double x3, double x2) const{
+    UNUNSED_PARAMETER(x3);
+    UNUNSED_PARAMETER(x2);
+
     //Stress at coordinate is define within section.
     Eigen::MatrixXd theStress(1, 6); 
     theStress.fill(0.0);
@@ -179,6 +186,8 @@ UnxBoucWen3DLink::GetStressAt(double x3, double x2) const{
 //Gets the element internal response in VTK format.
 Eigen::VectorXd 
 UnxBoucWen3DLink::GetVTKResponse(std::string response) const{
+    UNUNSED_PARAMETER(response);
+
     //TODO: Stress/Strain responses
     //The VTK response vector.
     Eigen::VectorXd theResponse(6);
@@ -288,17 +297,12 @@ UnxBoucWen3DLink::ComputeInternalDynamicForces(){
     return InternalForces;
 }
 
-//Compute the PML history vector using gauss-integration.
-Eigen::VectorXd 
-UnxBoucWen3DLink::ComputePMLVector(){
-    //Empty PML vector.
-    Eigen::VectorXd Fpml;
-    return Fpml;
-}
-
 //Compute the surface forces acting on the element.
 Eigen::VectorXd 
 UnxBoucWen3DLink::ComputeSurfaceForces(const std::shared_ptr<Load> &surface, unsigned int face){
+    UNUNSED_PARAMETER(face);
+    UNUNSED_PARAMETER(surface);
+
     //Local surface load vector.
     Eigen::VectorXd surfaceForces(2*Dimension);
     surfaceForces.fill(0.0);
@@ -309,6 +313,9 @@ UnxBoucWen3DLink::ComputeSurfaceForces(const std::shared_ptr<Load> &surface, uns
 //Compute the body forces acting on the element.
 Eigen::VectorXd 
 UnxBoucWen3DLink::ComputeBodyForces(const std::shared_ptr<Load> &body, unsigned int k){
+    UNUNSED_PARAMETER(k);
+    UNUNSED_PARAMETER(body);
+
     //Local body load vector.
     Eigen::VectorXd bodyForces(2*Dimension);
     bodyForces.fill(0.0);
@@ -319,6 +326,9 @@ UnxBoucWen3DLink::ComputeBodyForces(const std::shared_ptr<Load> &body, unsigned 
 //Compute the domain reduction forces acting on the element.
 Eigen::VectorXd 
 UnxBoucWen3DLink::ComputeDomainReductionForces(const std::shared_ptr<Load> &drm, unsigned int k){
+    UNUNSED_PARAMETER(k);
+    UNUNSED_PARAMETER(drm);
+
     //Domain reduction force vector.
     unsigned int nDofs = GetNumberOfDegreeOfFreedom();
     Eigen::VectorXd DRMForces(nDofs);
