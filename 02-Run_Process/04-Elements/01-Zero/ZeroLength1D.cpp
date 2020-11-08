@@ -60,6 +60,7 @@ ZeroLength1D::SetDomain(std::map<unsigned int, std::shared_ptr<Node> > &nodes){
 void 
 ZeroLength1D::SetDamping(const std::shared_ptr<Damping> &damping){
     //does nothing.
+    UNUNSED_PARAMETER(damping);
 }
 
 //Gets the list of total-degree of freedom of this element.
@@ -116,6 +117,9 @@ ZeroLength1D::GetStrainRate() const{
 //Gets the material strain in section at  coordinate (x3,x2).
 Eigen::MatrixXd 
 ZeroLength1D::GetStrainAt(double x3, double x2) const{
+    UNUNSED_PARAMETER(x3);
+    UNUNSED_PARAMETER(x2);
+
     //Stress at coordinate is define within section.
     unsigned int ndim = theDimension*(theDimension + 1)/2;
     Eigen::MatrixXd theStrain(1, ndim);
@@ -127,6 +131,9 @@ ZeroLength1D::GetStrainAt(double x3, double x2) const{
 //Gets the material stress in section at  coordinate (x3,x2).
 Eigen::MatrixXd 
 ZeroLength1D::GetStressAt(double x3, double x2) const{
+    UNUNSED_PARAMETER(x3);
+    UNUNSED_PARAMETER(x2);
+
     //Stress at coordinate is define within section.
     unsigned int ndim = theDimension*(theDimension + 1)/2;
     Eigen::MatrixXd theStress(1, ndim);
@@ -248,17 +255,12 @@ ZeroLength1D::ComputeInternalDynamicForces(){
     return InternalForces;
 }
 
-//Compute the PML history vector using gauss-integration.
-Eigen::VectorXd 
-ZeroLength1D::ComputePMLVector(){
-    //Empty PML vector.
-    Eigen::VectorXd Fpml;
-    return Fpml;
-}
-
 //Compute the surface forces acting on the element.
 Eigen::VectorXd 
 ZeroLength1D::ComputeSurfaceForces(const std::shared_ptr<Load> &surface, unsigned int face){
+    UNUNSED_PARAMETER(face);
+    UNUNSED_PARAMETER(surface);
+
     //Local surface load vector.
     Eigen::VectorXd surfaceForces(2*theDimension);
     surfaceForces.fill(0.0);
@@ -269,6 +271,9 @@ ZeroLength1D::ComputeSurfaceForces(const std::shared_ptr<Load> &surface, unsigne
 //Compute the body forces acting on the element.
 Eigen::VectorXd 
 ZeroLength1D::ComputeBodyForces(const std::shared_ptr<Load> &body, unsigned int k){
+    UNUNSED_PARAMETER(k);
+    UNUNSED_PARAMETER(body);
+
     //Local body load vector.
     Eigen::VectorXd bodyForces(2*theDimension);
     bodyForces.fill(0.0);
@@ -279,6 +284,9 @@ ZeroLength1D::ComputeBodyForces(const std::shared_ptr<Load> &body, unsigned int 
 //Compute the domain reduction forces acting on the element.
 Eigen::VectorXd 
 ZeroLength1D::ComputeDomainReductionForces(const std::shared_ptr<Load> &drm, unsigned int k){
+    UNUNSED_PARAMETER(k);
+    UNUNSED_PARAMETER(drm);
+
     //Domain reduction force vector.
     unsigned int nDofs = GetNumberOfDegreeOfFreedom();
     Eigen::VectorXd DRMForces(nDofs);
