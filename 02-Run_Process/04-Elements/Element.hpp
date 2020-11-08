@@ -157,12 +157,6 @@ class Element{
         ///@see Assembler::ComputeDynamicInternalForceVector().
         virtual Eigen::VectorXd ComputeInternalDynamicForces() = 0;
 
-        ///Compute the PML history vector for Perfectly-Matched Layer (PML).
-        ///@return Vector with the PML history variables.
-        ///@note The history vector only applies for PML in 3D, see @ref linkPML3DHexa8 linkPML3DHexa20.
-        ///@see Assembler::ComputeExternalForceVector(), Integrator::ComputeEffectiveForce().
-        virtual Eigen::VectorXd ComputePMLVector() = 0;
-
         ///Compute the surface forces acting on the element.
         ///@param surface Pointer to the Load object that contains this information.
         ///@param k The time step at which the surface load is evaluated.
