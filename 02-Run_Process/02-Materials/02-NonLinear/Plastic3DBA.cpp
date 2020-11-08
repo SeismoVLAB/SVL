@@ -187,7 +187,7 @@ Plastic3DBA::UpdateState(const Eigen::VectorXd strain, const unsigned int cond){
         
         double infty = 1.0E12 , DSTol = 1.0E-12;
         
-        int UnloadFlag = 0;
+        //int UnloadFlag = 0;  [-Wunused-variable]
 
         Hn = h*pow(kappa,m);
 
