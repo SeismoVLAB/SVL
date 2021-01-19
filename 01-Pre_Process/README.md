@@ -3,7 +3,7 @@
 Pre-Process
 ===========
 
-The main objective of the **Pre-Analysis** is to abstract the user from complicated manipulation in creating the input files. Therefore, the **Pre-Analysis** folder is employed to parse a pre-defined user's format into the Run-Analysis format. In Seismo-VLAB the **Pre-Analysis** corresponds to a set of python rutines that are in charge of generating input files, domain (mesh) partition, degree of freedom numbering, spatial variability of soil/structure properties, and parameter identification files. 
+The **Pre-Analysis** is a Python (user friendly) interface designed to handle large models in different formats. In this regard, the **Pre-Analysis** allows the user to parse formats from other software (ETABS, SAP, and GMSH) as well as it provides with several routines allows the user to create a model manually using such interface. The main **Pre-Analysis** task is orchestrated by two python files: <span style="color:blue">SeismoVLAB.py</span> that loads all required modules to generate a model; and <span style="color:blue">Definitions.py</span> that contains the data structure (dictionaries) that stores the finite element information. The Python routines also provided in **SVL** handles the degree-of-freedom numbering in <span style="color:blue">Numberer.py</span>, the domain partition in <span style="color:blue">Partition.py</span>, soil spatial variability in <span style="color:blue">RandomField.py</span>, and domain reduction forces in <span style="color:blue">PlaneWave.py</span>. Other features can be incorporated to meet the user's need as well.
 
 Further informatin can be obatained at:
 
@@ -14,31 +14,44 @@ Start with Pre-Process
 ----------------------
 The best way to start with the **Pre-Process** is to run some debugging cases on the official documentation webSite: https://SeismoVLAB.github.io/SVL/03-Validations/
 
-In these examples, you will note that the Pre-Process' input file is defined by fields, for which each field starts and ends with a <span style="color:blue">\*TOKEN</span> and <span style="color:blue">\*END</span> keyword that defines the scope of the variables being defined. Inside each field, variables are defined with a <span style="color:blue">-variable</span> declaration followed by its corresponding instantiation, i.e, name, number, path. Each variable are separated by commas <span style="color:blue">“,”</span> which allows the format to be not only order insensitive, but also case insensitive. However, tags (identifiers) need to be declared at the begining of each line within the field. 
+In these examples, you will note that the Pre-Process' Python module is imported using:
 
+<span style="color:magenta">from</span> Core <span style="color:magenta">import</span> SeismoVLAB <span style="color:magenta">as</span> SVL 
+
+However, the **PYTHONPATH** needs to be set to the Pre-Process' Python module address:
+
+<span style="color:lime">export</span> PYTHONPATH=<span style="color:yellow">"/path/to/SeismoVLAB/01-Pre_Process"</span>
 
 Running the Pre-Process
 -----------------------
 Once the model is created, running the **Pre-Process** is straightforward, just execute:
 
 <pre>
-python3 PreAnalysis.py 'path/to/input/file'
+python3 'path/to/input/file.py'
 </pre>
 
-The previous command will generate the command input line to be used in the Run-Process.
+The previous command will generate the command input line to be used in the **Run-Process**.
 
 Files Description
 =================
 
-* **PreProcess.py**:
-  This is the main python file. 
-* **Parser.py**:
-  Field from the input file are transformed into python dictionaries. 
-* **Metis.py**:
-  This python file runs the METIS - Serial Graph Partitioning by George Karypis, and gets the element indeces for each partition.
-* **Numbering.py**:
-  This python file assigns the degree of freedom numbering for each Point according to the User's numbering pattern.
-* **PlaneWave.py**:
-  This python routine creates the domain reduction input files for the homogeneous linear elastic half-space case.  
-* **SeismoVLab.py**:
-  This python file writes the output files for the Pre-Process format. In other words, transform all dictionaries information into text files. 
+* **Core**:
+  * <span style="color:blue">Definitions.py</span>: Declares the main dictionaries used to store user's input options and model information.
+  * <span style="color:blue">Utilities.py</span>: Provides with useful functions to print variables, save model, clear variables and more.
+  * <span style="color:blue">Partition.py</span>: Generates the domain partition
+  * <span style="color:blue">Numberer.py</span>: This python file assigns the degree of freedom numbering for each Point according to the User's numbering pattern.
+  * <span style="color:blue">Outputs.py</span>: Writes the **Run-Analysis** input files in *.svl or *.json format
+  * <span style="color:blue">RandomField.py</span>: Applies a random field to a background finite element model
+  * <span style="color:blue">PlaneWave.py</span>: This python routine creates the domain reduction input files for the homogeneous linear elastic half-space case.
+  * <span style="color:blue">SeismoVLAB.py</span>: Main python file tha imports all required modules.
+* **Method**
+  * <span style="color:blue">Attach.py</span>: Functions provided to populate the the finite element model
+  * <span style="color:blue">Remove.py</span>: Functions provided to delete the finite element model
+  * <span style="color:blue">Builder.py</span>: Provides vith functions to create simple geometries in 1D, 2D, and 3D
+  * <span style="color:blue">Display.py</span>: Creates a 3D visualization of the model defined
+  * <span style="color:blue">Compute.py</span>: Computes the kinematic constraints for diaphrag, rigid body, and rigid link.
+* **Parser**
+  * <span style="color:blue">Formats.py</span>: Parse a file provided with the format in which is written
+  * <span style="color:blue">GMSH.py</span>: Parses a gmsh input file with .*mesh (INRIA) extension 
+  * <span style="color:blue">ETABS.py</span>: Parses a ETABS input file with .*e2k extension 
+  * <span style="color:blue">SAP2000.py</span>: Parses a SAP input file with .*s2k (INRIA) extension 
