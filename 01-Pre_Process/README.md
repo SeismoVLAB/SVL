@@ -5,7 +5,15 @@ Pre-Process
 
 The **Pre-Analysis** is a Python (user friendly) interface designed to handle large models in different formats. In this regard, the **Pre-Analysis** allows the user to parse formats from other software (ETABS, SAP, and GMSH) as well as it provides with several routines allows the user to create a model manually using such interface. The main **Pre-Analysis** task is orchestrated by two python files: <span style="color:blue">SeismoVLAB.py</span> that loads all required modules to generate a model; and <span style="color:blue">Definitions.py</span> that contains the data structure (dictionaries) that stores the finite element information. The Python routines also provided in **SVL** handles the degree-of-freedom numbering in <span style="color:blue">Numberer.py</span>, the domain partition in <span style="color:blue">Partition.py</span>, soil spatial variability in <span style="color:blue">RandomField.py</span>, and domain reduction forces in <span style="color:blue">PlaneWave.py</span>. Other features can be incorporated to meet the user's need as well.
 
-Further informatin can be obatained at:
+Installation of **Seismo-VLab** (Pre-Process) on Linux/MacOSX/Windows requires a `python3` environment and the following libraries:
+
+* Numpy
+* Scipy
+* Matplotlib
+* VTK
+* JSON
+
+Further information can be obatained at:
 
 * Official webSite: https://SeismoVLAB.github.io/SVL/
 * Official documentation: https://SeismoVLAB.github.io/SVL/01-Pre-Process/docs/index.html
