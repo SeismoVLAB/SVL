@@ -17,7 +17,7 @@ The validation folder provides with several models (from simple to complicated) 
 
 All cases in folders **01-Debugging** and **02-Performance** are compressed; Therefore, they need to be unziped before using them.
 
-To generate the PDF report,  we advice to import the 01-Pre-Process module as:
+To generate the PDF report,  we advice to import the **01-Pre-Process** module as:
 
 <pre>
 export PYTHONPATH="/path/to/SeismoVLAB/01-Pre_Process"
