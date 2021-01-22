@@ -28,7 +28,9 @@ In these examples, you will note that the Pre-Process' Python module is imported
 
 However, the **PYTHONPATH** needs to be set to the Pre-Process' Python module address:
 
-<span style="color:lime">export</span> PYTHONPATH=<span style="color:yellow">"/path/to/SeismoVLAB/01-Pre_Process"</span>
+<pre>
+export PYTHONPATH="/path/to/SeismoVLAB/01-Pre_Process"
+</pre>
 
 Running the Pre-Process
 -----------------------
