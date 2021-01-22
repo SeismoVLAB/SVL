@@ -53,7 +53,7 @@ Running the Run-Analysis
 Once **Seismo-VLAB** is compiled, write in a terminal window (Linux/MacOSX) or command prompt (cmd in Windows),
 
 <pre>
-./SeismoVLab -help
+./SeismoVLab --help
 </pre>
 
 and the following message will be printed:
