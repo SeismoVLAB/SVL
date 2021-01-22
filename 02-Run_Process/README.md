@@ -13,8 +13,9 @@ The **Run-Process** is the main core of this software, and it is in charge of ge
 
 Further informatin can be obatained at:
 
-* Official webSite: https://SeismoVLAB.github.io/SVL/
-* Official documentation: https://SeismoVLAB.github.io/SVL/02-Run-Process/docs/index.html
+* Official website: http://www.seismovlab.com
+* GitHub repository: https://github.com/SeismoVLAB/SVL
+* Official documentation: http://www.seismovlab.com/documentation/index.html
 
 Compiling Run-Analysis
 ----------------------

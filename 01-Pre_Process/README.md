@@ -15,8 +15,9 @@ Installation of **Seismo-VLab** (Pre-Process) on Linux/MacOSX/Windows requires a
 
 Further information can be obatained at:
 
-* Official webSite: https://SeismoVLAB.github.io/SVL/
-* Official documentation: https://SeismoVLAB.github.io/SVL/01-Pre-Process/docs/index.html
+* Official website: http://www.seismovlab.com
+* GitHub repository: https://github.com/SeismoVLAB/SVL
+* Official documentation: http://www.seismovlab.com/documentation/index.html
 
 Start with Pre-Process
 ----------------------
