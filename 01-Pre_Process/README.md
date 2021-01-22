@@ -24,7 +24,9 @@ The best way to start with the **Pre-Process** is to run some debugging cases on
 
 In these examples, you will note that the Pre-Process' Python module is imported using:
 
-<span style="color:magenta">from</span> Core <span style="color:magenta">import</span> SeismoVLAB <span style="color:magenta">as</span> SVL 
+<pre>
+from Core import SeismoVLAB as SVL
+</pre> 
 
 However, the **PYTHONPATH** needs to be set to the Pre-Process' Python module address:
 
