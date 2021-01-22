@@ -15,7 +15,22 @@ The validation folder provides with several models (from simple to complicated) 
   * **Comment** is a description 
   * **Material** and **Element** are the **SVL**'s class name.
 
-All cases in folders **01-Debugging** and **02-Performance** are compressed; Therefore, they need to be unziped. Further information can be obatained at:
+All cases in folders **01-Debugging** and **02-Performance** are compressed; Therefore, they need to be unziped before using them.
+
+To generate the PDF report,  we advice to import the 01-Pre-Process module as:
+
+<pre>
+export PYTHONPATH="/path/to/SeismoVLAB/01-Pre_Process"
+</pre>
+
+Then execute in a python command prompt:
+
+<pre>
+python3 runValidation.py
+</pre>
+
+
+Further information can be obatained at:
 
 * Official website: https://www.seismovlab.com
 * Download website: https://github.com/SeismoVLAB/SVL
