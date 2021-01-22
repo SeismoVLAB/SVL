@@ -28,7 +28,7 @@ In these examples, you will note that the Pre-Process' Python module is imported
 from Core import SeismoVLAB as SVL
 </pre> 
 
-However, the **PYTHONPATH** needs to be set to the Pre-Process' Python module address:
+However, the **PYTHONPATH** needs to be set to the **Pre-Process** Python module address:
 
 <pre>
 export PYTHONPATH="/path/to/SeismoVLAB/01-Pre_Process"
