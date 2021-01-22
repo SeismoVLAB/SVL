@@ -17,7 +17,15 @@ Visit the gallery for examples: https://SeismoVLAB.github.io/SeismoVLAB/gallery/
 
 Installing Seismo-VLAB
 ----------------------
-Installation of **Seismo-VLab** on Linux/MacOSX requires to download `Eigen C++ library`, `MUMPS Library`, and `Pestc Library`. Also, python3 is needed along with libraries such as numpy, scipy, and matplotlib.
+Installation of **Seismo-VLab** (Pre-Process) on Linux/MacOSX/Windows requires a `python3` environment and the following libraries:
+
+* Numpy
+* Scipy
+* Matplotlib
+* VTK
+* JSON
+
+Installation of **Seismo-VLab** (Run-Process) on Linux/MacOSX/Windows requires to download `Eigen C++ library`, `MUMPS Library`, and `Pestc Library`. Also, python3 is needed along with libraries such as numpy, scipy, and matplotlib.
 
 * The **Eigen C++ library** can be downloaded from the website http://eigen.tuxfamily.org/. This package needs to be unzip and its content move (for instnce) to `/usr/include/Eigen`. 
 * The **MUMPS library** can be downloaded from the website http://mumps.enseeiht.fr/. This package needs to be unzip and compiled (for instnce) at `/usr/include/Mumps`.
