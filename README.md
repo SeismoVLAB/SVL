@@ -2,8 +2,9 @@
 
 **Seismo-VLAB** is a simple, fast, and extendable C++ multi-platform finite element software designed to optimize large-scale simulations of dynamic, nonlinear soil-structure interaction (SSI) problems. The software is intented to be used by academics researches in structural and geothecnical field but also for industrials, students, etc.
 
-* Official webSite: https://SeismoVLAB.github.io/SeismoVLAB/
-* Official documentation: https://SeismoVLAB.github.io/SeismoVLAB/docs/index.html
+* Official website: http://www.seismovlab.com
+* GitHub repository: https://github.com/SeismoVLAB/SVL
+* Official documentation: http://www.seismovlab.com/documentation/index.html
 
 What can Seismo-VLAB do?
 ------------------------
@@ -13,7 +14,7 @@ With **Seismo-VLAB** you can solve:
 * Linear and Nonlinear soil-structure interaction problems.
 * Standard mechanics-based nonlinear structural dynamic problems.
 
-Visit the gallery for examples: https://SeismoVLAB.github.io/SeismoVLAB/gallery/
+Visit the gallery for examples: http://www.seismovlab.com/gallery.html
 
 Installing Seismo-VLAB
 ----------------------

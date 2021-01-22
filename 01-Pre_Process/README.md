@@ -20,7 +20,7 @@ Further information can be obatained at:
 
 Start with Pre-Process
 ----------------------
-The best way to start with the **Pre-Process** is to run some debugging cases on the official documentation webSite: https://SeismoVLAB.github.io/SVL/03-Validations/
+The best way to start with the **Pre-Process** is to run some debugging cases on the official documentation webSite: https://github.com/SeismoVLAB/SVL/tree/master/03-Validations
 
 In these examples, you will note that the Pre-Process' Python module is imported using:
 
