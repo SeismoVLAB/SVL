@@ -25,23 +25,23 @@ The best way to start with the **Pre-Process** is to run some debugging cases on
 
 In these examples, you will note that the Pre-Process' Python module is imported using:
 
-<pre>
+```Python
 from Core import SeismoVLAB as SVL
-</pre> 
+```
 
 However, the **PYTHONPATH** needs to be set to the **Pre-Process** Python module address:
 
-<pre>
+```Python
 export PYTHONPATH="/path/to/SeismoVLAB/01-Pre_Process"
-</pre>
+```
 
 Running the Pre-Process
 -----------------------
 Once the model is created, running the **Pre-Process** is straightforward, just execute:
 
-<pre>
+```Python
 python3 'path/to/input/file.py'
-</pre>
+```
 
 The previous command will generate the command input line to be used in the **Run-Process**.
 

@@ -34,18 +34,18 @@ Installation of **Seismo-VLab** (Run-Process) on Linux/MacOSX/Windows requires t
 
 Assuming the previous libraries are successfully installed, then modify the `Makefile.inc` file such the previous path point to the right libraries:
 
-<pre>
+```makefile
 EIGEN_DIR = /usr/include/Eigen
 PETSC_DIR = /usr/include/Petsc
 MUMPS_DIR = /usr/include/Mumps
-</pre>
+```
 
 Also, check that : `MPI_DIR, METIS_DIR, SCOTCH_DIR` have the correct path where these libraries are installed. Make sure libraries such as: *-lscalapack-openmpi -lblacs-openmpi -llapack -lblas* and *-lparmetis -lmetis -lptesmumps -lptscotch -lptscotcherr* are also installed.
 
 Finally, write in terminal:
-<pre>
+```bash
 make -s DEBUG=False
-</pre>
+```
 
 Some libraries can be easily installed using repositories:
 * **LAPACK :** sudo apt-get install liblapack-dev
