@@ -2,9 +2,10 @@
 # -*- coding: Utf-8 -*-
 
 import json
-from Parser.GMSH import parseGMSH
 from Parser.ETABS import parseETABS
 from Parser.SAP2000 import parseSAP
+from Parser.ANSYS import parseANSYS
+from Parser.ABAQUS import parseABAQUS
 from Core.Utilities import debugInfo
 
 def parseFile(filepath=None, fileformat=None):
@@ -27,12 +28,14 @@ def parseFile(filepath=None, fileformat=None):
     """
     if fileformat.upper() == 'JSON':
         mesh = parseJSON(filepath)
-    elif fileformat.upper() == 'GMSH':
+    elif fileformat.upper() == 'ANSYS':
         mesh = parseGMSH(filepath)
     elif fileformat.upper() == 'ETABS':
         mesh = parseETABS(filepath)
     elif fileformat.upper() == 'SAP':
         mesh = parseSAP(filepath)
+    elif fileformat.upper() == 'ABAQUS':
+        mesh = parseGMSH(filepath)
     else:
         mesh = {}
         info = debugInfo(2)
