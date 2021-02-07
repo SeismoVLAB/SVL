@@ -25,8 +25,8 @@
 //
 // Description:
 ///This file contains the "Profiler object" declarations to compute how long it 
-///takes for a program to be executed, and sequentially meassures the time of 
-///Execution of each funtion.
+///takes for a program to be executed, and sequentially measures the time of 
+///Execution of each function.
 //------------------------------------------------------------------------------
 
 #ifndef _PROFILER_HHP_
@@ -79,10 +79,9 @@ class Profiler{
 
         ///Starts the Profiler output file.
         ///@param name Name o the function to be timed.
-        ///@param filepath The path where the profiler will be written.
-        void BeginSession(const std::string& name, const std::string& filepath = "./"){
+        void BeginSession(const std::string& name){
             std::stringstream filename;
-            filename << filepath << "/Profiler." << rank << ".json";
+            filename << filePath << "/Profiler." << rank << ".json";
             m_OutputStream.open(filename.str().c_str());
             WriteHeader();
             m_CurrentSession = new InstrumentationSession{ name };
@@ -156,7 +155,7 @@ class Profiler{
 /// @file      Profiler.hpp
 /// @class     Timer
 /// @see       
-/// @brief     Class that compute how long it takes for a program to be executed, and sequentially meassures the time of execution of each funtion.
+/// @brief     Class that compute how long it takes for a program to be executed, and sequentially measures the time of execution of each function.
 class Timer{
 
     public:
@@ -198,7 +197,6 @@ class Timer{
         bool m_Stopped;
 };
 
-#define PROFILING 0
 #if PROFILING
 ///Macro to compute time for profiler
 ///@param name Name of the function to be timed.

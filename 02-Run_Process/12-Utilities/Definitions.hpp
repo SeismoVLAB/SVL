@@ -37,15 +37,31 @@
 /// @date      June 9, 2020
 /// @version   1.0
 /// @file      Definitions.hpp
-/// @see       Utilities.hpp
+/// @see       Utilities.hpp and Profiler.hpp
 
-#define UNUNSED_PARAMETER(x) (void)x
+///Define if profiler is active (0: no profile, 1: profile code)
+#define PROFILING 0
+
+///Define macro for unused parameter
+#define UNUSED(x)
 
 ///The processor number.
 extern int rank;
 
 ///The number of partitions.
 extern int size;
+
+///The problem dimension (1D, 2D, 3D). 
+extern unsigned int nDimensions;
+
+///The file name to be loaded.
+extern std::string fileName;
+
+///The folder path where the file is loaded.
+extern std::string filePath;
+
+///The element mass formulation.
+extern bool MassFormulation;
 
 ///Maximum memory for lumped storage sparse matrix.
 extern unsigned int LumpedStorage;
