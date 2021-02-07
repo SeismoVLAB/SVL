@@ -24,7 +24,7 @@
 //   [1]
 //
 // Description:
-///This set of functions gets the command line user's inputs.
+// This set of functions gets the command line user's inputs.
 //------------------------------------------------------------------------------
 
 #ifndef _UTILITIES_HPP_
@@ -49,9 +49,9 @@ printHelp(){
     if(rank == 0){
         std::cout << " COMMAND LINE FLAGS TO PROVIDE:                                  \n";
         std::cout << "     -dir  : Location of the working directory.                  \n";
-        std::cout << "     -file : Name of the SeismoVLab file to be loaded.           \n";
+        std::cout << "     -file : Name of the SeismoVLAB file to be loaded.           \n";
         std::cout << "                                                                 \n";
-        std::cout << " \x1B[33mUse Example \x1B[0m: ./SeismoVLab -dir /path/to/files -file model.$.svl\n";
+        std::cout << " \x1B[33mUse Example \x1B[0m: ./SeismoVLAB.exe -dir /path/to/files -file model.$.svl\n";
     }
 }
 
@@ -86,10 +86,10 @@ printLogo(){
     }
 }
 
-///Parse Command Line Inputs.
-bool 
-CommandLine(int argc, char **argv, std::string &folder, std::string &file){
-    //Auxiliar Variable.
+///Parse Command Line Inputs. 
+void
+CommandLine(int argc, char **argv){
+    //Auxiliary Variable.
     int iter  = 0; 
     int count = 0;
 
@@ -98,11 +98,9 @@ CommandLine(int argc, char **argv, std::string &folder, std::string &file){
         //Help Command Line Output is Active.
         if(strcasecmp(argv[iter],"--help") == 0){
             printHelp();
-            return true;
         }
         else if(strcasecmp(argv[iter],"--h") == 0){
             printHelp();
-            return true;
         }
         iter++;
     }
@@ -112,12 +110,12 @@ CommandLine(int argc, char **argv, std::string &folder, std::string &file){
     while(iter < argc){
         //Name of the Mesh input file.
         if(strcasecmp(argv[iter],"-file") == 0){
-            file = std::string(argv[iter + 1]);
+            fileName = std::string(argv[iter + 1]);
             count++;        
         }
         //Location of the Mesh File:
         if(strcasecmp(argv[iter],"-dir") == 0){
-            folder = std::string(argv[iter + 1]);    
+            filePath = std::string(argv[iter + 1]);    
             count++;    
         }
         iter++;     
@@ -128,10 +126,6 @@ CommandLine(int argc, char **argv, std::string &folder, std::string &file){
         if(rank == 0)
             std::cout << "\x1B[31m ERROR: \x1B[0mNOT ENOUGH Command line input arguments. \n";
         printHelp();
-        return true;
-    }
-    else{
-        return false;
     }
 }
 
