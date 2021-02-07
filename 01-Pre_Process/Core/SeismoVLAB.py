@@ -82,7 +82,8 @@ def Entities2Processor(matSubdomain, secSubdomain, nodeSubdomain, massSubdomain,
         'Nodes'       : {}, 
         'Masses'      : {}, 
         'Supports'    : {}, 
-        'Constraints' : {}, 
+        'Constraints' : {},
+        'Surfaces'    : {},
         'Elements'    : {}, 
         'Dampings'    : {}, 
         'Loads'       : {}, 
@@ -122,11 +123,26 @@ def Entities2Processor(matSubdomain, secSubdomain, nodeSubdomain, massSubdomain,
     #Gets the constraints for this partition
     cTags = sorted(conSubdomain, reverse=True)
     for tag in cTags:
-        ToProcessor['Constraints'][str(tag)] = Entities['Constraints'][tag]
+        mTags = []
+        Constraint = Entities['Constraints'][tag]
+        sTags = Entities['Nodes'][Constraint['stag']]['totaldof'][Constraint['sdof']]
+        for node, dof in zip(Constraint['mtag'], Constraint['mdof']):
+            mTags.append(Entities['Nodes'][node]['freedof'][dof])
+        ToProcessor['Constraints'][str(tag)] = {'stag': sTags, 'mtag': mTags, 'factor': Constraint['factor']}
 
     #Gets the elements for this partition
+    Options['nparaview'] = 0
     for tag in elemSubdomain:
         ToProcessor['Elements'][str(tag)] = Entities['Elements'][tag]
+        Options['nparaview'] += (len(Entities['Elements'][tag]['conn']) + 1)
+    Options['nfeatures'] += Options['nparaview']
+
+    #Gets the surfaces for this partition
+    for sTag in Entities['Surfaces']:
+        eTag = Entities['Surfaces'][sTag]['etag']
+        if eTag in elemSubdomain:
+            face = Entities['Surfaces'][sTag]['face']
+            ToProcessor['Surfaces'][str(sTag)] = {'element': eTag, 'face': face}
 
     #Gets the dampings for this partition
     for dTag in Entities['Dampings']:
@@ -138,30 +154,58 @@ def Entities2Processor(matSubdomain, secSubdomain, nodeSubdomain, massSubdomain,
     #Gets the loads for this partition
     loadSubdomain = list()
     for lTag in Entities['Loads']:
-        if Entities['Loads'][lTag]['name'] == 'POINTLOAD':
+        name = Entities['Loads'][lTag]['name']
+        if name == 'POINTLOAD':
             nTags = sorted(nodeSubdomain.intersection(Entities['Loads'][lTag]['attributes']['list']))
             if nTags:
+                fTag  = Entities['Loads'][lTag]['attributes']['fun']
+                fname = Entities['Functions'][fTag]['name']
+                fdir  = Entities['Functions'][fTag]['attributes']['dir']
+                if fname == 'CONSTANT':
+                    magnitude = Entities['Functions'][fTag]['attributes']['mag']
+                    attributes = {'name': fname, 'mag': magnitude, 'dir': fdir, 'list': nTags}
+                    ToProcessor['Loads'][str(lTag)] = {'name': name, 'attributes': attributes}
+                elif fname == 'TIMESERIE':
+                    filepath = Entities['Functions'][fTag]['attributes']['file']
+                    attributes = {'name': fname, 'file': filepath, 'dir': fdir, 'list': nTags}
+                    ToProcessor['Loads'][str(lTag)] = {'name': name, 'attributes': attributes}
                 loadSubdomain.append(lTag)
-                ToProcessor['Loads'][str(lTag)] = copy.deepcopy(Entities['Loads'][lTag])
-                ToProcessor['Loads'][str(lTag)]['attributes']['list'] = nTags
                 Entities['Loads'][lTag]['attributes']['list'] = list(set(Entities['Loads'][lTag]['attributes']['list']).difference(nTags))
-        elif Entities['Loads'][lTag]['name'] == 'ELEMENTLOAD':
+        elif name == 'ELEMENTLOAD':
             eTags = sorted(list(set(elemSubdomain).intersection(Entities['Loads'][lTag]['attributes']['list'])))
             if eTags:
-                ToProcessor['Loads'][str(lTag)] = copy.deepcopy(Entities['Loads'][lTag])
-                ToProcessor['Loads'][str(lTag)]['attributes']['list'] = eTags
+                fTag  = Entities['Loads'][lTag]['attributes']['fun']
+                fname = Entities['Functions'][fTag]['name']
+                lname = Entities['Loads'][lTag]['attributes']['type']
+                if fname == 'CONSTANT':
+                    fdir  = Entities['Functions'][fTag]['attributes']['dir']
+                    magnitude = Entities['Functions'][fTag]['attributes']['mag']
+                    attributes = {'name': fname, 'type': lname, 'mag': magnitude, 'dir': fdir, 'list': eTags}
+                    ToProcessor['Loads'][str(lTag)] = {'name': name, 'attributes': attributes}
+                elif fname == 'TIMESERIE':
+                    filepath = Entities['Functions'][fTag]['attributes']['file']
+                    if lname == 'GENERALWAVE':
+                        attributes = {'name': fname, 'type': lname, 'file': filepath, 'list': eTags}
+                        ToProcessor['Loads'][str(lTag)] = {'name': name, 'attributes': attributes}
+                    elif lname == 'PLANEWAVE':
+                        features = {} #Entities['Functions'][fTag]['features']
+                        attributes = {'name': fname, 'type': lname, 'file': filepath, 'features': features, 'list': eTags}
+                        ToProcessor['Loads'][str(lTag)] = {'name': name, 'attributes': attributes}
+                    else:
+                        fdir  = Entities['Functions'][fTag]['attributes']['dir']
+                        attributes = {'name': fname, 'type': lname, 'file': filepath, 'dir': fdir, 'list': eTags}
+                        ToProcessor['Loads'][str(lTag)] = {'name': name, 'attributes': attributes}
                 loadSubdomain.append(lTag)
-        elif Entities['Loads'][lTag]['name'] == 'SUPPORTMOTION':
+        elif name == 'SUPPORTMOTION':
             nTags = sorted(nodeSubdomain.intersection(Entities['Loads'][lTag]['attributes']['list']))
             if nTags:
-                ToProcessor['Loads'][str(lTag)] = copy.deepcopy(Entities['Loads'][lTag])
-                ToProcessor['Loads'][str(lTag)]['attributes']['list'] = nTags
+                attributes = {'list': nTags}
+                ToProcessor['Loads'][str(lTag)] = {'name': name, 'attributes': attributes}
                 loadSubdomain.append(lTag)
 
     #Gets the load combinations for this partition
     for cTag in Entities['Combinations']:
         name = Entities['Combinations'][cTag]['name']
-
         lTag = list(set(Entities['Combinations'][cTag]['attributes']['load']).intersection(loadSubdomain))
         if lTag:
             load    = Entities['Combinations'][cTag]['attributes']['load']
@@ -201,6 +245,7 @@ def Entities2Processor(matSubdomain, secSubdomain, nodeSubdomain, massSubdomain,
             OUTFILE = OUTFILE[0] + '_PART' + str(k)
             ToProcessor['Recorders'][str(rTag)] = copy.deepcopy(Entities['Recorders'][rTag])
             ToProcessor['Recorders'][str(rTag)]['file'] = OUTFILE
+            ToProcessor['Recorders'][str(rTag)]['features'] = Options['nparaview']
 
     #Gets the simulation for this partition
     for sTag in Entities['Simulations']:
@@ -217,6 +262,10 @@ def Entities2Processor(matSubdomain, secSubdomain, nodeSubdomain, massSubdomain,
 
         tag = Entities['Simulations'][sTag]['attributes']['solver']
         solver = Entities['Solvers'][tag]
+
+        if solver['name'] == 'PETSC':
+            solver['d_nz'] = int(Options['d_nz'][k])
+            solver['o_nz'] = int(Options['o_nz'][k])
 
         attributes = {'analysis': analysis, 'algorithm': algorithm, 'integrator': integrator, 'solver': solver}
         ToProcessor['Simulations'][sTag] = {'combo': ctag, 'attributes': attributes} 
@@ -316,7 +365,7 @@ def createPartitions():
             dict2json(ToProcessor, k)
     
     #The generated partition file name (generic) path
-    Options['execfile'] = Options['file'] + '.$.svl'
+    Options['execfile'] = Options['file'] + '.$.' + Options['format']
     Options['execpath'] = Options['path'] + '/' + 'Partition'
 
     #SeismoVLAB execution command line
@@ -377,17 +426,27 @@ def checkWarnings():
 
     #[2] Check all attributes in MATERIALS are defined in ENTITIES
     for mTag in Entities['Materials']:
+        name = Entities['Materials'][mTag]['name']
         if math.isnan(mTag):
             print("   *** Material[%s] is invalid and should be removed" % mTag) 
         if Entities['Materials'][mTag]['name'] not in SVLclasses['Materials']:
             print("   *** Material[%s] does not have an appropriate class name (%s) ***" % (mTag,Entities['Materials'][mTag]['name']))
+        if name not in SVLclasses['Materials']:
+            print("   *** Section[%s] does not have an appropriate class name (%s) ***" % (mTag,Entities['Materials'][mTag]['name'])) 
+        elif Options['dimension'] not in SVLclasses['Materials'][name]['dim']:
+            print("   *** Material[%s] cannot be used in a %sD space ***" % (mTag, Options['dimension']))
 
     #[3] Check all attributes in SECTIONS are defined in ENTITIES
     for sTag in Entities['Sections']:
+        name = Entities['Sections'][sTag]['name']
         if math.isnan(sTag):
             print("   *** Section[%s] is invalid and should be removed" % sTag) 
         if Entities['Sections'][sTag]['name'] not in SVLclasses['Sections']:
             print("   *** Section[%s] does not have an appropriate class name (%s) ***" % (sTag,Entities['Sections'][sTag]['name']))
+        if name not in SVLclasses['Sections']:
+            print("   *** Section[%s] does not have an appropriate class name (%s) ***" % (sTag,Entities['Sections'][sTag]['name'])) 
+        elif Options['dimension'] not in SVLclasses['Sections'][name]['dim']:
+            print("   *** Section[%s] cannot be used in a %sD space ***" % (sTag, Options['dimension']))
 
     #[4] Check all attributes in ELEMENTS are defined in ENTITIES
     if not Entities['Elements']:
@@ -397,10 +456,13 @@ def checkWarnings():
 
     naux = set(nTags)
     for eTag in Entities['Elements']:
+        name = Entities['Elements'][eTag]['name']
         if math.isnan(eTag):
             print("   *** Element[%s] is invalid and should be removed" % nTag) 
-        if Entities['Elements'][eTag]['name'] not in SVLclasses['Elements']:
-            print("   *** Elements[%s] does not have an appropriate class name (%s) ***" % (nTag,Entities['Elements'][eTag]['name'])) 
+        if name not in SVLclasses['Elements']:
+            print("   *** Elements[%s] does not have an appropriate class name (%s) ***" % (eTag,Entities['Elements'][eTag]['name'])) 
+        elif Options['dimension'] not in SVLclasses['Elements'][name]['dim']:
+            print("   *** Element[%s] cannot be used in a %sD space ***" % (eTag, Options['dimension']))
         if 'material' in Entities['Elements'][eTag]['attributes']:
             mtag = Entities['Elements'][eTag]['attributes']['material']
             if mtag not in mTags:
@@ -420,7 +482,7 @@ def checkWarnings():
             name = Entities['Elements'][sTag]['name']
             surf = Entities['Surfaces'][sTag]['conn']
             conn = np.array(Entities['Elements'][sTag]['conn'])
-            Entities['Surfaces'][sTag]['face'] = SurfaceFace(VTKelems['VTKsvl'][name], surf, conn)
+            Entities['Surfaces'][sTag]['face'] = SurfaceFace(SVLclasses['Elements'][name]['type'], surf, conn)
         else:
             print('   *** Surface[%s] does not belong to Element[%s] ***' % (sTag, eTag))
 
