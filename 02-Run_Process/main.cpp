@@ -32,9 +32,9 @@
 //
 // Example of Usage:
 //  *SERIAL VERSION
-//   ./SeismoVLab -dir /file/path/ -file file.$.svl 
+//   ./SeismoVLAB.exe -dir /file/path/ -file file.$.json 
 //  *PARALLEL VERSION
-//   mpirun -np n ./SeismoVLab -dir /file/path/ -file file.$.svl
+//   mpirun -np n ./SeismoVLAB.exe -dir /file/path/ -file file.$.json
 //------------------------------------------------------------------------------
 
 #include <memory>
@@ -42,57 +42,36 @@
 #include <petscsys.h>
 
 #include "Parser.hpp"
-#include "Mesh.hpp"
-#include "Analysis.hpp"
 #include "Utilities.hpp"
 #include "Definitions.hpp"
 #include "Profiler.hpp"
 
 int main(int argc, char **argv){                                            
-    //Auxiliar variables.
-    bool Stop;
-    std::string File;
-    std::string Folder;
-
     //Initialize MPI instance.
     PetscInitialize(&argc, &argv, NULL, NULL);
     MPI_Comm_rank(PETSC_COMM_WORLD, &rank);
     MPI_Comm_size(PETSC_COMM_WORLD, &size);
 
-    //Prints the SeismoVLab logo.
+    //Prints the Seismo-VLAB logo.
     printLogo();
 
-    //Parse command line argumets.    
-    Stop = CommandLine(argc, argv, Folder, File);
+    //Parse command line arguments.    
+    CommandLine(argc, argv);
 
     //Initialize the profiler.
     #if PROFILING
-    Profiler::Get().BeginSession("Profile", Folder);
+    Profiler::Get().BeginSession("Profile");
     #endif
 
-    //Check command line arguments is valid.
-    if(!Stop){
-        //Creates Subdomain Pointer.
-        std::shared_ptr<Mesh> mesh;
+    //Performs the simulation using JSON input file.
+    RunFromJSON();
 
-        //Creates Analysis Pointer.
-        std::unique_ptr<Analysis> analysis;
-
-        //Parse the Mesh/Analysis From User's Files.
-        Parser SVL(size, Folder, File);
-        Stop = SVL.GetFromFile(mesh, analysis);
-
-        //Starts analysis if mesh/analysis are created.
-        if(!Stop) 
-            Stop = analysis->Analyze();
-    }
-
-    //Finilize the profiler.
+    //Finalize the profiler.
     #if PROFILING
     Profiler::Get().EndSession();
     #endif
 
-    //Finilize MPI library.
+    //Finalize MPI library.
     PetscFinalize();
 
     return 0;
