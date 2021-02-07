@@ -47,7 +47,7 @@ NewtonRaphson::ComputeNewIncrement(std::shared_ptr<Mesh> &mesh, unsigned int i){
         theIntegrator->ComputeEffectiveStiffness(mesh, Keff);
 
         //Incorporates the effects of support motion.
-        Feff -= theIntegrator->ComputeSupportMotionVector(mesh, LoadFactor, i);
+        theIntegrator->ComputeSupportMotionVector(mesh, Feff, LoadFactor, i);
 
         //Solve the linear system.
         bool stop = theSolver->SolveSystem(Keff, Feff);

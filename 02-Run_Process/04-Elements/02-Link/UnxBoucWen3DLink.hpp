@@ -58,10 +58,11 @@ class UnxBoucWen3DLink : public Element{
         ///@param variables Vector that contains auxiliar model parameters.
         ///@param dim The model dimension.
         ///@param dir The local direction where this Element is acting.
-        ///@param massform The mass formulation.
+        ///@param tol Tolerance to stop Newton-Raphson iterations.
+        ///@param nmax Maximum number of iteration for Newton-Raphson.
         ///@note More details can be found at @ref linkUnxBoucWen3DLink.
-        ///@see UnxBoucWen3DLink::theNodes, UnxBoucWen3DLink::theDirection, UnxBoucWen3DLink::theDimension, UnxBoucWen3DLink::MassForm.
-        UnxBoucWen3DLink(const std::vector<unsigned int> nodes, std::vector<double> parameters, std::vector<double> variables, const unsigned int dim, const unsigned int dir, bool massform=false);
+        ///@see UnxBoucWen3DLink::theNodes, UnxBoucWen3DLink::theDirection, UnxBoucWen3DLink::theDimension.
+        UnxBoucWen3DLink(const std::vector<unsigned int> nodes, std::vector<double> parameters, std::vector<double> variables, const unsigned int dim, const unsigned int dir, double tol=1E-06, unsigned int nmax=50);
 
         ///Destroys this UnxBoucWen3DLink object.
         ~UnxBoucWen3DLink();
@@ -124,6 +125,10 @@ class UnxBoucWen3DLink : public Element{
         ///@note The current responses are: "Strain", "Stress".
         Eigen::VectorXd GetVTKResponse(std::string response) const;
 
+        ///Computes the element energy for a given deformation.
+        ///@return Scalar with the element deformation energy.
+        double ComputeEnergy();
+
         ///Compute the lumped/consistent mass matrix of the element.
         ///@return Matrix with the Element mass matrix.
         ///@note The mass matrix can be revisited in @ref linkUnxBoucWen3DLink.
@@ -185,11 +190,14 @@ class UnxBoucWen3DLink : public Element{
         Eigen::VectorXd ComputeDomainReductionForces(const std::shared_ptr<Load> &drm, unsigned int k);
 
     private:
-        ///Restoring force amplitude parameter
-        double A;
+        ///Initial stiffness of hysteretic component
+        double Ko;
 
-        ///Exponent of non-linear hardening component.
-        double mu;
+        ///Yield force 
+        double Fy;
+
+        ///Yielding exponent (sharpness of hysteresis loop corners) 
+        double alpha;
 
         ///Yielding exponent (sharpness of hysteresis loop corners) 
         double eta;
@@ -199,21 +207,6 @@ class UnxBoucWen3DLink : public Element{
 
         ///second hysteretic shape parameter
         double gamma;
-
-        ///Yield force of hysteretic component.
-        double qY;
-
-        ///Yield deformation of hysteretic component.
-        double uY;
-
-        ///initial stiffness of hysteretic component
-        double k0;
-
-        ///stiffness of linear elastic component
-        double k2;
-
-        ///stiffness of nonlinear elastic component
-        double k3;
 
         ///Newton-Raphson Tolerance.
         double Tol;
@@ -238,9 +231,6 @@ class UnxBoucWen3DLink : public Element{
 
         ///Newton-Raphson maximum number of iterations.
         unsigned int nMax;
-
-        ///Mass Formulation.
-        bool MassForm;
 
         ///The element dimension in global coordinates.
         unsigned int Dimension;

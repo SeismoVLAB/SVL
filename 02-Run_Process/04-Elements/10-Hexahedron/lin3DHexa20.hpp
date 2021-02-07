@@ -59,10 +59,9 @@ class lin3DHexa20 : public Element{
         ///@param material Pointer to the Material that this Element is made out of.
         ///@param quadrature The integration rule to be employed.
         ///@param nGauss Number of Gauss points for Element integration.
-        ///@param massform The mass formulation to compute the mass matrix.
         ///@note More details can be found at @ref linklin3DHexa20.
         ///@see lin3DHexa20::theNodes, lin3DHexa20::theMaterial, lin3DHexa20::QuadraturePoints.
-        lin3DHexa20(const std::vector<unsigned int> nodes, std::unique_ptr<Material> &material, const std::string quadrature="GAUSS", const unsigned int nGauss=27, bool massform=false);
+        lin3DHexa20(const std::vector<unsigned int> nodes, std::unique_ptr<Material> &material, const std::string quadrature="GAUSS", const unsigned int nGauss=27);
 
         ///Destroys this lin3DHexa20 object.
         ~lin3DHexa20();
@@ -125,6 +124,10 @@ class lin3DHexa20 : public Element{
         ///@note The current responses are: "Strain", "Stress".
         Eigen::VectorXd GetVTKResponse(std::string response) const;
 
+        ///Computes the element energy for a given deformation.
+        ///@return Scalar with the element deformation energy.
+        double ComputeEnergy();
+
         ///Compute the lumped/consistent mass matrix of the element.
         ///@return Matrix with the Element mass matrix.
         ///@note The mass matrix can be revisited in @ref linklin3DHexa20.
@@ -186,9 +189,6 @@ class lin3DHexa20 : public Element{
         Eigen::VectorXd ComputeDomainReductionForces(const std::shared_ptr<Load> &drm, unsigned int k);
 
     private:
-        ///Mass Formulation.
-        bool MassForm;
-
         ///The Damping model.
         std::shared_ptr<Damping> theDamping;
 

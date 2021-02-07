@@ -5,6 +5,7 @@
 #include "GaussQuadrature.hpp"
 #include "LobattoQuadrature.hpp"
 #include "Definitions.hpp"
+#include "Profiler.hpp"
 
 //Define constant tolerance value:
 const double TOL = 0.9999995;
@@ -13,8 +14,8 @@ const double TOL = 0.9999995;
 const unsigned int VTKCELL = 21;
 
 //Overload constructor.
-lin2DTruss3::lin2DTruss3(const std::vector<unsigned int> nodes, std::unique_ptr<Material> &material, const double area, const std::string quadrature, const unsigned int nGauss, bool massform) :
-Element("lin2DTruss3", nodes, 6, VTKCELL), A(area), MassForm(massform){
+lin2DTruss3::lin2DTruss3(const std::vector<unsigned int> nodes, std::unique_ptr<Material> &material, const double area, const std::string quadrature, const unsigned int nGauss) :
+Element("lin2DTruss3", nodes, 6, VTKCELL), A(area){
     //The element nodes.
     theNodes.resize(3);
 
@@ -172,10 +173,7 @@ lin2DTruss3::GetStrainRate() const{
 
 //Gets the material strain in section at  coordinate (x3,x2).
 Eigen::MatrixXd 
-lin2DTruss3::GetStrainAt(double x3, double x2) const{
-    UNUNSED_PARAMETER(x3);
-    UNUNSED_PARAMETER(x2);
-
+lin2DTruss3::GetStrainAt(double UNUSED(x3), double UNUSED(x2)) const{
     //number of integration points.
     unsigned int nPoints = QuadraturePoints->GetNumberOfQuadraturePoints();
 
@@ -188,10 +186,7 @@ lin2DTruss3::GetStrainAt(double x3, double x2) const{
 
 //Gets the material stress in section at  coordinate (x3,x2).
 Eigen::MatrixXd 
-lin2DTruss3::GetStressAt(double x3, double x2) const{
-    UNUNSED_PARAMETER(x3);
-    UNUNSED_PARAMETER(x2);
-
+lin2DTruss3::GetStressAt(double UNUSED(x3), double UNUSED(x2)) const{
     //number of integration points.
     unsigned int nPoints = QuadraturePoints->GetNumberOfQuadraturePoints();
 
@@ -223,9 +218,19 @@ lin2DTruss3::GetVTKResponse(std::string response) const{
     return theResponse;
 }
 
+//Computes the element energy for a given deformation.
+double 
+lin2DTruss3::ComputeEnergy(){
+    //TODO: Integrate over element volume to compute the energy
+    return 0.0;
+}
+
 //Compute the mass matrix of the element using a consistent definition.
 Eigen::MatrixXd 
 lin2DTruss3::ComputeMassMatrix(){
+    //Starts profiling this funtion.
+    PROFILE_FUNCTION();
+
     //Use consistent mass definition:
     Eigen::MatrixXd MassMatrix(6,6);
     MassMatrix.fill(0.0);
@@ -248,7 +253,7 @@ lin2DTruss3::ComputeMassMatrix(){
     }
 
     //Lumped Mass Formulation
-    if(MassForm){
+    if(MassFormulation){
         //Lumped Mass in diagonal terms.
         double m11 = MassMatrix(0,0) + MassMatrix(0,2) + MassMatrix(0,4);
         double m22 = MassMatrix(2,0) + MassMatrix(2,2) + MassMatrix(2,4);
@@ -268,14 +273,15 @@ lin2DTruss3::ComputeMassMatrix(){
     //Transform Mass matrix into Global Coordinates.
     MassMatrix = localAxes.transpose()*MassMatrix*localAxes;
 
-
-
     return MassMatrix;
 }
 
 //Compute the stiffness matrix of the element.
 Eigen::MatrixXd 
 lin2DTruss3::ComputeStiffnessMatrix(){
+    //Starts profiling this funtion.
+    PROFILE_FUNCTION();
+
     //Gets the quadrature information.    
     Eigen::VectorXd wi;
     Eigen::MatrixXd xi;
@@ -309,6 +315,9 @@ lin2DTruss3::ComputeStiffnessMatrix(){
 //Compute the damping matrix of the element.
 Eigen::MatrixXd 
 lin2DTruss3::ComputeDampingMatrix(){
+    //Starts profiling this funtion.
+    PROFILE_FUNCTION();
+
     //Damping matrix definition.
     Eigen::MatrixXd DampingMatrix(6,6);
     DampingMatrix.fill(0.0);
@@ -374,6 +383,9 @@ lin2DTruss3::ComputePMLMatrix(){
 //Compute the element the internal forces acting on the element.
 Eigen::VectorXd 
 lin2DTruss3::ComputeInternalForces(){
+    //Starts profiling this funtion.
+    PROFILE_FUNCTION();
+
     //Gets the quadrature information.    
     Eigen::VectorXd wi;
     Eigen::MatrixXd xi;
@@ -428,8 +440,9 @@ lin2DTruss3::ComputeInternalDynamicForces(){
 
 //Compute the surface forces acting on the element.
 Eigen::VectorXd 
-lin2DTruss3::ComputeSurfaceForces(const std::shared_ptr<Load> &surfaceLoad, unsigned int face){
-    UNUNSED_PARAMETER(face);
+lin2DTruss3::ComputeSurfaceForces(const std::shared_ptr<Load> &surfaceLoad, unsigned int UNUSED(face)){
+    //Starts profiling this funtion.
+    PROFILE_FUNCTION();
 
     //Local surface load vector:
     Eigen::VectorXd surfaceForces(6);
@@ -460,6 +473,9 @@ lin2DTruss3::ComputeSurfaceForces(const std::shared_ptr<Load> &surfaceLoad, unsi
 //Compute the body forces acting on the element.
 Eigen::VectorXd 
 lin2DTruss3::ComputeBodyForces(const std::shared_ptr<Load> &bodyLoad, unsigned int k){
+    //Starts profiling this funtion.
+    PROFILE_FUNCTION();
+
     //Local body load vector:
     Eigen::VectorXd bodyForces(6);
 
@@ -491,9 +507,9 @@ lin2DTruss3::ComputeBodyForces(const std::shared_ptr<Load> &bodyLoad, unsigned i
 
 //Compute the domain reduction forces acting on the element.
 Eigen::VectorXd 
-lin2DTruss3::ComputeDomainReductionForces(const std::shared_ptr<Load> &drm, unsigned int k){
-    UNUNSED_PARAMETER(k);
-    UNUNSED_PARAMETER(drm);
+lin2DTruss3::ComputeDomainReductionForces(const std::shared_ptr<Load>& UNUSED(drm), unsigned int UNUSED(k)){
+    //Starts profiling this funtion.
+    PROFILE_FUNCTION();
 
     //TODO: Domain reduction forces are not implemented for Truss.
     Eigen::VectorXd DRMForces(6);

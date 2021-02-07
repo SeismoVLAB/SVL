@@ -6,13 +6,14 @@
 #include "GaussQuadrature.hpp"
 #include "LobattoQuadrature.hpp"
 #include "Definitions.hpp"
+#include "Profiler.hpp"
 
 //Define VTK cell value for Paraview:
 const unsigned int VTKCELL = 25;
 
 //Overload constructor.
-lin3DHexa20::lin3DHexa20(const std::vector<unsigned int> nodes, std::unique_ptr<Material> &material, const std::string quadrature, const unsigned int nGauss, bool massform) :
-Element("lin3DHexa20", nodes, 60, VTKCELL), MassForm(massform){
+lin3DHexa20::lin3DHexa20(const std::vector<unsigned int> nodes, std::unique_ptr<Material> &material, const std::string quadrature, const unsigned int nGauss) :
+Element("lin3DHexa20", nodes, 60, VTKCELL){
     //The element nodes.
     theNodes.resize(20);
 
@@ -170,10 +171,7 @@ lin3DHexa20::GetStrainRate() const{
 
 //Gets the material strain in section at  coordinate (x3,x2).
 Eigen::MatrixXd 
-lin3DHexa20::GetStrainAt(double x3, double x2) const{
-    UNUNSED_PARAMETER(x2);
-    UNUNSED_PARAMETER(x3);
-
+lin3DHexa20::GetStrainAt(double UNUSED(x3), double UNUSED(x2)) const{
     //number of integration points.
     unsigned int nPoints = QuadraturePoints->GetNumberOfQuadraturePoints();
 
@@ -186,10 +184,7 @@ lin3DHexa20::GetStrainAt(double x3, double x2) const{
 
 //Gets the material stress in section at  coordinate (x3,x2).
 Eigen::MatrixXd 
-lin3DHexa20::GetStressAt(double x3, double x2) const{
-    UNUNSED_PARAMETER(x2);
-    UNUNSED_PARAMETER(x3);
-
+lin3DHexa20::GetStressAt(double UNUSED(x3), double UNUSED(x2)) const{
     //number of integration points.
     unsigned int nPoints = QuadraturePoints->GetNumberOfQuadraturePoints();
 
@@ -220,9 +215,19 @@ lin3DHexa20::GetVTKResponse(std::string response) const{
     return theResponse;
 }
 
+//Computes the element energy for a given deformation.
+double 
+lin3DHexa20::ComputeEnergy(){
+    //TODO: Integrate over element volume to compute the energy
+    return 0.0;
+}
+
 //Compute the mass matrix of the element using gauss-integration.
 Eigen::MatrixXd 
 lin3DHexa20::ComputeMassMatrix(){
+    //Starts profiling this funtion.
+    PROFILE_FUNCTION();
+
     //Use consistent mass definition:
     Eigen::MatrixXd MassMatrix(60, 60);
     MassMatrix.fill(0.0);
@@ -248,7 +253,7 @@ lin3DHexa20::ComputeMassMatrix(){
     }
 
     //Lumped Mass Formulation
-    if(MassForm){
+    if(MassFormulation){
         //Lumped Mass in diagonal terms.
         double TotalMass = MassMatrix.sum()/3.00;
         double TraceMass = MassMatrix.trace()/3.00;
@@ -268,6 +273,9 @@ lin3DHexa20::ComputeMassMatrix(){
 //Compute the stiffness matrix of the element using gauss-integration.
 Eigen::MatrixXd 
 lin3DHexa20::ComputeStiffnessMatrix(){
+    //Starts profiling this funtion.
+    PROFILE_FUNCTION();
+
     //Stiffness matrix definition:
     Eigen::MatrixXd StiffnessMatrix(60, 60);
     StiffnessMatrix.fill(0.0);
@@ -298,6 +306,9 @@ lin3DHexa20::ComputeStiffnessMatrix(){
 //Compute the damping matrix of the element using gauss-integration.
 Eigen::MatrixXd 
 lin3DHexa20::ComputeDampingMatrix(){
+    //Starts profiling this funtion.
+    PROFILE_FUNCTION();
+
     //Damping matrix definition
     Eigen::MatrixXd DampingMatrix(60,60);
     DampingMatrix.fill(0.0);
@@ -356,6 +367,9 @@ lin3DHexa20::ComputePMLMatrix(){
 //Compute the internal forces acting on the element.
 Eigen::VectorXd 
 lin3DHexa20::ComputeInternalForces(){
+    //Starts profiling this funtion.
+    PROFILE_FUNCTION();
+
     //Stiffness matrix definition.
     Eigen::VectorXd InternalForces(60);
     InternalForces.fill(0.0);
@@ -415,6 +429,9 @@ lin3DHexa20::ComputeInternalDynamicForces(){
 //Compute the surface forces acting on the element.
 Eigen::VectorXd 
 lin3DHexa20::ComputeSurfaceForces(const std::shared_ptr<Load> &surfaceLoad, unsigned int face){
+    //Starts profiling this funtion.
+    PROFILE_FUNCTION();
+
     //Local surface load vector:
     Eigen::VectorXd surfaceForces(60);
     surfaceForces.fill(0.0);
@@ -620,6 +637,9 @@ lin3DHexa20::ComputeSurfaceForces(const std::shared_ptr<Load> &surfaceLoad, unsi
 //Compute the body forces acting on the element.
 Eigen::VectorXd 
 lin3DHexa20::ComputeBodyForces(const std::shared_ptr<Load> &bodyLoad, unsigned int k){
+    //Starts profiling this funtion.
+    PROFILE_FUNCTION();
+
     //Local body load vector.
     Eigen::VectorXd bodyForces(60);
     bodyForces.fill(0.0);
@@ -653,6 +673,9 @@ lin3DHexa20::ComputeBodyForces(const std::shared_ptr<Load> &bodyLoad, unsigned i
 //Compute the domain reduction forces acting on the element.
 Eigen::VectorXd 
 lin3DHexa20::ComputeDomainReductionForces(const std::shared_ptr<Load> &drm, unsigned int k){
+    //Starts profiling this funtion.
+    PROFILE_FUNCTION();
+
     //Local domain-reduction load vector.
     Eigen::VectorXd DRMForces(60);
 
@@ -757,9 +780,7 @@ lin3DHexa20::ComputeStrain(const Eigen::MatrixXd &Bij) const{
 
 //Update strain rate in the element.
 Eigen::VectorXd 
-lin3DHexa20::ComputeStrainRate(const Eigen::MatrixXd &Bij) const{
-    UNUNSED_PARAMETER(Bij);
-
+lin3DHexa20::ComputeStrainRate(const Eigen::MatrixXd& UNUSED(Bij)) const{
      //TODO: Compute strain rate.
     //Strain vector definition:
     Eigen::VectorXd strainrate(6);

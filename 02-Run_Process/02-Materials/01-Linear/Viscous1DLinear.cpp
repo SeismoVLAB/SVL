@@ -59,6 +59,12 @@ Viscous1DLinear::GetElasticityModulus() const{
     return 0.0;
 }
 
+//Access the material's energy at current strain.
+double 
+Viscous1DLinear::GetEnergy() const{
+    return 0.0;
+}
+
 //Returns consistent material matrix.
 Eigen::MatrixXd
 Viscous1DLinear::GetDamping() const{

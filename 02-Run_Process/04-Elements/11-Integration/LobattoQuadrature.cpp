@@ -3,8 +3,8 @@
 
 //Overload constructor.
 LobattoQuadrature::LobattoQuadrature(std::string name, unsigned int nQp) :
-QuadratureRule("Gauss"), nQuadraturePoints(nQp) {
-    //Sets the Gauss Quadrature Order for 1D, 2D, and 3D elements.
+QuadratureRule("Lobatto"), nQuadraturePoints(nQp) {
+    //Sets the Lobatto Quadrature Order for 1D, 2D, and 3D elements.
     if(strcasecmp(name.c_str(),"Line") == 0){
         nOrderQuadrature = nQp;
         //Quadrature number for Line is not implemented.
@@ -76,16 +76,16 @@ LobattoQuadrature::~LobattoQuadrature(){
     //Does nothing.
 }
 
-//Gets Number of Gauss Integration Points.
+//Gets Number of Lobatto Integration Points.
 unsigned int 
 LobattoQuadrature::GetNumberOfQuadraturePoints(){
     return nQuadraturePoints;
 }
 
-//Gets Gauss Integration Points.
+//Gets Lobatto Integration Points.
 void
 LobattoQuadrature::GetQuadraturePoints(std::string name, Eigen::VectorXd &Weights, Eigen::MatrixXd &Points){
-    //Sets the Gauss Quadrature Order for 1D, 2D, and 3D elements.
+    //Sets the Lobatto Quadrature Order for 1D, 2D, and 3D elements.
     if(strcasecmp(name.c_str(),"Line") == 0)
         SetLineQuadraturePoints(Weights, Points);
     else if(strcasecmp(name.c_str(),"Tria") == 0)
@@ -98,7 +98,7 @@ LobattoQuadrature::GetQuadraturePoints(std::string name, Eigen::VectorXd &Weight
         SetHexaQuadraturePoints(Weights, Points);
 }
 
-//Sets Gauss Quadrature for Line Elements.
+//Sets Lobatto Quadrature for Line Elements.
 void 
 LobattoQuadrature::SetLineQuadraturePoints(Eigen::VectorXd &Weights, Eigen::MatrixXd &Points){
     if(nOrderQuadrature == 2){
@@ -155,11 +155,12 @@ LobattoQuadrature::SetLineQuadraturePoints(Eigen::VectorXd &Weights, Eigen::Matr
     }
 }
 
-//Sets Gauss Quadrature for Triangular Elements.
+//Sets Lobatto Quadrature for Triangular Elements.
 void 
 LobattoQuadrature::SetTriaQuadraturePoints(Eigen::VectorXd &Weights, Eigen::MatrixXd &Points){
+    //TODO: Define the real Gauss-Lobatto integration point for Tria. The points below are the standard Gauss points.
     if(nOrderQuadrature == 1){
-        //One-point Gauss quadrature.
+        //One-point Lobatto quadrature.
         Weights.resize(1);
         Weights <<  0.5000000000000;
 
@@ -167,7 +168,7 @@ LobattoQuadrature::SetTriaQuadraturePoints(Eigen::VectorXd &Weights, Eigen::Matr
         Points  <<  0.3333333333333, 0.3333333333333;
     }
     else if(nOrderQuadrature == 2){
-        //Three-point Gauss quadrature.
+        //Three-point Lobatto quadrature.
         Weights.resize(3);
         Weights <<  0.1666666666666,
                     0.1666666666666,
@@ -179,7 +180,7 @@ LobattoQuadrature::SetTriaQuadraturePoints(Eigen::VectorXd &Weights, Eigen::Matr
                     0.1666666666666, 0.6666666666666;
     }
     else if(nOrderQuadrature == 3){
-        //Seven-point Gauss quadrature.
+        //Seven-point Lobatto quadrature.
         Weights.resize(7);
         Weights <<  0.0629695902724,
                     0.0629695902724,
@@ -199,7 +200,7 @@ LobattoQuadrature::SetTriaQuadraturePoints(Eigen::VectorXd &Weights, Eigen::Matr
                     0.3333333333333, 0.3333333333333;
     }
     else if(nOrderQuadrature == 4){
-        //Thirteen-point Gauss quadrature.
+        //Thirteen-point Lobatto quadrature.
         Weights.resize(13);
         Weights <<  0.0266736178044,
                     0.0266736178044,
@@ -232,7 +233,7 @@ LobattoQuadrature::SetTriaQuadraturePoints(Eigen::VectorXd &Weights, Eigen::Matr
     }
 }
 
-//Sets Gauss Quadrature for Quadrilateral Elements.
+//Sets Lobatto Quadrature for Quadrilateral Elements.
 void 
 LobattoQuadrature::SetQuadQuadraturePoints(Eigen::VectorXd &Weights, Eigen::MatrixXd &Points){
     if(nOrderQuadrature == 2){
@@ -369,11 +370,12 @@ LobattoQuadrature::SetQuadQuadraturePoints(Eigen::VectorXd &Weights, Eigen::Matr
     }
 }
 
-//Sets Gauss Quadrature for Tetrahedron Elements.
+//Sets Lobatto Quadrature for Tetrahedron Elements.
 void 
 LobattoQuadrature::SetTetraQuadraturePoints(Eigen::VectorXd &Weights, Eigen::MatrixXd &Points){
+    //TODO: Define the real Gauss-Lobatto integration point for Tetra. The points below are the standard Gauss points.
     if(nOrderQuadrature == 1){
-        //One-point Gauss quadrature.
+        //One-point Lobatto quadrature.
         Weights.resize(1);
         Weights <<  0.166666666666666;
 
@@ -381,7 +383,7 @@ LobattoQuadrature::SetTetraQuadraturePoints(Eigen::VectorXd &Weights, Eigen::Mat
         Points  <<  0.250000000000000, 0.250000000000000, 0.250000000000000; 
     }
     else if(nOrderQuadrature == 2){
-        //Four-point Gauss quadrature.
+        //Four-point Lobatto quadrature.
         Weights.resize(4);
         Weights <<  0.041666666666667,
                     0.041666666666667,
@@ -395,7 +397,7 @@ LobattoQuadrature::SetTetraQuadraturePoints(Eigen::VectorXd &Weights, Eigen::Mat
                     0.138196601125011, 0.585410196624969, 0.138196601125011;
     }
     else if(nOrderQuadrature == 3){
-        //Eleven-point Gauss quadrature.
+        //Eleven-point Lobatto quadrature.
         Weights.resize(11);
         Weights << -0.013155555555556,
                     0.007622222222222,
@@ -423,7 +425,7 @@ LobattoQuadrature::SetTetraQuadraturePoints(Eigen::VectorXd &Weights, Eigen::Mat
                     0.100596423833201, 0.100596423833201, 0.399403576166799;
     }
     else if(nOrderQuadrature == 4){
-        //Fifteen-point Gauss quadrature.
+        //Fifteen-point Lobatto quadrature.
         Weights.resize(15);
         Weights <<  0.030283678097089,
                     0.006026785714286,
@@ -460,7 +462,7 @@ LobattoQuadrature::SetTetraQuadraturePoints(Eigen::VectorXd &Weights, Eigen::Mat
     }
 }
 
-//Sets Gauss Quadrature for Hexahedron Elements.
+//Sets Lobatto Quadrature for Hexahedron Elements.
 void 
 LobattoQuadrature::SetHexaQuadraturePoints(Eigen::VectorXd &Weights, Eigen::MatrixXd &Points){
     if(nOrderQuadrature == 2){

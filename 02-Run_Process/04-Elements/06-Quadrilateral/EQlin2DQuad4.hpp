@@ -63,14 +63,13 @@ class EQlin2DQuad4 : public Element{
         ///@param th The thickness of the lin2DQuad4 Element.
         ///@param quadrature The integration rule to be employed.
         ///@param nGauss Number of Gauss points for Element integration.
-        ///@param massform The mass formulation to compute the mass matrix.
         ///@param type The type of modulus reduction and damping curve.
         ///@param zref Reference elevation to compute GGmax and damping.
         ///@param cf1 Lower corner frequencies for damping.
         ///@param cf2 Upper corner frequencies for damping.
         ///@note More details can be found at @ref linkEQlin2DQuad4.
         ///@see EQlin2DQuad4::theNodes, EQlin2DQuad4::theMaterial, EQlin2DQuad4::QuadraturePoints.
-        EQlin2DQuad4(const std::vector<unsigned int> nodes, std::unique_ptr<Material> &material, const double th, const std::string quadrature="GAUSS", const unsigned int nGauss=4, bool massform=true, const std::string Type="DARENDELI", const double zref=0.0, const double cf1=0.0, const double cf2=0.0);
+        EQlin2DQuad4(const std::vector<unsigned int> nodes, std::unique_ptr<Material> &material, const double th, const std::string quadrature="GAUSS", const unsigned int nGauss=4, const std::string Type="DARENDELI", const double zref=0.0, const double cf1=0.0, const double cf2=0.0);
 
         ///Destroys this EQlin2DQuad4 object.
         ~EQlin2DQuad4();
@@ -132,6 +131,10 @@ class EQlin2DQuad4 : public Element{
         ///@return Vector with the response at the Element center.
         ///@note The current responses are: "Strain", "Stress".
         Eigen::VectorXd GetVTKResponse(std::string response) const;
+
+        ///Computes the element energy for a given deformation.
+        ///@return Scalar with the element deformation energy.
+        double ComputeEnergy();
 
         ///Compute the lumped/consistent mass matrix of the element.
         ///@return Matrix with the Element mass matrix.
@@ -196,9 +199,6 @@ class EQlin2DQuad4 : public Element{
     private:
         ///Element thickness.
         double t;
-
-        ///Mass Formulation.
-        bool MassForm;
 
         ///Lower corner frequencies for damping
         double cf1;

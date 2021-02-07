@@ -102,11 +102,12 @@ class Integrator{
 
         ///Gets the incremental nodal support motion vector.
         ///@param mesh Pointer to the Mesh object where Node are stored.
+        ///@param Feff The effective force vector to incorporate support motion forces.
         ///@param factor The incremental load factor.
         ///@param k The time step number to be solved.
         ///@return Vector with the incremental support motion displacement.
         ///@see Node::GetSupportMotion(), Assembler::ComputeSupportMotionIncrement().
-        virtual Eigen::VectorXd ComputeSupportMotionVector(std::shared_ptr<Mesh> &mesh, double factor=1.00, unsigned int k=0) = 0;
+        virtual void ComputeSupportMotionVector(std::shared_ptr<Mesh> &mesh, Eigen::VectorXd &Feff, double factor=1.00, unsigned int k=0) = 0;
 
         ///Gets the effective force assiciated to the integrator.
         ///@param mesh Pointer to the Mesh object where Node and Element are stored.

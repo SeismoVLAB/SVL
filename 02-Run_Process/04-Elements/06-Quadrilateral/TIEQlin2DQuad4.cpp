@@ -7,13 +7,14 @@
 #include "GaussQuadrature.hpp"
 #include "LobattoQuadrature.hpp"
 #include "Definitions.hpp"
+#include "Profiler.hpp"
 
 //Define VTK cell value for Paraview:
 const unsigned int VTKCELL = 9;
 
 //Overload constructor.
-TIEQlin2DQuad4::TIEQlin2DQuad4(const std::vector<unsigned int> nodes, std::unique_ptr<Material> &material, const double th, const std::string quadrature, const unsigned int nGauss, bool massform, const std::string Type, const double zref, const double cf1, const double cf2, const double eref) :
-Element("TIEQlin2DQuad4", nodes, 8, VTKCELL), t(th), MassForm(massform), cf1(cf1), cf2(cf2), zref(zref), eref(eref), Type(Type) {
+TIEQlin2DQuad4::TIEQlin2DQuad4(const std::vector<unsigned int> nodes, std::unique_ptr<Material> &material, const double th, const std::string quadrature, const unsigned int nGauss, const std::string Type, const double zref, const double cf1, const double cf2, const double eref) :
+Element("TIEQlin2DQuad4", nodes, 8, VTKCELL), t(th), cf1(cf1), cf2(cf2), zref(zref), eref(eref), Type(Type) {
     //The element nodes.
     theNodes.resize(4);
 
@@ -27,7 +28,6 @@ Element("TIEQlin2DQuad4", nodes, 8, VTKCELL), t(th), MassForm(massform), cf1(cf1
     theMaterial.resize(nGauss);
     for(unsigned int i = 0; i < nGauss; i++)
         theMaterial[i] = material->CopyMaterial();
-
 }
 
 //Destructor.
@@ -205,10 +205,7 @@ TIEQlin2DQuad4::GetStrainRate() const{
 
 //Gets the material strain in section at  coordinate (x3,x2).
 Eigen::MatrixXd 
-TIEQlin2DQuad4::GetStrainAt(double x3, double x2) const{
-    UNUNSED_PARAMETER(x3);
-    UNUNSED_PARAMETER(x2);
-
+TIEQlin2DQuad4::GetStrainAt(double UNUSED(x3), double UNUSED(x2)) const{
     //number of integration points.
     unsigned int nPoints = QuadraturePoints->GetNumberOfQuadraturePoints();
 
@@ -221,10 +218,7 @@ TIEQlin2DQuad4::GetStrainAt(double x3, double x2) const{
 
 //Gets the material stress in section at  coordinate (x3,x2).
 Eigen::MatrixXd 
-TIEQlin2DQuad4::GetStressAt(double x3, double x2) const{
-    UNUNSED_PARAMETER(x3);
-    UNUNSED_PARAMETER(x2);
-
+TIEQlin2DQuad4::GetStressAt(double UNUSED(x3), double UNUSED(x2)) const{
     //number of integration points.
     unsigned int nPoints = QuadraturePoints->GetNumberOfQuadraturePoints();
 
@@ -255,9 +249,19 @@ TIEQlin2DQuad4::GetVTKResponse(std::string response) const{
     return theResponse;
 }
 
+//Computes the element energy for a given deformation.
+double 
+TIEQlin2DQuad4::ComputeEnergy(){
+    //TODO: Integrate over element volume to compute the energy
+    return 0.0;
+}
+
 //Compute the mass matrix of the element using gauss-integration.
 Eigen::MatrixXd 
 TIEQlin2DQuad4::ComputeMassMatrix(){
+    //Starts profiling this funtion.
+    PROFILE_FUNCTION();
+
     //Use consistent mass definition:
     Eigen::MatrixXd MassMatrix(8, 8);
     MassMatrix.fill(0.0);
@@ -283,7 +287,7 @@ TIEQlin2DQuad4::ComputeMassMatrix(){
     }
 
     //Lumped Mass Formulation
-    if(MassForm){
+    if(MassFormulation){
         //Lumped Mass in diagonal terms.
         for (unsigned int i = 0; i < 8; i++){
             for (unsigned int j = 0; j < 8; j++){
@@ -301,6 +305,9 @@ TIEQlin2DQuad4::ComputeMassMatrix(){
 //Compute the stiffness matrix of the element using gauss-integration.
 Eigen::MatrixXd 
 TIEQlin2DQuad4::ComputeStiffnessMatrix(){
+    //Starts profiling this funtion.
+    PROFILE_FUNCTION();
+
     //Stiffness matrix definition:
     Eigen::MatrixXd StiffnessMatrix(8, 8);
     StiffnessMatrix.fill(0.0);
@@ -354,6 +361,9 @@ TIEQlin2DQuad4::ComputeStiffnessMatrix(){
 //Compute the damping matrix of the element using gauss-integration.
 Eigen::MatrixXd 
 TIEQlin2DQuad4::ComputeDampingMatrix(){
+    //Starts profiling this funtion.
+    PROFILE_FUNCTION();
+
     //Damping matrix definition.
     Eigen::MatrixXd DampingMatrix(8, 8);
     DampingMatrix.fill(0.0);
@@ -423,6 +433,9 @@ TIEQlin2DQuad4::ComputePMLMatrix(){
 //Compute the internal forces acting on the element.
 Eigen::VectorXd 
 TIEQlin2DQuad4::ComputeInternalForces(){
+    //Starts profiling this funtion.
+    PROFILE_FUNCTION();
+
     //Stiffness matrix definition:
     Eigen::VectorXd InternalForces(8);
     InternalForces.fill(0.0);
@@ -498,6 +511,9 @@ TIEQlin2DQuad4::ComputeInternalDynamicForces(){
 //Compute the surface forces acting on the element.
 Eigen::VectorXd 
 TIEQlin2DQuad4::ComputeSurfaceForces(const std::shared_ptr<Load> &surfaceLoad, unsigned int face){
+    //Starts profiling this funtion.
+    PROFILE_FUNCTION();
+
     //Local surface load vector:
     Eigen::VectorXd surfaceForces(8);
     surfaceForces.fill(0.0);
@@ -585,6 +601,9 @@ TIEQlin2DQuad4::ComputeSurfaceForces(const std::shared_ptr<Load> &surfaceLoad, u
 //Compute the body forces acting on the element.
 Eigen::VectorXd 
 TIEQlin2DQuad4::ComputeBodyForces(const std::shared_ptr<Load> &bodyLoad, unsigned int k){
+    //Starts profiling this funtion.
+    PROFILE_FUNCTION();
+
     //Local body load vector:
     Eigen::VectorXd bodyForces(8);
     bodyForces.fill(0.0);
@@ -618,7 +637,8 @@ TIEQlin2DQuad4::ComputeBodyForces(const std::shared_ptr<Load> &bodyLoad, unsigne
 //Compute the domain reduction forces acting on the element.
 Eigen::VectorXd 
 TIEQlin2DQuad4::ComputeDomainReductionForces(const std::shared_ptr<Load> &drm, unsigned int k){
-    Eigen::VectorXd DRMForces(8);
+    //Starts profiling this funtion.
+    PROFILE_FUNCTION();
 
     //Get the Domain-Reduction field motion.
     Eigen::VectorXd x1 = theNodes[0]->GetDomainReductionMotion(k);
@@ -662,6 +682,7 @@ TIEQlin2DQuad4::ComputeDomainReductionForces(const std::shared_ptr<Load> &drm, u
     }
 
     //Domain reduction force vector.
+    Eigen::VectorXd DRMForces(8);
     DRMForces = MassMatrix*Ao + DampingMatrix*Vo + StiffnessMatrix*Uo;
 
     return DRMForces;
@@ -688,9 +709,7 @@ TIEQlin2DQuad4::ComputeStrain(const Eigen::MatrixXd &Bij) const{
 
 //Update strain rate in the element.
 Eigen::VectorXd 
-TIEQlin2DQuad4::ComputeStrainRate(const Eigen::MatrixXd &Bij) const{
-    UNUNSED_PARAMETER(Bij);
-
+TIEQlin2DQuad4::ComputeStrainRate(const Eigen::MatrixXd& UNUSED(Bij)) const{
     //TODO: Compute strain rate.
     //Strain vector definition:
     Eigen::VectorXd strainrate(3);

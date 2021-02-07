@@ -62,10 +62,9 @@ class PML2DQuad8 : public Element{
         ///@param parameters The list of PML parameters.
         ///@param quadrature The integration rule to be employed.
         ///@param nGauss Number of Gauss points for Element integration.
-        ///@param massform The mass formulation to compute the mass matrix.
         ///@note More details can be found at @ref linkPML2DQuad8.
         ///@see PML2DQuad8::theNodes, PML2DQuad8::theMaterial, PML2DQuad8::QuadraturePoints.
-        PML2DQuad8(const std::vector<unsigned int> nodes, std::unique_ptr<Material> &material, const std::vector<double> parameters, const std::string quadrature="GAUSS", const unsigned int nGauss=4, bool massform=false);
+        PML2DQuad8(const std::vector<unsigned int> nodes, std::unique_ptr<Material> &material, const std::vector<double> parameters, const std::string quadrature="GAUSS", const unsigned int nGauss=27);
 
         ///Destroys this PML2DQuad8 object.
         ~PML2DQuad8();
@@ -127,6 +126,10 @@ class PML2DQuad8 : public Element{
         ///@return Vector with the response at the Element center.
         ///@note The current responses are: "Strain", "Stress".
         Eigen::VectorXd GetVTKResponse(std::string response) const;
+
+        ///Computes the element energy for a given deformation.
+        ///@return Scalar with the element deformation energy.
+        double ComputeEnergy();
 
         ///Compute the lumped/consistent mass matrix of the element.
         ///@return Matrix with the Element mass matrix.
@@ -191,9 +194,6 @@ class PML2DQuad8 : public Element{
     private:
         ///Element thickness.
         double t;
-
-        //Mass Formulation.
-        bool MassForm;
 
         ///Polynomial degree of thePerfectly Match Layer.
         double m_pml;

@@ -149,10 +149,9 @@ ExtendedNewmarkBeta::ComputeReactionForce(std::shared_ptr<Mesh> &mesh, unsigned 
 }
 
 //Gets the incremental nodal support motion vector.
-Eigen::VectorXd 
-ExtendedNewmarkBeta::ComputeSupportMotionVector(std::shared_ptr<Mesh> &mesh, double factor, unsigned int k){
-    UNUNSED_PARAMETER(factor);
-
+void
+ExtendedNewmarkBeta::ComputeSupportMotionVector(std::shared_ptr<Mesh> &mesh, Eigen::VectorXd &Feff, double UNUSED(factor), unsigned int k){
+    //TODO:Include some if statement that performs the addition only if there is support motion applied.
     //Starts profiling this function.
     PROFILE_FUNCTION();
 
@@ -162,14 +161,13 @@ ExtendedNewmarkBeta::ComputeSupportMotionVector(std::shared_ptr<Mesh> &mesh, dou
     //Computes the required forces to impose these displacements.
     Eigen::VectorXd Lg = Total2FreeMatrix.transpose()*(K*SupportMotion);
 
-    return Lg;
+    //Add the contribution to the current effective force vector.
+    Feff -= Lg;
 }
 
 //Gets the effective force associated to this integrator.
 void
-ExtendedNewmarkBeta::ComputeEffectiveForce(std::shared_ptr<Mesh> &mesh, Eigen::VectorXd &Feff, double factor, unsigned int k){
-    UNUNSED_PARAMETER(factor);
-
+ExtendedNewmarkBeta::ComputeEffectiveForce(std::shared_ptr<Mesh> &mesh, Eigen::VectorXd &Feff, double UNUSED(factor), unsigned int k){
     //Starts profiling this function.
     PROFILE_FUNCTION();
 

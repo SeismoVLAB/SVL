@@ -468,7 +468,7 @@ Assembler::ComputeSupportMotionIncrement(std::shared_ptr<Mesh> &mesh, unsigned i
 
                 //Assemble the force vector.
                 for(unsigned int i = 0; i < dg.size(); i++)
-                    SupportMotion(totalDofs[i]) = Factors[it]*dg(i);
+                    SupportMotion(totalDofs[i]) += Factors[it]*dg(i);
             }
         }
     }

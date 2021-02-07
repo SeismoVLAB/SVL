@@ -33,7 +33,7 @@
 COND := $(DEBUG)
 
 #PROGRAM's NAME.
-EXE	 := SeismoVLab.exe
+EXE	 := SeismoVLAB.exe
 
 #INCLUDE RULE FOR COMPILATION.
 include Makefile.mk

@@ -6,13 +6,14 @@
 #include "GaussQuadrature.hpp"
 #include "LobattoQuadrature.hpp"
 #include "Definitions.hpp"
+#include "Profiler.hpp"
 
 //Define VTK cell value for Paraview:
 const unsigned int VTKCELL = 9;
 
 //Overload constructor.
-kin2DQuad4::kin2DQuad4(const std::vector<unsigned int> nodes, std::unique_ptr<Material> &material, const double th, const std::string quadrature, const unsigned int nGauss, bool massform) :
-Element("kin2DQuad4", nodes, 8, VTKCELL), t(th), MassForm(massform) {
+kin2DQuad4::kin2DQuad4(const std::vector<unsigned int> nodes, std::unique_ptr<Material> &material, const double th, const std::string quadrature, const unsigned int nGauss) :
+Element("kin2DQuad4", nodes, 8, VTKCELL), t(th){
     //The element nodes.
     theNodes.resize(4);
 
@@ -188,10 +189,7 @@ kin2DQuad4::GetStrainRate() const{
 
 //Gets the material strain in section at  coordinate (x3,x2).
 Eigen::MatrixXd 
-kin2DQuad4::GetStrainAt(double x3, double x2) const{
-    UNUNSED_PARAMETER(x3);
-    UNUNSED_PARAMETER(x2);
-
+kin2DQuad4::GetStrainAt(double UNUSED(x3), double UNUSED(x2)) const{
     //number of integration points.
     unsigned int nPoints = QuadraturePoints->GetNumberOfQuadraturePoints();
 
@@ -204,10 +202,7 @@ kin2DQuad4::GetStrainAt(double x3, double x2) const{
 
 //Gets the material stress in section at  coordinate (x3,x2).
 Eigen::MatrixXd 
-kin2DQuad4::GetStressAt(double x3, double x2) const{
-    UNUNSED_PARAMETER(x3);
-    UNUNSED_PARAMETER(x2);
-
+kin2DQuad4::GetStressAt(double UNUSED(x3), double UNUSED(x2)) const{
     //number of integration points.
     unsigned int nPoints = QuadraturePoints->GetNumberOfQuadraturePoints();
 
@@ -236,9 +231,18 @@ kin2DQuad4::GetVTKResponse(std::string response) const{
     return theResponse;
 }
 
+//Computes the element energy for a given deformation.
+double 
+kin2DQuad4::ComputeEnergy(){
+    //TODO: Integrate over element volume to compute the energy
+    return 0.0;
+}
+
 //Compute the mass matrix of the element using gauss-integration.
 Eigen::MatrixXd 
 kin2DQuad4::ComputeMassMatrix(){
+    PROFILE_FUNCTION();
+
     //Use consistent mass definition:
     Eigen::MatrixXd MassMatrix(8,8);
     MassMatrix.fill(0.0);
@@ -264,7 +268,7 @@ kin2DQuad4::ComputeMassMatrix(){
     }
 
     //Lumped Mass Formulation
-    if(MassForm){
+    if(MassFormulation){
         //Lumped Mass in diagonal terms.
         for (unsigned int i = 0; i < 8; i++){
             for (unsigned int j = 0; j < 8; j++){
@@ -282,6 +286,8 @@ kin2DQuad4::ComputeMassMatrix(){
 //Compute the stiffness matrix of the element using gauss-integration.
 Eigen::MatrixXd 
 kin2DQuad4::ComputeStiffnessMatrix(){
+    PROFILE_FUNCTION();
+
     //Stiffness matrix definition:
     Eigen::MatrixXd StiffnessMatrix(8,8);
     StiffnessMatrix.fill(0.0);
@@ -322,6 +328,8 @@ kin2DQuad4::ComputeStiffnessMatrix(){
 //Compute the damping matrix of the element using gauss-integration.
 Eigen::MatrixXd 
 kin2DQuad4::ComputeDampingMatrix(){
+    PROFILE_FUNCTION();
+
     //Damping matrix definition.
     Eigen::MatrixXd DampingMatrix(8,8);
     DampingMatrix.fill(0.0);
@@ -380,6 +388,8 @@ kin2DQuad4::ComputePMLMatrix(){
 //Compute the internal forces acting on the element.
 Eigen::VectorXd 
 kin2DQuad4::ComputeInternalForces(){
+    PROFILE_FUNCTION();
+
     //Stiffness matrix definition:
     Eigen::VectorXd InternalForces(8);
     InternalForces.fill(0.0);
@@ -432,6 +442,8 @@ kin2DQuad4::ComputeInternalDynamicForces(){
 //Compute the surface forces acting on the element.
 Eigen::VectorXd 
 kin2DQuad4::ComputeSurfaceForces(const std::shared_ptr<Load> &surfaceLoad, unsigned int face){
+    PROFILE_FUNCTION();
+
     //Local surface load vector:
     Eigen::VectorXd surfaceForces(8);
     surfaceForces.fill(0.0);
@@ -519,6 +531,8 @@ kin2DQuad4::ComputeSurfaceForces(const std::shared_ptr<Load> &surfaceLoad, unsig
 //Compute the body forces acting on the element.
 Eigen::VectorXd 
 kin2DQuad4::ComputeBodyForces(const std::shared_ptr<Load> &bodyLoad, unsigned int k){
+    PROFILE_FUNCTION();
+
     //Local body load vector:
     Eigen::VectorXd bodyForces(8);
     bodyForces.fill(0.0);
@@ -552,7 +566,7 @@ kin2DQuad4::ComputeBodyForces(const std::shared_ptr<Load> &bodyLoad, unsigned in
 //Compute the domain reduction forces acting on the element.
 Eigen::VectorXd 
 kin2DQuad4::ComputeDomainReductionForces(const std::shared_ptr<Load> &drm, unsigned int k){
-    Eigen::VectorXd DRMForces(8);
+    PROFILE_FUNCTION();
 
     //Get the Domain-Reduction field motion.
     Eigen::VectorXd x1 = theNodes[0]->GetDomainReductionMotion(k);
@@ -596,6 +610,7 @@ kin2DQuad4::ComputeDomainReductionForces(const std::shared_ptr<Load> &drm, unsig
     }
 
     //Domain reduction force vector.
+    Eigen::VectorXd DRMForces(8);
     DRMForces = MassMatrix*Ao + DampingMatrix*Vo + StiffnessMatrix*Uo;
 
     return DRMForces;
@@ -665,11 +680,7 @@ kin2DQuad4::ComputeStrain(const double ri, const double si, const Eigen::MatrixX
 
 //Update strain rate in the element.
 Eigen::VectorXd 
-kin2DQuad4::ComputeStrainRate(const double ri, const double si, const Eigen::MatrixXd &Bij) const{
-    UNUNSED_PARAMETER(ri);
-    UNUNSED_PARAMETER(si);
-    UNUNSED_PARAMETER(Bij);
-
+kin2DQuad4::ComputeStrainRate(const double UNUSED(ri), const double UNUSED(si), const Eigen::MatrixXd& UNUSED(Bij)) const{
     //TODO: Compute strain rate.
     //Strain vector definition:
     Eigen::VectorXd strainrate(3);

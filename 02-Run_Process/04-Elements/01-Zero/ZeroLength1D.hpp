@@ -55,12 +55,10 @@ class ZeroLength1D : public Element{
         ///Creates a ZeroLength1D in a finite element Mesh.
         ///@param nodes The Node connectivity array of this Element.
         ///@param material Pointer to the Material that this Element is made out of.
-        ///@param dim The model dimension.
         ///@param dir The direction where this Element is acting.
-        ///@param massform The mass formulation.
         ///@note More details can be found at @ref linkZeroLength1D.
-        ///@see ZeroLength1D::theNodes, ZeroLength1D::theDirection, ZeroLength1D::theDimension, ZeroLength1D::MassForm.
-        ZeroLength1D(const std::vector<unsigned int> nodes, std::unique_ptr<Material> &material, const unsigned int dim, const unsigned int dir, bool massform=false);
+        ///@see ZeroLength1D::theNodes, ZeroLength1D::theDirection.
+        ZeroLength1D(const std::vector<unsigned int> nodes, std::unique_ptr<Material> &material, const unsigned int dir);
 
         ///Destroys this ZeroLength1D object.
         ~ZeroLength1D();
@@ -123,6 +121,10 @@ class ZeroLength1D : public Element{
         ///@note The current responses are: "Strain", "Stress".
         Eigen::VectorXd GetVTKResponse(std::string response) const;
 
+        ///Computes the element energy for a given deformation.
+        ///@return Scalar with the element deformation energy.
+        double ComputeEnergy();
+
         ///Compute the lumped/consistent mass matrix of the element.
         ///@return Matrix with the Element mass matrix.
         ///@note The mass matrix can be revisited in @ref linkZeroLength1D.
@@ -184,12 +186,6 @@ class ZeroLength1D : public Element{
         Eigen::VectorXd ComputeDomainReductionForces(const std::shared_ptr<Load> &drm, unsigned int k);
 
     private:
-        ///Mass Formulation.
-        bool MassForm;
-
-        ///The element dimension in global coordinates.
-        unsigned int theDimension;
-
         ///The element direction in global coordinates.
         unsigned int theDirection;
     

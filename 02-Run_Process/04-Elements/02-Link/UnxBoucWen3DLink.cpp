@@ -2,6 +2,7 @@
 #include <iostream>
 #include "UnxBoucWen3DLink.hpp"
 #include "Definitions.hpp"
+#include "Profiler.hpp"
 
 //Define constant tolerance value:
 const double TOL = 0.9999995;
@@ -10,37 +11,30 @@ const double TOL = 0.9999995;
 const unsigned int VTKCELL = 3; 
 
 //Overload constructor.
-UnxBoucWen3DLink::UnxBoucWen3DLink(const std::vector<unsigned int> nodes, std::vector<double> params, std::vector<double> vars, const unsigned int dim, const unsigned int dir, bool massform) :
-Element("UnxBoucWen3DLink", nodes, 2*dim, VTKCELL), MassForm(massform), Dimension(dim), Direction(dir){
+UnxBoucWen3DLink::UnxBoucWen3DLink(const std::vector<unsigned int> nodes, std::vector<double> params, std::vector<double> vars, const unsigned int dim, const unsigned int dir, double tol, unsigned int nmax) :
+Element("UnxBoucWen3DLink", nodes, 2*dim, VTKCELL), Dimension(dim), Direction(dir), Tol(tol), nMax(nmax){
     //The element nodes.
     theNodes.resize(2);
 
-    //Assign internal variables.
-    A      = params[0];
-    mu     = params[1];
-    eta    = params[2];
-    beta   = params[3];
-    gamma  = params[4];
-    Tol    = params[5];
+    //Assign Histeretic curve variables.
+    Fy = vars[0];
+    Ko = vars[1];
 
-    //Auxiliar variables.
-    double fy = vars[0];
-    double Kinit  = vars[1];
-    double alpha1 = vars[2];
-    double alpha2 = vars[3];
+    //Assign Histeretic shape variables.
+    alpha  = params[0];
+    eta    = params[1];
+    beta   = params[2];
+    gamma  = params[3];
 
     //Compute Bouc-Wen backbone curve parameters
     z    = 0.0;
-    nMax = 50;
-    qY   = fy*(1.0 - alpha1 - alpha2*pow(fy/Kinit, mu - 1.0));
-    uY   = qY/Kinit;
-    k0   = (1.0 - alpha1)*Kinit;
-    k2   = alpha1*Kinit;
-    k3   = alpha2*Kinit;
+    zn   = 0.0;
+    U    = 0.0;
+    Un   = 0.0;
 
-    //Initialize stiffnes and internal force.
+    //Initialize stiffness and internal force.
     qbw = 0.0;
-    kbw = Kinit;
+    kbw = Ko;
 }
 
 //Destructor:
@@ -68,12 +62,16 @@ UnxBoucWen3DLink::UpdateState(){
     //Relative link deformation.
     double dUn = U - Un;
 
+    //Yield force and deformation of hysteretic component.
+    double qY = Fy*(1.0 - alpha);
+    double uY = qY/Ko;
+
     //Newton-Raphson iteration.
     double f, df, dz;
     unsigned int k = 0;
 
     do{
-        f  = z - zn - dUn/uY*(A - pow(abs(z), eta)*(gamma + beta*sign(z*dUn)));
+        f  = z - zn - dUn/uY*(1.0 - pow(abs(z), eta)*(gamma + beta*sign(z*dUn)));
         df = 1.0 + dUn/uY*eta*pow(abs(z), eta - 1.0)*sign(z)*(gamma + beta*sign(z*dUn));
         dz = f/df;
         z  = z - dz;
@@ -81,11 +79,11 @@ UnxBoucWen3DLink::UpdateState(){
     } while( (fabs(dz) > Tol) & (k < nMax) );
 
     //Derivative of internal variable w.r.t displacement.
-    double dzdu = A - pow(fabs(z), eta)*(gamma + beta*sign(z*dUn));
+    double dzdu = 1.0 - pow(fabs(z), eta)*(gamma + beta*sign(z*dUn));
 
-    //Compute consistent stiggnes matrix and internal force vector.
-    qbw = qY*z + k2*U + k3*sign(U)*pow(fabs(U), mu - 1.0);
-    kbw = k0*dzdu + k2 + k3*mu*pow(abs(U), mu - 1.0);
+    //Compute consistent stiffness matrix and internal force vector.
+    qbw = qY*z + alpha*Ko*U;
+    kbw = (1.0 - alpha)*Ko*dzdu + alpha*Ko;
 }
 
 //Sets the finite element dependance among objects.
@@ -102,9 +100,8 @@ UnxBoucWen3DLink::SetDomain(std::map<unsigned int, std::shared_ptr<Node> > &node
 
 //Sets the damping model.
 void 
-UnxBoucWen3DLink::SetDamping(const std::shared_ptr<Damping> &damping){
+UnxBoucWen3DLink::SetDamping(const std::shared_ptr<Damping>& UNUSED(damping)){
     //does nothing.
-    UNUNSED_PARAMETER(damping);
 }
 
 //Gets the list of total-degree of freedom of this element.
@@ -159,10 +156,7 @@ UnxBoucWen3DLink::GetStrainRate() const{
 
 //Gets the material strain in section at  coordinate (x3,x2).
 Eigen::MatrixXd 
-UnxBoucWen3DLink::GetStrainAt(double x3, double x2) const{
-    UNUNSED_PARAMETER(x3);
-    UNUNSED_PARAMETER(x2);
-
+UnxBoucWen3DLink::GetStrainAt(double UNUSED(x3), double UNUSED(x2)) const{
     //Stress at coordinate is define within section.
     Eigen::MatrixXd theStrain(1, 6); 
     theStrain.fill(0.0);
@@ -172,10 +166,7 @@ UnxBoucWen3DLink::GetStrainAt(double x3, double x2) const{
 
 //Gets the material stress in section at  coordinate (x3,x2).
 Eigen::MatrixXd 
-UnxBoucWen3DLink::GetStressAt(double x3, double x2) const{
-    UNUNSED_PARAMETER(x3);
-    UNUNSED_PARAMETER(x2);
-
+UnxBoucWen3DLink::GetStressAt(double UNUSED(x3), double UNUSED(x2)) const{
     //Stress at coordinate is define within section.
     Eigen::MatrixXd theStress(1, 6); 
     theStress.fill(0.0);
@@ -185,9 +176,7 @@ UnxBoucWen3DLink::GetStressAt(double x3, double x2) const{
 
 //Gets the element internal response in VTK format.
 Eigen::VectorXd 
-UnxBoucWen3DLink::GetVTKResponse(std::string response) const{
-    UNUNSED_PARAMETER(response);
-
+UnxBoucWen3DLink::GetVTKResponse(std::string UNUSED(response)) const{
     //TODO: Stress/Strain responses
     //The VTK response vector.
     Eigen::VectorXd theResponse(6);
@@ -196,9 +185,19 @@ UnxBoucWen3DLink::GetVTKResponse(std::string response) const{
     return theResponse;
 }
 
+//Computes the element energy for a given deformation.
+double 
+UnxBoucWen3DLink::ComputeEnergy(){
+    //TODO: Integrate over element volume to compute the energy
+    return 0.0;
+}
+
 //Compute the mass matrix of the element.
 Eigen::MatrixXd 
 UnxBoucWen3DLink::ComputeMassMatrix(){
+    //Starts profiling this funtion.
+    PROFILE_FUNCTION();
+
     //The matrix dimension.
     unsigned int nDim = 2*Dimension;
 
@@ -212,6 +211,9 @@ UnxBoucWen3DLink::ComputeMassMatrix(){
 //Compute the stiffness matrix of the element.
 Eigen::MatrixXd 
 UnxBoucWen3DLink::ComputeStiffnessMatrix(){
+    //Starts profiling this funtion.
+    PROFILE_FUNCTION();
+
     //The vector dimension.
     unsigned int nDim = 2*Dimension;
 
@@ -234,6 +236,9 @@ UnxBoucWen3DLink::ComputeStiffnessMatrix(){
 //Compute damping matrix of the element.
 Eigen::MatrixXd 
 UnxBoucWen3DLink::ComputeDampingMatrix(){
+    //Starts profiling this funtion.
+    PROFILE_FUNCTION();
+
     //The matrix dimension.
     unsigned int nDim = 2*Dimension;
 
@@ -254,6 +259,9 @@ UnxBoucWen3DLink::ComputePMLMatrix(){
 //Compute the element internal forces acting on the element.
 Eigen::VectorXd 
 UnxBoucWen3DLink::ComputeInternalForces(){
+    //Starts profiling this funtion.
+    PROFILE_FUNCTION();
+
     //The vector dimension.
     unsigned int nDim = 2*Dimension;
 
@@ -299,9 +307,9 @@ UnxBoucWen3DLink::ComputeInternalDynamicForces(){
 
 //Compute the surface forces acting on the element.
 Eigen::VectorXd 
-UnxBoucWen3DLink::ComputeSurfaceForces(const std::shared_ptr<Load> &surface, unsigned int face){
-    UNUNSED_PARAMETER(face);
-    UNUNSED_PARAMETER(surface);
+UnxBoucWen3DLink::ComputeSurfaceForces(const std::shared_ptr<Load>& UNUSED(surface), unsigned int UNUSED(face)){
+    //Starts profiling this funtion.
+    PROFILE_FUNCTION();
 
     //Local surface load vector.
     Eigen::VectorXd surfaceForces(2*Dimension);
@@ -312,9 +320,9 @@ UnxBoucWen3DLink::ComputeSurfaceForces(const std::shared_ptr<Load> &surface, uns
 
 //Compute the body forces acting on the element.
 Eigen::VectorXd 
-UnxBoucWen3DLink::ComputeBodyForces(const std::shared_ptr<Load> &body, unsigned int k){
-    UNUNSED_PARAMETER(k);
-    UNUNSED_PARAMETER(body);
+UnxBoucWen3DLink::ComputeBodyForces(const std::shared_ptr<Load>& UNUSED(body), unsigned int UNUSED(k)){
+    //Starts profiling this funtion.
+    PROFILE_FUNCTION();
 
     //Local body load vector.
     Eigen::VectorXd bodyForces(2*Dimension);
@@ -325,9 +333,9 @@ UnxBoucWen3DLink::ComputeBodyForces(const std::shared_ptr<Load> &body, unsigned 
 
 //Compute the domain reduction forces acting on the element.
 Eigen::VectorXd 
-UnxBoucWen3DLink::ComputeDomainReductionForces(const std::shared_ptr<Load> &drm, unsigned int k){
-    UNUNSED_PARAMETER(k);
-    UNUNSED_PARAMETER(drm);
+UnxBoucWen3DLink::ComputeDomainReductionForces(const std::shared_ptr<Load>& UNUSED(drm), unsigned int UNUSED(k)){
+    //Starts profiling this funtion.
+    PROFILE_FUNCTION();
 
     //Domain reduction force vector.
     unsigned int nDofs = GetNumberOfDegreeOfFreedom();

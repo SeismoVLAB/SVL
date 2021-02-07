@@ -3,7 +3,7 @@
 
 //Default Constructor.
 Element::Element(std::string name, const std::vector<unsigned int> nodes, unsigned int ndofs, unsigned int VTKcell) : 
-Name(name), VTKCell(VTKcell), NumberOfNodes(nodes.size()), NumberOfDegreeOfFreedom(ndofs), Nodes(nodes) {
+Name(name), VTKCell(VTKcell), NumberOfNodes(nodes.size()), NumberOfDegreeOfFreedom(ndofs), Nodes(nodes){
     //Does nothing.
 }
 

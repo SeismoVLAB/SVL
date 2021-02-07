@@ -126,10 +126,9 @@ QuasiStatic::ComputeReactionForce(std::shared_ptr<Mesh> &mesh, unsigned int k){
 }
 
 //Gets the incremental nodal support motion vector.
-Eigen::VectorXd 
-QuasiStatic::ComputeSupportMotionVector(std::shared_ptr<Mesh> &mesh, double factor, unsigned int k){
-    UNUNSED_PARAMETER(k);
-
+void
+QuasiStatic::ComputeSupportMotionVector(std::shared_ptr<Mesh> &mesh, Eigen::VectorXd &Feff, double factor, unsigned int UNUSED(k)){
+    //TODO:Include some if statement that performs the addition only if there is support motion applied.
     //Starts profiling this function.
     PROFILE_FUNCTION();
 
@@ -139,7 +138,8 @@ QuasiStatic::ComputeSupportMotionVector(std::shared_ptr<Mesh> &mesh, double fact
     //Computes the required forces to impose these displacements.
     Eigen::VectorXd Lg = Total2FreeMatrix.transpose()*(K*SupportMotion);
 
-    return Lg;
+    //Add the contribution to the current effective force vector.
+    Feff -= Lg;
 }
 
 //Gets the effective force associated to this integrator.

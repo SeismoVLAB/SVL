@@ -86,6 +86,10 @@ class Elastic1DLinear : public Material{
         ///@see Elastic1DLinear::E.
         double GetElasticityModulus() const;
 
+        ///Access the material's energy at current strain.
+        ///@return Scalar with the material energy value.
+        double GetEnergy() const;
+
         ///Returns the material viscous damping.
         ///@return Vector with the material damping components.
         Eigen::MatrixXd GetDamping() const;

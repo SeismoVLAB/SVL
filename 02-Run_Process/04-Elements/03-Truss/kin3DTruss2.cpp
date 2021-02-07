@@ -2,6 +2,7 @@
 #include <iostream>
 #include "kin3DTruss2.hpp"
 #include "Definitions.hpp"
+#include "Profiler.hpp"
 
 //Define constant tolerance value:
 const double TOL = 0.9999995;
@@ -10,8 +11,8 @@ const double TOL = 0.9999995;
 const unsigned int VTKCELL = 3;
 
 //Overload constructor.
-kin3DTruss2::kin3DTruss2(const std::vector<unsigned int> nodes, std::unique_ptr<Material> &material, const double area, bool massform) :
-Element("kin3DTruss2", nodes, 6, VTKCELL), A(area), MassForm(massform) {
+kin3DTruss2::kin3DTruss2(const std::vector<unsigned int> nodes, std::unique_ptr<Material> &material, const double area) :
+Element("kin3DTruss2", nodes, 6, VTKCELL), A(area){
     //The element nodes.
     theNodes.resize(2);
 
@@ -126,10 +127,7 @@ kin3DTruss2::GetStrainRate() const{
 
 //Gets the material strain in section at  coordinate (x3,x2).
 Eigen::MatrixXd 
-kin3DTruss2::GetStrainAt(double x3, double x2) const{
-    UNUNSED_PARAMETER(x2);
-    UNUNSED_PARAMETER(x3);
-
+kin3DTruss2::GetStrainAt(double UNUSED(x3), double UNUSED(x2)) const{
     //Stress at coordinate is define within section.
     Eigen::MatrixXd theStrain(1, 6);
     theStrain.fill(0.0);
@@ -139,10 +137,7 @@ kin3DTruss2::GetStrainAt(double x3, double x2) const{
 
 //Gets the material stress in section at  coordinate (x3,x2).
 Eigen::MatrixXd 
-kin3DTruss2::GetStressAt(double x3, double x2) const{
-    UNUNSED_PARAMETER(x2);
-    UNUNSED_PARAMETER(x3);
-
+kin3DTruss2::GetStressAt(double UNUSED(x3), double UNUSED(x2)) const{
     //Stress at coordinate is define within section.
     Eigen::MatrixXd theStress(1, 6);
     theStress.fill(0.0);
@@ -168,9 +163,19 @@ kin3DTruss2::GetVTKResponse(std::string response) const{
     return theResponse;
 }
 
+//Computes the element energy for a given deformation.
+double 
+kin3DTruss2::ComputeEnergy(){
+    //TODO: Integrate over element volume to compute the energy
+    return 0.0;
+}
+
 //Compute the mass matrix of the element.
 Eigen::MatrixXd 
 kin3DTruss2::ComputeMassMatrix(){
+    //Starts profiling this funtion.
+    PROFILE_FUNCTION();
+
     //Computes the transformation matrix.
     Eigen::MatrixXd localAxes = ComputeTransformationAxes();
     
@@ -181,7 +186,7 @@ kin3DTruss2::ComputeMassMatrix(){
     double rho = theMaterial->GetDensity();
 
     //Construct mass matrix according to formulation.
-    if(MassForm){
+    if(MassFormulation){
         //Gets the total mass:
         double mass = rho*A*Lo/2.0;
 
@@ -214,6 +219,9 @@ kin3DTruss2::ComputeMassMatrix(){
 //Compute the stiffness matrix of the element.
 Eigen::MatrixXd 
 kin3DTruss2::ComputeStiffnessMatrix(){
+    //Starts profiling this funtion.
+    PROFILE_FUNCTION();
+
     //Gets material tangent matrix.
     Eigen::MatrixXd E = theMaterial->GetTangentStiffness();
 
@@ -244,6 +252,9 @@ kin3DTruss2::ComputeStiffnessMatrix(){
 //Compute the damping matrix of the element.
 Eigen::MatrixXd 
 kin3DTruss2::ComputeDampingMatrix(){
+    //Starts profiling this funtion.
+    PROFILE_FUNCTION();
+
     //Define damping matrix
     Eigen::MatrixXd DampingMatrix(6,6);
     DampingMatrix.fill(0.0);
@@ -281,6 +292,9 @@ kin3DTruss2::ComputePMLMatrix(){
 //Compute the element the internal forces acting on the element.
 Eigen::VectorXd 
 kin3DTruss2::ComputeInternalForces(){
+    //Starts profiling this funtion.
+    PROFILE_FUNCTION();
+
     //The global axes transformation.
     Eigen::VectorXd LocalAxes = ComputeLocalAxes();
 
@@ -315,8 +329,9 @@ kin3DTruss2::ComputeInternalDynamicForces(){
 
 //Compute the surface forces acting on the element.
 Eigen::VectorXd 
-kin3DTruss2::ComputeSurfaceForces(const std::shared_ptr<Load> &surfaceLoad, unsigned int face){
-    UNUNSED_PARAMETER(face);
+kin3DTruss2::ComputeSurfaceForces(const std::shared_ptr<Load> &surfaceLoad, unsigned int UNUSED(face)){
+    //Starts profiling this funtion.
+    PROFILE_FUNCTION();
 
     //Local surface load vector:
     Eigen::VectorXd surfaceForces(6);
@@ -347,6 +362,9 @@ kin3DTruss2::ComputeSurfaceForces(const std::shared_ptr<Load> &surfaceLoad, unsi
 //Compute the body forces acting on the element.
 Eigen::VectorXd 
 kin3DTruss2::ComputeBodyForces(const std::shared_ptr<Load> &bodyLoad, unsigned int k){
+    //Starts profiling this funtion.
+    PROFILE_FUNCTION();
+
     //Local body load vector:
     Eigen::VectorXd bodyForces(6);
 
@@ -378,9 +396,9 @@ kin3DTruss2::ComputeBodyForces(const std::shared_ptr<Load> &bodyLoad, unsigned i
 
 //Compute the domain reduction forces acting on the element.
 Eigen::VectorXd 
-kin3DTruss2::ComputeDomainReductionForces(const std::shared_ptr<Load> &drm, unsigned int k){
-    UNUNSED_PARAMETER(k);
-    UNUNSED_PARAMETER(drm);
+kin3DTruss2::ComputeDomainReductionForces(const std::shared_ptr<Load>& UNUSED(drm), unsigned int UNUSED(k)){
+    //Starts profiling this funtion.
+    PROFILE_FUNCTION();
 
     //TODO: Domain reduction forces are not implemented for Truss.
     Eigen::VectorXd DRMForces(6);

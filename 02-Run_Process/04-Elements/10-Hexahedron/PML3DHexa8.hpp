@@ -60,10 +60,9 @@ class PML3DHexa8 : public Element{
         ///@param parameters The list of PML parameters.
         ///@param quadrature The integration rule to be employed.
         ///@param nGauss Number of Gauss points for Element integration.
-        ///@param massform The mass formulation to compute the mass matrix.
         ///@note More details can be found at @ref linkPML3DHexa8.
         ///@see PML3DHexa8::theNodes, PML3DHexa8::theMaterial, PML3DHexa8::QuadraturePoints.
-        PML3DHexa8(const std::vector<unsigned int> nodes, std::unique_ptr<Material> &material, const std::vector<double> parameters, const std::string quadrature="GAUSS", const unsigned int nGauss=8, bool massform=false);
+        PML3DHexa8(const std::vector<unsigned int> nodes, std::unique_ptr<Material> &material, const std::vector<double> parameters, const std::string quadrature="GAUSS", const unsigned int nGauss=8);
 
         ///Destroys this PML3DHexa8 object.
         ~PML3DHexa8();
@@ -126,6 +125,10 @@ class PML3DHexa8 : public Element{
         ///@note The current responses are: "Strain", "Stress".
         Eigen::VectorXd GetVTKResponse(std::string response) const;
 
+        ///Computes the element energy for a given deformation.
+        ///@return Scalar with the element deformation energy.
+        double ComputeEnergy();
+
         ///Compute the lumped/consistent mass matrix of the element.
         ///@return Matrix with the Element mass matrix.
         ///@note The mass matrix can be revisited in @ref linkPML3DHexa8.
@@ -187,9 +190,6 @@ class PML3DHexa8 : public Element{
         Eigen::VectorXd ComputeDomainReductionForces(const std::shared_ptr<Load> &drm, unsigned int k);
 
     private:
-        ///Mass Formulation.
-        bool MassForm;
-
         ///Polynomial degree of thePerfectly Match Layer.
         double m_pml;
 
@@ -270,10 +270,6 @@ class PML3DHexa8 : public Element{
         ///@param lambda The first Lame constant.
         ///@return Vector with the stretching parameters.
         Eigen::VectorXd ComputePMLStretchingFactors(const double ri, const double si, const double ti, const double rho, const double mu, const double lambda) const;
-
-        ///Compute the PML history matrix for Perfectly-Matched Layer (PML).
-        ///@return Matrix with the PML history components.
-        Eigen::MatrixXd ComputePMLMatrix() const;
 };
 
 #endif

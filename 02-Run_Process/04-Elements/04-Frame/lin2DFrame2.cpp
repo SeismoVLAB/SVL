@@ -4,6 +4,7 @@
 #include "GaussQuadrature.hpp"
 #include "LobattoQuadrature.hpp"
 #include "Definitions.hpp"
+#include "Profiler.hpp"
 
 //Define constant tolerance value:
 const double TOL = 0.9999995;
@@ -12,8 +13,8 @@ const double TOL = 0.9999995;
 const unsigned int VTKCELL = 3;
 
 //Overload constructor.
-lin2DFrame2::lin2DFrame2(const std::vector<unsigned int> nodes, std::unique_ptr<Section> &section, bool massform, bool formulation, const std::string quadrature, unsigned int nGauss) :
-Element("lin2DFrame2", nodes, 6, VTKCELL), MassForm(massform), Formulation(formulation), Phi(0.0) {
+lin2DFrame2::lin2DFrame2(const std::vector<unsigned int> nodes, std::unique_ptr<Section> &section, bool formulation, const std::string quadrature, unsigned int nGauss) :
+Element("lin2DFrame2", nodes, 6, VTKCELL), Formulation(formulation), Phi(0.0){
     //The element nodes.
     theNodes.resize(2);
 
@@ -42,7 +43,7 @@ lin2DFrame2::~lin2DFrame2(){
 
 //Save the material states in the element.
 void 
-lin2DFrame2::CommitState(void){
+lin2DFrame2::CommitState(){
     //It considers only linear elastic material, thus viscous material is not allowed.
     unsigned int nPoints = QuadraturePoints->GetNumberOfQuadraturePoints();
 
@@ -212,9 +213,19 @@ lin2DFrame2::GetVTKResponse(std::string response) const{
     return theResponse;
 }
 
+//Computes the element energy for a given deformation.
+double 
+lin2DFrame2::ComputeEnergy(){
+    //TODO: Integrate over element volume to compute the energy
+    return 0.0;
+}
+
 //Compute the mass matrix of the element.
 Eigen::MatrixXd 
 lin2DFrame2::ComputeMassMatrix(){
+    //Starts profiling this funtion.
+    PROFILE_FUNCTION();
+
     //Gets the quadrature information.    
     Eigen::VectorXd wi;
     Eigen::MatrixXd xi;
@@ -237,7 +248,7 @@ lin2DFrame2::ComputeMassMatrix(){
     }
 
     //Lumped Mass Formulation
-    if(MassForm){
+    if(MassFormulation){
         //Lumped Mass in diagonal terms.
         double m11 = MassMatrix(0,0) + MassMatrix(0,3);
         double m22 = MassMatrix(1,1) + MassMatrix(1,4);
@@ -263,6 +274,9 @@ lin2DFrame2::ComputeMassMatrix(){
 //Compute the stiffness matrix of the element.
 Eigen::MatrixXd 
 lin2DFrame2::ComputeStiffnessMatrix(){
+    //Starts profiling this funtion.
+    PROFILE_FUNCTION();
+
     //Gets the quadrature information.    
     Eigen::VectorXd wi;
     Eigen::MatrixXd xi;
@@ -296,6 +310,9 @@ lin2DFrame2::ComputeStiffnessMatrix(){
 //Compute the damping matrix of the element.
 Eigen::MatrixXd 
 lin2DFrame2::ComputeDampingMatrix(){
+    //Starts profiling this funtion.
+    PROFILE_FUNCTION();
+
     //Damping matrix definition.
     Eigen::MatrixXd DampingMatrix;
     DampingMatrix.resize(6,6);
@@ -333,6 +350,9 @@ lin2DFrame2::ComputePMLMatrix(){
 //Compute the element the internal forces acting on the element.
 Eigen::VectorXd 
 lin2DFrame2::ComputeInternalForces(){
+    //Starts profiling this funtion.
+    PROFILE_FUNCTION();
+
     //Gets the quadrature information.    
     Eigen::VectorXd wi;
     Eigen::MatrixXd xi;
@@ -387,8 +407,9 @@ lin2DFrame2::ComputeInternalDynamicForces(){
 
 //Compute the surface forces acting on the element.
 Eigen::VectorXd 
-lin2DFrame2::ComputeSurfaceForces(const std::shared_ptr<Load> &surfaceLoad, unsigned int face){
-    UNUNSED_PARAMETER(face);
+lin2DFrame2::ComputeSurfaceForces(const std::shared_ptr<Load> &surfaceLoad, unsigned int UNUSED(face)){
+    //Starts profiling this funtion.
+    PROFILE_FUNCTION();
 
     //Local surface load vector:
     Eigen::VectorXd surfaceForces(6);
@@ -419,6 +440,9 @@ lin2DFrame2::ComputeSurfaceForces(const std::shared_ptr<Load> &surfaceLoad, unsi
 //Compute the body forces acting on the element.
 Eigen::VectorXd 
 lin2DFrame2::ComputeBodyForces(const std::shared_ptr<Load> &bodyLoad, unsigned int k){
+    //Starts profiling this funtion.
+    PROFILE_FUNCTION();
+
     //Local body load vector:
     Eigen::VectorXd bodyForces(6);
 
@@ -450,9 +474,9 @@ lin2DFrame2::ComputeBodyForces(const std::shared_ptr<Load> &bodyLoad, unsigned i
 
 //Compute the domain reduction forces acting on the element.
 Eigen::VectorXd 
-lin2DFrame2::ComputeDomainReductionForces(const std::shared_ptr<Load> &drm, unsigned int k){
-    UNUNSED_PARAMETER(k);
-    UNUNSED_PARAMETER(drm);
+lin2DFrame2::ComputeDomainReductionForces(const std::shared_ptr<Load>& UNUSED(drm), unsigned int UNUSED(k)){
+    //Starts profiling this funtion.
+    PROFILE_FUNCTION();
 
     //TODO: Domain reduction forces not implemented for frame.
     Eigen::VectorXd DRMForces(6);

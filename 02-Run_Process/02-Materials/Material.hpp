@@ -79,6 +79,10 @@ class Material{
         ///@return The material elasticity's (E) moduli value.
         virtual double GetElasticityModulus() const = 0;
 
+        ///Computes the material energy for a given strain.
+        ///@return Scalar with the material energy value.
+        virtual double GetEnergy() const = 0;
+
         ///Returns the material viscous damping.
         ///@return Vector with the material damping components.
         virtual Eigen::MatrixXd GetDamping() const = 0;

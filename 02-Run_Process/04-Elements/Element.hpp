@@ -121,6 +121,10 @@ class Element{
         ///@note The current responses are: "Strain", "Stress".
         virtual Eigen::VectorXd GetVTKResponse(std::string response) const = 0;
 
+        ///Computes the element energy for a given deformation.
+        ///@return Scalar with the element deformation energy.
+        virtual double ComputeEnergy() = 0;
+
         ///Compute the lumped/consistent mass matrix of the element.
         ///@return Matrix with the Element mass matrix.
         ///@note The mass matrix can be revisited in @ref linkElement.

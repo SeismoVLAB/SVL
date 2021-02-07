@@ -60,10 +60,9 @@ class HDRBYamamoto2DLink : public Element{
         ///@param variables Vector that contains auxiliar model parameters.
         ///@param dim The model dimension.
         ///@param dir The local direction where this Element is acting.
-        ///@param massform The mass formulation.
         ///@note More details can be found at @ref linkHDRBYamamoto2DLink.
-        ///@see HDRBYamamoto2DLink::theNodes, HDRBYamamoto2DLink::theDirection, HDRBYamamoto2DLink::theDimension, HDRBYamamoto2DLink::MassForm.
-        HDRBYamamoto2DLink(const std::vector<unsigned int> nodes, double de, double di, double hr, unsigned int dim, bool massform=false);
+        ///@see HDRBYamamoto2DLink::theNodes, HDRBYamamoto2DLink::theDirection, HDRBYamamoto2DLink::theDimension.
+        HDRBYamamoto2DLink(const std::vector<unsigned int> nodes, double de, double di, double hr, unsigned int dim);
 
         ///Destroys this HDRBYamamoto2DLink object.
         ~HDRBYamamoto2DLink();
@@ -125,6 +124,10 @@ class HDRBYamamoto2DLink : public Element{
         ///@return Vector with the response at the Element center.
         ///@note The current responses are: "Strain", "Stress".
         Eigen::VectorXd GetVTKResponse(std::string response) const;
+
+        ///Computes the element energy for a given deformation.
+        ///@return Scalar with the element deformation energy.
+        double ComputeEnergy();
 
         ///Compute the lumped/consistent mass matrix of the element.
         ///@return Matrix with the Element mass matrix.
@@ -229,9 +232,6 @@ class HDRBYamamoto2DLink : public Element{
         ///Non-linear Displacement Trajectory Vector
         Eigen::VectorXd Qaux;
 
-        ///Mass Formulation.
-        bool MassForm;
-    
         ///The Element's Nodes.
         std::vector<std::shared_ptr<Node> > theNodes;
 

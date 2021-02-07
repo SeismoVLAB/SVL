@@ -6,13 +6,14 @@
 #include "GaussQuadrature.hpp"
 #include "LobattoQuadrature.hpp"
 #include "Definitions.hpp"
+#include "Profiler.hpp"
 
 //Define VTK cell value for Paraview:
 const unsigned int VTKCELL = 23;
 
 //Overload constructor.
-PML2DQuad8::PML2DQuad8(const std::vector<unsigned int> nodes, std::unique_ptr<Material> &material, const std::vector<double> parameters, const std::string quadrature, const unsigned int nGauss, bool massform) :
-Element("PML2DQuad8", nodes, 40, VTKCELL), t(parameters[0]), MassForm(massform), m_pml(parameters[1]), L_pml(parameters[2]), R_pml(parameters[3]), x0_pml(parameters[4]), y0_pml(parameters[5]), nx_pml(parameters[6]), ny_pml(parameters[7]) {
+PML2DQuad8::PML2DQuad8(const std::vector<unsigned int> nodes, std::unique_ptr<Material> &material, const std::vector<double> parameters, const std::string quadrature, const unsigned int nGauss) :
+Element("PML2DQuad8", nodes, 40, VTKCELL), t(parameters[0]), m_pml(parameters[1]), L_pml(parameters[2]), R_pml(parameters[3]), x0_pml(parameters[4]), y0_pml(parameters[5]), nx_pml(parameters[6]), ny_pml(parameters[7]) {
     //The element nodes.
     theNodes.resize(8);
 
@@ -170,10 +171,7 @@ PML2DQuad8::GetStrainRate() const{
 
 //Gets the material strain in section at  coordinate (x3,x2).
 Eigen::MatrixXd 
-PML2DQuad8::GetStrainAt(double x3, double x2) const{
-    UNUNSED_PARAMETER(x3);
-    UNUNSED_PARAMETER(x2);
-
+PML2DQuad8::GetStrainAt(double UNUSED(x3), double UNUSED(x2)) const{
     //number of integration points.
     unsigned int nPoints = QuadraturePoints->GetNumberOfQuadraturePoints();
 
@@ -186,10 +184,7 @@ PML2DQuad8::GetStrainAt(double x3, double x2) const{
 
 //Gets the material stress in section at  coordinate (x3,x2).
 Eigen::MatrixXd 
-PML2DQuad8::GetStressAt(double x3, double x2) const{
-    UNUNSED_PARAMETER(x3);
-    UNUNSED_PARAMETER(x2);
-
+PML2DQuad8::GetStressAt(double UNUSED(x3), double UNUSED(x2)) const{
     //number of integration points.
     unsigned int nPoints = QuadraturePoints->GetNumberOfQuadraturePoints();
 
@@ -202,9 +197,7 @@ PML2DQuad8::GetStressAt(double x3, double x2) const{
 
 //Gets the element internal response in VTK format.
 Eigen::VectorXd 
-PML2DQuad8::GetVTKResponse(std::string response) const{
-    UNUNSED_PARAMETER(response);
-
+PML2DQuad8::GetVTKResponse(std::string UNUSED(response)) const{
     //IMPORTANT: Since PML is a buffer for absorbing waves, we decided not to show results. 
     Eigen::VectorXd theResponse(6);
     theResponse.fill(0.0);
@@ -212,9 +205,19 @@ PML2DQuad8::GetVTKResponse(std::string response) const{
     return theResponse;
 }
 
+//Computes the element energy for a given deformation.
+double 
+PML2DQuad8::ComputeEnergy(){
+    //TODO: Integrate over element volume to compute the energy
+    return 0.0;
+}
+
 //Compute the mass matrix of the element using gauss-integration.
 Eigen::MatrixXd 
 PML2DQuad8::ComputeMassMatrix(){
+    //Starts profiling this funtion.
+    PROFILE_FUNCTION();
+
     //Use consistent mass definition:
     Eigen::MatrixXd MassMatrix(40, 40);
     MassMatrix.fill(0.0);
@@ -272,7 +275,7 @@ PML2DQuad8::ComputeMassMatrix(){
     }
 
     //TODO: Lumped Mass Formulation for PML.
-    if(MassForm){
+    if(MassFormulation){
         //Lumped Mass in diagonal terms.
     }
     
@@ -282,6 +285,9 @@ PML2DQuad8::ComputeMassMatrix(){
 //Compute the stiffness matrix of the element using gauss-integration.
 Eigen::MatrixXd 
 PML2DQuad8::ComputeStiffnessMatrix(){
+    //Starts profiling this funtion.
+    PROFILE_FUNCTION();
+
     //Stiffness matrix definition:
     Eigen::MatrixXd StiffnessMatrix(40, 40);
     StiffnessMatrix.fill(0.0);
@@ -397,6 +403,9 @@ PML2DQuad8::ComputeStiffnessMatrix(){
 //Compute the damping matrix of the element using gauss-integration.
 Eigen::MatrixXd 
 PML2DQuad8::ComputeDampingMatrix(){
+    //Starts profiling this funtion.
+    PROFILE_FUNCTION();
+
     //Damping matrix definition:
     Eigen::MatrixXd DampingMatrix(40, 40);
     DampingMatrix.fill(0.0);
@@ -522,6 +531,9 @@ PML2DQuad8::ComputePMLMatrix(){
 //Compute the internal forces acting on the element.
 Eigen::VectorXd 
 PML2DQuad8::ComputeInternalForces(){
+    //Starts profiling this funtion.
+    PROFILE_FUNCTION();
+
     //Gets the element coordinates in deformed configuration. 
     Eigen::VectorXd U1 = theNodes[0]->GetDisplacements() + theNodes[0]->GetIncrementalDisplacements();
     Eigen::VectorXd U2 = theNodes[1]->GetDisplacements() + theNodes[1]->GetIncrementalDisplacements();
@@ -571,9 +583,9 @@ PML2DQuad8::ComputeInternalDynamicForces(){
 
 //Compute the surface forces acting on the element.
 Eigen::VectorXd 
-PML2DQuad8::ComputeSurfaceForces(const std::shared_ptr<Load> &surface, unsigned int face){
-    UNUNSED_PARAMETER(face);
-    UNUNSED_PARAMETER(surface);
+PML2DQuad8::ComputeSurfaceForces(const std::shared_ptr<Load>& UNUSED(surface), unsigned int UNUSED(face)){
+    //Starts profiling this funtion.
+    PROFILE_FUNCTION();
 
     //PML surface forces are not supported, i.e., makes no sense.
     Eigen::VectorXd surfaceForces(40);
@@ -584,9 +596,9 @@ PML2DQuad8::ComputeSurfaceForces(const std::shared_ptr<Load> &surface, unsigned 
 
 //Compute the body forces acting on the element.
 Eigen::VectorXd 
-PML2DQuad8::ComputeBodyForces(const std::shared_ptr<Load> &bodyLoad, unsigned int k){
-    UNUNSED_PARAMETER(k);
-    UNUNSED_PARAMETER(bodyLoad);
+PML2DQuad8::ComputeBodyForces(const std::shared_ptr<Load>& UNUSED(bodyLoad), unsigned int UNUSED(k)){
+    //Starts profiling this funtion.
+    PROFILE_FUNCTION();
 
     //PML body forces are not supported, i.e., makes no sense.
     Eigen::VectorXd bodyForces(40);
@@ -597,9 +609,9 @@ PML2DQuad8::ComputeBodyForces(const std::shared_ptr<Load> &bodyLoad, unsigned in
 
 //Compute the domain reduction forces acting on the element.
 Eigen::VectorXd 
-PML2DQuad8::ComputeDomainReductionForces(const std::shared_ptr<Load> &drm, unsigned int k){
-    UNUNSED_PARAMETER(k);
-    UNUNSED_PARAMETER(drm);
+PML2DQuad8::ComputeDomainReductionForces(const std::shared_ptr<Load>& UNUSED(drm), unsigned int UNUSED(k)){
+    //Starts profiling this funtion.
+    PROFILE_FUNCTION();
 
     //DRM method in PML domain is not supported, i.e., makes no sense.
     Eigen::VectorXd DRMForces(40);
@@ -633,9 +645,7 @@ PML2DQuad8::ComputeStrain(const Eigen::MatrixXd &Bij) const{
 
 //Update strain rate in the element.
 Eigen::VectorXd 
-PML2DQuad8::ComputeStrainRate(const Eigen::MatrixXd &Bij) const{
-    UNUNSED_PARAMETER(Bij);
-
+PML2DQuad8::ComputeStrainRate(const Eigen::MatrixXd& UNUSED(Bij)) const{
     //TODO: Compute strain rate.
     //Strain vector definition:
     Eigen::VectorXd strainrate(3);

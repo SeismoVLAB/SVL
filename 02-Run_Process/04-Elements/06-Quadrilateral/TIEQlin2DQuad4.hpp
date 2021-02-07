@@ -63,7 +63,6 @@ class TIEQlin2DQuad4 : public Element{
         ///@param quadrature The integration rule to be employed.
         ///@param nGauss Number of Gauss points for Element integration.
         ///@param nGauss Number of Gauss points for Element integration.
-        ///@param massform The mass formulation to compute the mass matrix.
         ///@param type The type of modulus reduction and damping curve.
         ///@param zref Reference elevation to compute GGmax and damping.
         ///@param cf1 Lower corner frequencies for damping.
@@ -71,7 +70,7 @@ class TIEQlin2DQuad4 : public Element{
         ///@param eref Reference shear strain metric to read G/Gmax and damping curves.
         ///@note More details can be found at @ref linkTIEQlin2DQuad4.
         ///@see TIEQlin2DQuad4::theNodes, TIEQlin2DQuad4::theMaterial, TIEQlin2DQuad4::QuadraturePoints.
-        TIEQlin2DQuad4(const std::vector<unsigned int> nodes, std::unique_ptr<Material> &material, const double th, const std::string quadrature="GAUSS", const unsigned int nGauss=4, bool massform=true, const std::string Type="DARENDELI", const double zref=0.0, const double cf1=0.0, const double cf2=0.0, const double eref=0.0);
+        TIEQlin2DQuad4(const std::vector<unsigned int> nodes, std::unique_ptr<Material> &material, const double th, const std::string quadrature="GAUSS", const unsigned int nGauss=4, const std::string Type="DARENDELI", const double zref=0.0, const double cf1=0.0, const double cf2=0.0, const double eref=0.0);
 
         ///Destroys this TIEQlin2DQuad4 object.
         ~TIEQlin2DQuad4();
@@ -133,6 +132,10 @@ class TIEQlin2DQuad4 : public Element{
         ///@return Vector with the response at the Element center.
         ///@note The current responses are: "Strain", "Stress".
         Eigen::VectorXd GetVTKResponse(std::string response) const;
+
+        ///Computes the element energy for a given deformation.
+        ///@return Scalar with the element deformation energy.
+        double ComputeEnergy();
 
         ///Compute the lumped/consistent mass matrix of the element.
         ///@return Matrix with the Element mass matrix.
@@ -197,9 +200,6 @@ class TIEQlin2DQuad4 : public Element{
     private:
         ///Element thickness.
         double t;
-
-        ///Mass Formulation.
-        bool MassForm;
 
         ///Lower corner frequencies for damping
         double cf1;

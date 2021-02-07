@@ -7,13 +7,14 @@
 #include "GaussQuadrature.hpp"
 #include "LobattoQuadrature.hpp"
 #include "Definitions.hpp"
+#include "Profiler.hpp"
 
 //THIS IS THE VTK NUMBER FOR HEXA IN PARAVIEW
 const unsigned int VTKCELL = 12;
 
 //Overload constructor.
-PML3DHexa8::PML3DHexa8(const std::vector<unsigned int> nodes, std::unique_ptr<Material> &material, const std::vector<double> parameters, const std::string quadrature, const unsigned int nGauss, bool massform) :
-Element("PML3DHexa8", nodes, 72, VTKCELL), MassForm(massform), m_pml(parameters[0]), L_pml(parameters[1]), R_pml(parameters[2]), x0_pml(parameters[3]), y0_pml(parameters[4]), z0_pml(parameters[5]), nx_pml(parameters[6]), ny_pml(parameters[7]), nz_pml(parameters[8]) {
+PML3DHexa8::PML3DHexa8(const std::vector<unsigned int> nodes, std::unique_ptr<Material> &material, const std::vector<double> parameters, const std::string quadrature, const unsigned int nGauss) :
+Element("PML3DHexa8", nodes, 72, VTKCELL), m_pml(parameters[0]), L_pml(parameters[1]), R_pml(parameters[2]), x0_pml(parameters[3]), y0_pml(parameters[4]), z0_pml(parameters[5]), nx_pml(parameters[6]), ny_pml(parameters[7]), nz_pml(parameters[8]) {
     //The element nodes.
     theNodes.resize(8);
 
@@ -36,7 +37,7 @@ PML3DHexa8::~PML3DHexa8(){
 
 //Save the material states in the element.
 void 
-PML3DHexa8::CommitState(void){
+PML3DHexa8::CommitState(){
 	//Updates the viscous material components.
 	unsigned int nPoints = QuadraturePoints->GetNumberOfQuadraturePoints();
 
@@ -48,7 +49,7 @@ PML3DHexa8::CommitState(void){
 
 //Update the material states in the element.
 void 
-PML3DHexa8::UpdateState(void){
+PML3DHexa8::UpdateState(){
 	//Gets the quadrature information.
     Eigen::VectorXd wi;
     Eigen::MatrixXd xi;
@@ -151,10 +152,7 @@ PML3DHexa8::GetStrainRate() const{
 
 //Gets the material strain in section at  coordinate (x3,x2).
 Eigen::MatrixXd 
-PML3DHexa8::GetStrainAt(double x3, double x2) const{
-    UNUNSED_PARAMETER(x3);
-    UNUNSED_PARAMETER(x2);
-
+PML3DHexa8::GetStrainAt(double UNUSED(x3), double UNUSED(x2)) const{
     //number of integration points.
     unsigned int nPoints = QuadraturePoints->GetNumberOfQuadraturePoints();
 
@@ -167,10 +165,7 @@ PML3DHexa8::GetStrainAt(double x3, double x2) const{
 
 //Gets the material stress in section at  coordinate (x3,x2).
 Eigen::MatrixXd 
-PML3DHexa8::GetStressAt(double x3, double x2) const{
-    UNUNSED_PARAMETER(x3);
-    UNUNSED_PARAMETER(x2);
-
+PML3DHexa8::GetStressAt(double UNUSED(x3), double UNUSED(x2)) const{
     //number of integration points.
     unsigned int nPoints = QuadraturePoints->GetNumberOfQuadraturePoints();
 
@@ -183,9 +178,7 @@ PML3DHexa8::GetStressAt(double x3, double x2) const{
 
 //Gets the element internal response in VTK format.
 Eigen::VectorXd 
-PML3DHexa8::GetVTKResponse(std::string response) const{
-    UNUNSED_PARAMETER(response);
-
+PML3DHexa8::GetVTKResponse(std::string UNUSED(response)) const{
     //IMPORTANT: Since PML is a buffer for absorbing waves, we decided not to show results. 
     Eigen::VectorXd theResponse(6);
     theResponse.fill(0.0);
@@ -193,56 +186,20 @@ PML3DHexa8::GetVTKResponse(std::string response) const{
     return theResponse;
 }
 
-Eigen::VectorXd
-PML3DHexa8::ComputePMLStretchingFactors(const double ri, const double si, const double ti, const double rho, const double mu, const double lambda) const {
-	//Gets the element coordinates in deformed configuration. 
-	Eigen::VectorXd X1 = theNodes[0]->GetCoordinates();
-	Eigen::VectorXd X2 = theNodes[1]->GetCoordinates();
-	Eigen::VectorXd X3 = theNodes[2]->GetCoordinates();
-	Eigen::VectorXd X4 = theNodes[3]->GetCoordinates();
-	Eigen::VectorXd X5 = theNodes[4]->GetCoordinates();
-	Eigen::VectorXd X6 = theNodes[5]->GetCoordinates();
-	Eigen::VectorXd X7 = theNodes[6]->GetCoordinates();
-	Eigen::VectorXd X8 = theNodes[7]->GetCoordinates();
-
-	Eigen::VectorXd X(24);
-	X << X1, X2, X3, X4, X5, X6, X7, X8;
-
-	Eigen::MatrixXd Hij = ComputeShapeFunctionMatrix(ri, si, ti);
-
-	Eigen::VectorXd XGauss = Hij*X;
-
-	double x = XGauss(0);
-	double y = XGauss(1);
-	double z = XGauss(2);
-
-	//P wave velocity
-	double V_pml = sqrt((lambda + 2.0*mu)/rho);
-	
-	//characteristic length
-	double b_pml = L_pml/10.0;
-
-	//stretching parameters
-	double a0 = (m_pml+1.0)*b_pml/2.0/L_pml*log(1.0/R_pml);
-	double b0 = (m_pml+1.0)*V_pml/2.0/L_pml*log(1.0/R_pml);
-
-	double ax = 1.0+a0*pow((x-x0_pml)*nx_pml/L_pml,m_pml);
-	double ay = 1.0+a0*pow((y-y0_pml)*ny_pml/L_pml,m_pml);
-	double az = 1.0+a0*pow((z-z0_pml)*nz_pml/L_pml,m_pml);
-
-	double bx = b0*pow((x-x0_pml)*nx_pml/L_pml,m_pml);
-	double by = b0*pow((y-y0_pml)*ny_pml/L_pml,m_pml);
-	double bz = b0*pow((z-z0_pml)*nz_pml/L_pml,m_pml);
-
-	Eigen::VectorXd abc_pml(6);
-	abc_pml << ax, ay, az, bx, by, bz;
-
-	return abc_pml;
+//Computes the element energy for a given deformation.
+double 
+PML3DHexa8::ComputeEnergy(){
+    //TODO: Integrate over element volume to compute the energy
+    return 0.0;
 }
 
+//Compute the Mass matrix of the element using gauss-integration.
 Eigen::MatrixXd 
-PML3DHexa8::ComputeMassMatrix(void){
-	//ux, uy, sxx, syy, sxy
+PML3DHexa8::ComputeMassMatrix(){
+    //Starts profiling this funtion.
+    PROFILE_FUNCTION();
+
+	//ux, uy, uz, sxx, syy, szz, sxy, syz, sxz
 	Eigen::MatrixXd MassMatrix(72,72);
 	MassMatrix.fill(0.0);
 
@@ -312,7 +269,10 @@ PML3DHexa8::ComputeMassMatrix(void){
 
 //Compute the stiffness matrix of the element using gauss-integration.
 Eigen::MatrixXd 
-PML3DHexa8::ComputeStiffnessMatrix(void){
+PML3DHexa8::ComputeStiffnessMatrix(){
+    //Starts profiling this funtion.
+    PROFILE_FUNCTION();
+
 	//Stiffness matrix definition:
 	Eigen::MatrixXd StiffnessMatrix(72,72);
 	StiffnessMatrix.fill(0.0);
@@ -451,7 +411,10 @@ PML3DHexa8::ComputeStiffnessMatrix(void){
 
 //Compute the Damping matrix of the element using gauss-integration.
 Eigen::MatrixXd 
-PML3DHexa8::ComputeDampingMatrix(void){
+PML3DHexa8::ComputeDampingMatrix(){
+    //Starts profiling this funtion.
+    PROFILE_FUNCTION();
+
 	//Stiffness matrix definition:
 	Eigen::MatrixXd DampingMatrix(72,72);
 	DampingMatrix.fill(0.0);
@@ -591,6 +554,9 @@ PML3DHexa8::ComputeDampingMatrix(void){
 //Compute the PML history matrix for Perfectly-Matched Layer (PML).
 Eigen::MatrixXd 
 PML3DHexa8::ComputePMLMatrix(){
+    //Starts profiling this funtion.
+    PROFILE_FUNCTION();
+
 	//Impedance buffer matrix definition:
     Eigen::MatrixXd ImpedanceMatrix(72,72);
 	ImpedanceMatrix.fill(0.0);
@@ -731,7 +697,10 @@ PML3DHexa8::ComputePMLMatrix(){
 
 //Compute the internal forces acting on the element.
 Eigen::VectorXd 
-PML3DHexa8::ComputeInternalForces(void){
+PML3DHexa8::ComputeInternalForces(){
+    //Starts profiling this funtion.
+    PROFILE_FUNCTION();
+
 	//Stiffness matrix definition:
 	Eigen::VectorXd InternalForces(72);
 	InternalForces.fill(0.0) ;
@@ -783,9 +752,9 @@ PML3DHexa8::ComputeInternalDynamicForces(){
 
 //Compute the body forces acting on the element.
 Eigen::VectorXd 
-PML3DHexa8::ComputeBodyForces(const std::shared_ptr<Load> &bodyLoad, unsigned int k){
-    UNUNSED_PARAMETER(k);
-    UNUNSED_PARAMETER(bodyLoad);
+PML3DHexa8::ComputeBodyForces(const std::shared_ptr<Load>& UNUSED(bodyLoad), unsigned int UNUSED(k)){
+    //Starts profiling this funtion.
+    PROFILE_FUNCTION();
 
 	//Local body load vector:
 	Eigen::VectorXd bodyForces(72);
@@ -796,9 +765,9 @@ PML3DHexa8::ComputeBodyForces(const std::shared_ptr<Load> &bodyLoad, unsigned in
 
 //Compute the surface forces acting on the element.
 Eigen::VectorXd 
-PML3DHexa8::ComputeSurfaceForces(const std::shared_ptr<Load> &surface, unsigned int face){
-    UNUNSED_PARAMETER(face);
-    UNUNSED_PARAMETER(surface);
+PML3DHexa8::ComputeSurfaceForces(const std::shared_ptr<Load>& UNUSED(surface), unsigned int UNUSED(face)){
+    //Starts profiling this funtion.
+    PROFILE_FUNCTION();
 
     //PML surface forces are not supported, i.e., makes no sense.
     Eigen::VectorXd surfaceForces(72);
@@ -809,9 +778,9 @@ PML3DHexa8::ComputeSurfaceForces(const std::shared_ptr<Load> &surface, unsigned 
 
 //Compute the domain reduction forces acting on the element.
 Eigen::VectorXd 
-PML3DHexa8::ComputeDomainReductionForces(const std::shared_ptr<Load> &drm, unsigned int k){
-    UNUNSED_PARAMETER(k);
-    UNUNSED_PARAMETER(drm);
+PML3DHexa8::ComputeDomainReductionForces(const std::shared_ptr<Load>& UNUSED(drm), unsigned int UNUSED(k)){
+    //Starts profiling this funtion.
+    PROFILE_FUNCTION();
 
     //PML is not supposed to generate DRM forces.
 	Eigen::VectorXd DRMForces(72);
@@ -852,9 +821,7 @@ PML3DHexa8::ComputeStrain(const Eigen::MatrixXd &Bij) const{
 
 //Update strain rate in the element.
 Eigen::VectorXd 
-PML3DHexa8::ComputeStrainRate(const Eigen::MatrixXd &Bij) const{
-	(void)Bij;
-
+PML3DHexa8::ComputeStrainRate(const Eigen::MatrixXd& UNUSED(Bij)) const{
 	//TODO: Compute strain rate.
 	//Strain vector definition:
     Eigen::VectorXd strainrate(6);
@@ -962,4 +929,52 @@ PML3DHexa8::ComputeStrainDisplacementMatrix(const double ri, const double si, co
 		    B13, 0.0, B11, B23, 0.0, B21, B33, 0.0, B31, B43, 0.0, B41, B53, 0.0, B51, B63, 0.0, B61, B73, 0.0, B71, B83, 0.0, B81;
 
 	return Bij;
+}
+
+//Evaluates the stretching parameters of PML
+Eigen::VectorXd
+PML3DHexa8::ComputePMLStretchingFactors(const double ri, const double si, const double ti, const double rho, const double mu, const double lambda) const {
+	//Gets the element coordinates in deformed configuration. 
+	Eigen::VectorXd X1 = theNodes[0]->GetCoordinates();
+	Eigen::VectorXd X2 = theNodes[1]->GetCoordinates();
+	Eigen::VectorXd X3 = theNodes[2]->GetCoordinates();
+	Eigen::VectorXd X4 = theNodes[3]->GetCoordinates();
+	Eigen::VectorXd X5 = theNodes[4]->GetCoordinates();
+	Eigen::VectorXd X6 = theNodes[5]->GetCoordinates();
+	Eigen::VectorXd X7 = theNodes[6]->GetCoordinates();
+	Eigen::VectorXd X8 = theNodes[7]->GetCoordinates();
+
+	Eigen::VectorXd X(24);
+	X << X1, X2, X3, X4, X5, X6, X7, X8;
+
+	Eigen::MatrixXd Hij = ComputeShapeFunctionMatrix(ri, si, ti);
+
+	Eigen::VectorXd XGauss = Hij*X;
+
+	double x = XGauss(0);
+	double y = XGauss(1);
+	double z = XGauss(2);
+
+	//P wave velocity
+	double V_pml = sqrt((lambda + 2.0*mu)/rho);
+	
+	//characteristic length
+	double b_pml = L_pml/10.0;
+
+	//stretching parameters
+	double a0 = (m_pml+1.0)*b_pml/2.0/L_pml*log(1.0/R_pml);
+	double b0 = (m_pml+1.0)*V_pml/2.0/L_pml*log(1.0/R_pml);
+
+	double ax = 1.0+a0*pow((x-x0_pml)*nx_pml/L_pml,m_pml);
+	double ay = 1.0+a0*pow((y-y0_pml)*ny_pml/L_pml,m_pml);
+	double az = 1.0+a0*pow((z-z0_pml)*nz_pml/L_pml,m_pml);
+
+	double bx = b0*pow((x-x0_pml)*nx_pml/L_pml,m_pml);
+	double by = b0*pow((y-y0_pml)*ny_pml/L_pml,m_pml);
+	double bz = b0*pow((z-z0_pml)*nz_pml/L_pml,m_pml);
+
+	Eigen::VectorXd abc_pml(6);
+	abc_pml << ax, ay, az, bx, by, bz;
+
+	return abc_pml;
 }

@@ -59,10 +59,9 @@ class kin2DFrame2 : public Element{
         ///@param nodes The Node connectivity array of this Element.
         ///@param material Pointer to the Material that this Element is made out of.
         ///@param area The cross-section area of the kin3DTruss2 Element.
-        ///@param massform The mass formulation to compute the mass matrix.
         ///@note More details can be found at @ref linkkin2DFrame2.
         ///@see kin3DTruss2::theNodes, kin3DTruss2::theMaterial.
-        kin2DFrame2(const std::vector<unsigned int> nodes, std::unique_ptr<Section> &section, bool massform=true);
+        kin2DFrame2(const std::vector<unsigned int> nodes, std::unique_ptr<Section> &section);
 
         ///Destroys this kin3DTruss2 object.
         ~kin2DFrame2();
@@ -124,6 +123,10 @@ class kin2DFrame2 : public Element{
         ///@return Vector with the response at the Element center.
         ///@note The current responses are: "Strain", "Stress".
         Eigen::VectorXd GetVTKResponse(std::string response) const;
+
+        ///Computes the element energy for a given deformation.
+        ///@return Scalar with the element deformation energy.
+        double ComputeEnergy();
 
         ///Compute the lumped/consistent mass matrix of the element.
         ///@return Matrix with the Element mass matrix.
@@ -191,9 +194,6 @@ class kin2DFrame2 : public Element{
 
         ///Angle of the element.
         double Alpha;
-
-        ///Mass Formulation.
-        bool MassForm;
 
         ///The Damping model.
         std::shared_ptr<Damping> theDamping;

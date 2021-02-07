@@ -76,6 +76,13 @@ Plastic3DJ2::GetElasticityModulus() const{
     return 9.0*K*G/(3.0*K + G);
 }
 
+//Access the material's energy at current strain.
+double 
+Plastic3DJ2::GetEnergy() const{
+    //TODO: Compute/write the energy density for this material 
+    return 0.0;
+}
+
 //Returns the material viscous damping.
 Eigen::MatrixXd 
 Plastic3DJ2::GetDamping() const{

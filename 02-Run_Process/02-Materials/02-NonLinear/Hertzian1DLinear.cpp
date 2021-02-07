@@ -58,6 +58,14 @@ Hertzian1DLinear::GetElasticityModulus() const{
     return 0.0;
 }
 
+//Access the material's energy at current strain.
+double 
+Hertzian1DLinear::GetEnergy() const{
+    double e2 = Strain(0)*Strain(0);
+    double W  = 1.0/2.0*k1*e2 + 1.0/3.0*k2*e2*Strain(0) + 1.0/4.0*k3*e2*e2;
+    return W;
+}
+
 //Returns the material viscous damping.
 Eigen::MatrixXd 
 Hertzian1DLinear::GetDamping() const{
@@ -105,7 +113,11 @@ Hertzian1DLinear::GetTangentStiffness() const{
 //Returns the initial material stiffness.
 Eigen::MatrixXd
 Hertzian1DLinear::GetInitialTangentStiffness() const{
-    return TangentStiffness;
+    //The material initial stiffness matrix.
+    Eigen::MatrixXd InitialTangentStiffness(1,1);
+    InitialTangentStiffness << k1;
+
+    return InitialTangentStiffness;
 }
 
 //Perform converged material state update.
@@ -123,5 +135,8 @@ Hertzian1DLinear::UpdateState(const Eigen::VectorXd strain, const unsigned int c
 
         //Update the stress.
         Stress = k1*strain + k2*strain*strain + k3*strain*strain*strain;
+
+        //Consistent Tangent Operator.
+        TangentStiffness << k1 + 2.0*k2*strain(0) + 3.0*strain(0)*strain(0);
     }
 }

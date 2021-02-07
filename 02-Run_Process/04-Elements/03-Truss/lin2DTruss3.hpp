@@ -59,10 +59,9 @@ class lin2DTruss3 : public Element{
         ///@param area The cross-section area.
         ///@param quadrature The integration rule to be employed.
         ///@param nGauss Number of Gauss points for Element integration.
-        ///@param massform The mass formulation to compute the mass matrix.
         ///@note More details can be found at @ref linklin2DTruss3.
         ///@see lin2DTruss3::theNodes, lin2DTruss3::theMaterial, lin2DTruss3::QuadraturePoints.
-        lin2DTruss3(const std::vector<unsigned int> nodes, std::unique_ptr<Material> &material, const double area, const std::string quadrature="GAUSS", const unsigned int nGauss=3, bool massform=false);
+        lin2DTruss3(const std::vector<unsigned int> nodes, std::unique_ptr<Material> &material, const double area, const std::string quadrature="GAUSS", const unsigned int nGauss=3);
 
         ///Destroys this lin2DTruss3 object.
         ~lin2DTruss3();
@@ -124,6 +123,10 @@ class lin2DTruss3 : public Element{
         ///@return Vector with the response at the Element center.
         ///@note The current responses are: "Strain", "Stress".
         Eigen::VectorXd GetVTKResponse(std::string response) const;
+
+        ///Computes the element energy for a given deformation.
+        ///@return Scalar with the element deformation energy.
+        double ComputeEnergy();
 
         ///Compute the lumped/consistent mass matrix of the element.
         ///@return Matrix with the Element mass matrix.
@@ -192,9 +195,6 @@ class lin2DTruss3 : public Element{
         ///Area of cross-section.
         double A;
 
-        ///Mass Formulation.
-        bool MassForm;
-    
         ///The Damping model.
         std::shared_ptr<Damping> theDamping;
 

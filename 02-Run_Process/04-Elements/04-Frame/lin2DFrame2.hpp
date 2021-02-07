@@ -57,13 +57,12 @@ class lin2DFrame2 : public Element{
         ///Creates a lin2DFrame2 in a finite element Mesh.
         ///@param nodes The Node connectivity array of this Element.
         ///@param section Pointer to the Section that this Element is made out of.
-        ///@param massform The mass formulation to compute the mass matrix.
         ///@param formulation The frame formulation: "Bernoulli", "Timoshenko".
         ///@param quadrature The integration rule to be employed.
         ///@param nGauss Number of Gauss points for Element integration.
         ///@note More details can be found at @ref linklin2DFrame2.
         ///@see lin2DFrame2::theNodes, lin2DFrame2::theSection, lin2DFrame2::QuadraturePoints.
-        lin2DFrame2(const std::vector<unsigned int> nodes, std::unique_ptr<Section> &section, bool massform=true, bool formulation=false, const std::string quadrature="GAUSS", unsigned int nGauss=3);
+        lin2DFrame2(const std::vector<unsigned int> nodes, std::unique_ptr<Section> &section, bool formulation=false, const std::string quadrature="GAUSS", unsigned int nGauss=3);
 
         ///Destroys this lin2DFrame2 object.
         ~lin2DFrame2();
@@ -125,6 +124,10 @@ class lin2DFrame2 : public Element{
         ///@return Vector with the response at the Element center.
         ///@note The current responses are: "Strain", "Stress".
         Eigen::VectorXd GetVTKResponse(std::string response) const;
+
+        ///Computes the element energy for a given deformation.
+        ///@return Scalar with the element deformation energy.
+        double ComputeEnergy();
 
         ///Compute the lumped/consistent mass matrix of the element.
         ///@return Matrix with the Element mass matrix.
@@ -189,9 +192,6 @@ class lin2DFrame2 : public Element{
     private:    
         ///Length of the element.
         double L;
-
-        ///Mass Formulation.
-        bool MassForm;
 
         ///The element formulation.
         bool Formulation;

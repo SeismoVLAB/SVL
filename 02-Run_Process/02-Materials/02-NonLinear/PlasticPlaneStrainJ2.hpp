@@ -89,6 +89,10 @@ class PlasticPlaneStrainJ2 : public Material{
         ///@return The material Elasticity's modulus.
         double GetElasticityModulus() const;
 
+        ///Access the material's energy at current strain.
+        ///@return Scalar with the material energy value.
+        double GetEnergy() const;
+
         ///Returns the material viscous damping.
         ///@return Vector with the material damping components.
         Eigen::MatrixXd GetDamping() const;

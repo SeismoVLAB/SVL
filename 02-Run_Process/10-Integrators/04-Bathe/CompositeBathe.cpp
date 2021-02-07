@@ -163,12 +163,9 @@ CompositeBathe::ComputeReactionForce(std::shared_ptr<Mesh> &mesh, unsigned int k
 }
 
 //Gets the incremental nodal support motion vector.
-Eigen::VectorXd 
-CompositeBathe::ComputeSupportMotionVector(std::shared_ptr<Mesh> &mesh, double factor, unsigned int k){
-    UNUNSED_PARAMETER(k);
-    UNUNSED_PARAMETER(mesh);
-    UNUNSED_PARAMETER(factor);
-
+void
+CompositeBathe::ComputeSupportMotionVector(std::shared_ptr<Mesh>& UNUSED(mesh), Eigen::VectorXd &Feff, double UNUSED(factor), unsigned int UNUSED(k)){
+    //TODO:Include some if statement that performs the addition only if there is support motion applied.
     //Starts profiling this function.
     PROFILE_FUNCTION();
 
@@ -176,14 +173,13 @@ CompositeBathe::ComputeSupportMotionVector(std::shared_ptr<Mesh> &mesh, double f
     //Computes the required forces to impose these displacements.
     Eigen::VectorXd Lg = Total2FreeMatrix.transpose()*(K*SupportMotion);
 
-    return Lg;
+    //Add the contribution to the current effective force vector.
+    Feff -= Lg;
 }
 
 //Gets the effective force associated to this integrator.
 void
-CompositeBathe::ComputeEffectiveForce(std::shared_ptr<Mesh> &mesh, Eigen::VectorXd &Feff, double factor, unsigned int k){
-    UNUNSED_PARAMETER(factor);
-
+CompositeBathe::ComputeEffectiveForce(std::shared_ptr<Mesh> &mesh, Eigen::VectorXd &Feff, double UNUSED(factor), unsigned int k){
     //Starts profiling this function.
     PROFILE_FUNCTION();
 

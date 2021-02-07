@@ -59,10 +59,9 @@ class lin3DShell4 : public Element{
         ///@param section Pointer to the Section that this Element is made out of.
         ///@param nGauss Numner of Gauss-integration points.
         ///@param quadrature The integration rule to be employed.
-        ///@param massform The mass formulation to compute the mass matrix.
         ///@note More details can be found at @ref linklin3DShell4.
         ///@see lin3DShell4::theNodes, lin3DShell4::theMaterial, lin3DShell4::QuadraturePoints.
-        lin3DShell4(const std::vector<unsigned int> nodes, std::unique_ptr<Section> &section, const std::string quadrature="GAUSS", const unsigned int nGauss=9, bool massform=true);
+        lin3DShell4(const std::vector<unsigned int> nodes, std::unique_ptr<Section> &section, const std::string quadrature="GAUSS", const unsigned int nGauss=9);
 
         ///Destroys this lin3DShell4 object.
         ~lin3DShell4();
@@ -125,6 +124,10 @@ class lin3DShell4 : public Element{
         ///@note The current responses are: "Strain", "Stress".
         Eigen::VectorXd GetVTKResponse(std::string response) const;
 
+        ///Computes the element energy for a given deformation.
+        ///@return Scalar with the element deformation energy.
+        double ComputeEnergy();
+
         ///Compute the lumped/consistent mass matrix of the element.
         ///@return Matrix with the Element mass matrix.
         ///@note The mass matrix can be revisited in @ref linklin3DShell4.
@@ -186,9 +189,6 @@ class lin3DShell4 : public Element{
         Eigen::VectorXd ComputeDomainReductionForces(const std::shared_ptr<Load> &drm, unsigned int k);
 
     private:
-        ///Mass Formulation.
-        bool MassForm;
-
         ///The Damping model.
         std::shared_ptr<Damping> theDamping;
 

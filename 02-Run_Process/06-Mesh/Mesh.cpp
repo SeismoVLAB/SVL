@@ -5,11 +5,7 @@ typedef Eigen::Triplet<double> T;
 
 //Overload constructor.
 Mesh::Mesh() { 
-    //Initialize global variables.
-    PMLStorage = 1;
-    LumpedStorage = 0;
-    ConsistentStorage = 0;
-    numberOfConstrainedDofs = 0;
+    //Does nothing.
 }
  
 //Destructor.
@@ -20,6 +16,12 @@ Mesh::~Mesh(){
 //Compute mapping and storage.
 void 
 Mesh::Initialize(){
+    //Initialize global variables.
+    PMLStorage = 1;
+    LumpedStorage = 0;
+    ConsistentStorage = 0;
+    numberOfConstrainedDofs = 0;
+
     //Initialize the mesh objects.
     for(auto it : Elements){
         auto &Tag = it.first;

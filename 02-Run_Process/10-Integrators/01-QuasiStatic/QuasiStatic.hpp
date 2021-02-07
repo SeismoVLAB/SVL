@@ -116,7 +116,7 @@ class QuasiStatic : public Integrator{
         ///@param k The time step number to be solved.
         ///@return Vector with the incremental support motion displacement.
         ///@see Node::GetSupportMotion(), Assembler::ComputeSupportMotionIncrement().
-        Eigen::VectorXd ComputeSupportMotionVector(std::shared_ptr<Mesh> &mesh, double factor=1.00, unsigned int k=0);
+        void ComputeSupportMotionVector(std::shared_ptr<Mesh> &mesh, Eigen::VectorXd &Feff, double factor=1.00, unsigned int k=0);
 
         ///Gets the effective force assiciated to the QuasiStatic integrator.
         ///@param mesh Pointer to the Mesh object where Node and Element are stored.

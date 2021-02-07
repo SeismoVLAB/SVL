@@ -2,6 +2,7 @@
 #include <iostream>
 #include "null3DFrame2.hpp"
 #include "Definitions.hpp"
+#include "Profiler.hpp"
 
 //Define constant tolerance value:
 const double TOL = 0.9999995;
@@ -105,10 +106,7 @@ null3DFrame2::GetStrainRate() const{
 
 //Gets the material strain in section at  coordinate (x3,x2).
 Eigen::MatrixXd 
-null3DFrame2::GetStrainAt(double x3, double x2) const{
-    UNUNSED_PARAMETER(x3);
-    UNUNSED_PARAMETER(x2);
-
+null3DFrame2::GetStrainAt(double UNUSED(x3), double UNUSED(x2)) const{
     //Stress at coordinate is define within section.
     Eigen::MatrixXd theStrain(1, 6);
     theStrain.fill(0.0);
@@ -118,10 +116,7 @@ null3DFrame2::GetStrainAt(double x3, double x2) const{
 
 //Gets the material stress in section at  coordinate (x3,x2).
 Eigen::MatrixXd 
-null3DFrame2::GetStressAt(double x3, double x2) const{
-    UNUNSED_PARAMETER(x3);
-    UNUNSED_PARAMETER(x2);
-
+null3DFrame2::GetStressAt(double UNUSED(x3), double UNUSED(x2)) const{
     //Stress at coordinate is define within section.
     Eigen::MatrixXd theStress(1, 6);
     theStress.fill(0.0);
@@ -131,9 +126,7 @@ null3DFrame2::GetStressAt(double x3, double x2) const{
 
 //Gets the element internal response in VTK format.
 Eigen::VectorXd 
-null3DFrame2::GetVTKResponse(std::string response) const{
-    UNUNSED_PARAMETER(response);
-
+null3DFrame2::GetVTKResponse(std::string UNUSED(response)) const{
     //The VTK response vector.
     Eigen::VectorXd theResponse(6);
     theResponse.fill(0.0);
@@ -141,9 +134,19 @@ null3DFrame2::GetVTKResponse(std::string response) const{
     return theResponse;
 }
 
+//Computes the element energy for a given deformation.
+double 
+null3DFrame2::ComputeEnergy(){
+    //TODO: Integrate over element volume to compute the energy
+    return 0.0;
+}
+
 //Compute the mass matrix of the element.
 Eigen::MatrixXd 
 null3DFrame2::ComputeMassMatrix(){
+    //Starts profiling this funtion.
+    PROFILE_FUNCTION();
+
     //Consistent mass definition.
     Eigen::MatrixXd MassMatrix(12,12);
     MassMatrix.fill(0.0);
@@ -154,6 +157,9 @@ null3DFrame2::ComputeMassMatrix(){
 //Compute the stiffness matrix of the element using gauss-integration.
 Eigen::MatrixXd 
 null3DFrame2::ComputeStiffnessMatrix(){
+    //Starts profiling this funtion.
+    PROFILE_FUNCTION();
+
     //Stiffness matrix definition:
     Eigen::MatrixXd StiffnessMatrix(12, 12);
     StiffnessMatrix.fill(0.0);
@@ -164,6 +170,9 @@ null3DFrame2::ComputeStiffnessMatrix(){
 //Compute the damping matrix of the element.
 Eigen::MatrixXd 
 null3DFrame2::ComputeDampingMatrix(){
+    //Starts profiling this funtion.
+    PROFILE_FUNCTION();
+
     //Damping matrix definition.
     Eigen::MatrixXd DampingMatrix(12, 12);
     DampingMatrix.fill(0.0);
@@ -181,6 +190,9 @@ null3DFrame2::ComputePMLMatrix(){
 //Compute the element the internal forces acting on the element.
 Eigen::VectorXd 
 null3DFrame2::ComputeInternalForces(){
+    //Starts profiling this funtion.
+    PROFILE_FUNCTION();
+
     //Stiffness matrix definition:
     Eigen::VectorXd InternalForces(12);
     InternalForces.fill(0.0);
@@ -200,9 +212,9 @@ null3DFrame2::ComputeInternalDynamicForces(){
 
 //Compute the surface forces acting on the element.
 Eigen::VectorXd 
-null3DFrame2::ComputeSurfaceForces(const std::shared_ptr<Load> &surfaceLoad, unsigned int face){
-    UNUNSED_PARAMETER(face);
-    UNUNSED_PARAMETER(surfaceLoad);
+null3DFrame2::ComputeSurfaceForces(const std::shared_ptr<Load>& UNUSED(surfaceLoad), unsigned int UNUSED(face)){
+    //Starts profiling this funtion.
+    PROFILE_FUNCTION();
 
     //Local surface load vector:
     Eigen::VectorXd surfaceForces(12);
@@ -213,9 +225,9 @@ null3DFrame2::ComputeSurfaceForces(const std::shared_ptr<Load> &surfaceLoad, uns
 
 //Compute the body forces acting on the element.
 Eigen::VectorXd 
-null3DFrame2::ComputeBodyForces(const std::shared_ptr<Load> &bodyLoad, unsigned int k){
-    UNUNSED_PARAMETER(k);
-    UNUNSED_PARAMETER(bodyLoad);
+null3DFrame2::ComputeBodyForces(const std::shared_ptr<Load>& UNUSED(bodyLoad), unsigned int UNUSED(k)){
+    //Starts profiling this funtion.
+    PROFILE_FUNCTION();
 
     //Local body load vector:
     Eigen::VectorXd bodyForces(12);
@@ -226,9 +238,9 @@ null3DFrame2::ComputeBodyForces(const std::shared_ptr<Load> &bodyLoad, unsigned 
 
 //Compute the domain reduction forces acting on the element.
 Eigen::VectorXd 
-null3DFrame2::ComputeDomainReductionForces(const std::shared_ptr<Load> &drm, unsigned int k){
-    UNUNSED_PARAMETER(k);
-    UNUNSED_PARAMETER(drm);
+null3DFrame2::ComputeDomainReductionForces(const std::shared_ptr<Load>& UNUSED(drm), unsigned int UNUSED(k)){
+    //Starts profiling this funtion.
+    PROFILE_FUNCTION();
 
     //TODO: Domain reduction forces not implemented for frame.
     Eigen::VectorXd DRMForces(12);

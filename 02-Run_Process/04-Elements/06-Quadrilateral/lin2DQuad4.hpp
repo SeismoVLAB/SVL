@@ -61,10 +61,9 @@ class lin2DQuad4 : public Element{
         ///@param th The thickness of the lin2DQuad4 Element.
         ///@param quadrature The integration rule to be employed.
         ///@param nGauss Number of Gauss points for Element integration.
-        ///@param massform The mass formulation to compute the mass matrix.
         ///@note More details can be found at @ref linklin2DQuad4.
         ///@see lin2DQuad4::theNodes, lin2DQuad4::theMaterial, lin2DQuad4::QuadraturePoints.
-        lin2DQuad4(const std::vector<unsigned int> nodes, std::unique_ptr<Material> &material, const double th, const std::string quadrature="GAUSS", const unsigned int nGauss=4, bool massform=true);
+        lin2DQuad4(const std::vector<unsigned int> nodes, std::unique_ptr<Material> &material, const double th, const std::string quadrature="GAUSS", const unsigned int nGauss=4);
 
         ///Destroys this lin2DQuad4 object.
         ~lin2DQuad4();
@@ -126,6 +125,10 @@ class lin2DQuad4 : public Element{
         ///@return Vector with the response at the Element center.
         ///@note The current responses are: "Strain", "Stress".
         Eigen::VectorXd GetVTKResponse(std::string response) const;
+
+        ///Computes the element energy for a given deformation.
+        ///@return Scalar with the element deformation energy.
+        double ComputeEnergy();
 
         ///Compute the lumped/consistent mass matrix of the element.
         ///@return Matrix with the Element mass matrix.
@@ -190,9 +193,6 @@ class lin2DQuad4 : public Element{
     private:
         ///Element thickness.
         double t;
-
-        ///Mass Formulation.
-        bool MassForm;
 
         ///The Damping model.
         std::shared_ptr<Damping> theDamping;

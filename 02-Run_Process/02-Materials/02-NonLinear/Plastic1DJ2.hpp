@@ -89,6 +89,10 @@ class Plastic1DJ2 : public Material{
         ///@see Plastic1DJ2::E.
         double GetElasticityModulus() const;
 
+        ///Access the material's energy at current strain.
+        ///@return Scalar with the material energy value.
+        double GetEnergy() const;
+
         ///Returns the material viscous damping.
         ///@return Vector with the material damping components.
         ///@see Plastic1DJ2::Damping.

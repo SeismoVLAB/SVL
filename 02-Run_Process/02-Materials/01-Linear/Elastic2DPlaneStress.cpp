@@ -64,6 +64,13 @@ Elastic2DPlaneStress::GetElasticityModulus() const{
     return E;
 }
 
+//Access the material's energy at current strain.
+double 
+Elastic2DPlaneStress::GetEnergy() const{
+    double W = 1.0/2.0*Strain.transpose()*TangentStiffness*Strain;
+    return W;
+}
+
 //Returns the material viscous damping.
 Eigen::MatrixXd 
 Elastic2DPlaneStress::GetDamping() const{

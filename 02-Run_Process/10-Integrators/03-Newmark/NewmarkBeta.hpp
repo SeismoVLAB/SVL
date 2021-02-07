@@ -28,8 +28,8 @@
 //       volume 129 (12), 1380-1393, 2003.
 //
 // Description:
-///This file contains the "NewmarkBeta" integration declaration, the rouine 
-///inncludes any damping and inertial forces present in the analysis, also 
+///This file contains the "NewmarkBeta" integration declaration, the routine 
+///include any damping and inertial forces present in the analysis, also 
 ///this integrator is meant to be used in dynamic analysis with linear or 
 ///non-linear algorithms. 
 //------------------------------------------------------------------------------
@@ -117,11 +117,12 @@ class NewmarkBeta : public Integrator{
 
         ///Gets the incremental nodal support motion vector.
         ///@param mesh Pointer to the Mesh object where Node are stored.
+        ///@param Feff The effective force vector to incorporate support motion forces.
         ///@param factor The incremental load factor.
         ///@param k The time step number to be solved.
         ///@return Vector with the incremental support motion displacement.
         ///@see Node::GetSupportMotion(), Assembler::ComputeSupportMotionIncrement().
-        Eigen::VectorXd ComputeSupportMotionVector(std::shared_ptr<Mesh> &mesh, double factor=1.00, unsigned int k=0);
+        void ComputeSupportMotionVector(std::shared_ptr<Mesh> &mesh, Eigen::VectorXd &Feff, double factor=1.00, unsigned int k=0);
 
         ///Gets the effective force assiciated to the NewmarkBeta integrator.
         ///@param mesh Pointer to the Mesh object where Node and Element are stored.

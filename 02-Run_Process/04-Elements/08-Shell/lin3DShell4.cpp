@@ -5,6 +5,7 @@
 #include "GaussQuadrature.hpp"
 #include "LobattoQuadrature.hpp"
 #include "Definitions.hpp"
+#include "Profiler.hpp"
 
 //Define constant tolerance value:
 const double TOL = 0.9999995;
@@ -13,8 +14,8 @@ const double TOL = 0.9999995;
 const unsigned int VTKCELL = 9;
 
 //Overload constructor.
-lin3DShell4::lin3DShell4(const std::vector<unsigned int> nodes, std::unique_ptr<Section> &section, const std::string quadrature, const unsigned int nGauss, bool massform) :
-Element("lin3DShell4", nodes, 24, VTKCELL), MassForm(massform) {
+lin3DShell4::lin3DShell4(const std::vector<unsigned int> nodes, std::unique_ptr<Section> &section, const std::string quadrature, const unsigned int nGauss) :
+Element("lin3DShell4", nodes, 24, VTKCELL){
     //The element nodes.
     theNodes.resize(4);
 
@@ -152,9 +153,7 @@ lin3DShell4::GetStrainRate() const{
 
 //Gets the material strain in section at  coordinate (x3,x2).
 Eigen::MatrixXd 
-lin3DShell4::GetStrainAt(double x3, double x2) const{
-    UNUNSED_PARAMETER(x2);
-
+lin3DShell4::GetStrainAt(double x3, double UNUSED(x2)) const{
     //number of integration points.
     unsigned int nPoints = QuadraturePoints->GetNumberOfQuadraturePoints();
 
@@ -168,9 +167,7 @@ lin3DShell4::GetStrainAt(double x3, double x2) const{
 
 //Gets the material stress in section at  coordinate (x3,x2).
 Eigen::MatrixXd 
-lin3DShell4::GetStressAt(double x3, double x2) const{
-    UNUNSED_PARAMETER(x2);
-
+lin3DShell4::GetStressAt(double x3, double UNUSED(x2)) const{
     //number of integration points.
     unsigned int nPoints = QuadraturePoints->GetNumberOfQuadraturePoints();
 
@@ -200,9 +197,19 @@ lin3DShell4::GetVTKResponse(std::string response) const{
     return theResponse;
 }
 
+//Computes the element energy for a given deformation.
+double 
+lin3DShell4::ComputeEnergy(){
+    //TODO: Integrate over element volume to compute the energy
+    return 0.0;
+}
+
 //Compute the mass matrix of the element gauss-integration.
 Eigen::MatrixXd 
 lin3DShell4::ComputeMassMatrix(){
+    //Starts profiling this funtion.
+    PROFILE_FUNCTION();
+
     //Computes the transformation matrix.
     Eigen::MatrixXd localAxes = ComputeLocalAxes();
 
@@ -243,7 +250,7 @@ lin3DShell4::ComputeMassMatrix(){
     AssemblePlateMembraneEffects(MassMatrix, MembraneMass, PlateMass);
 
     //Lumped Mass Formulation
-    if(MassForm){
+    if(MassFormulation){
         double mtot = ComputeTotalMass();
         double MassX = MassMatrix(0,0) + MassMatrix(6,6) + MassMatrix(12,12) + MassMatrix(18,18);
         double MassY = MassMatrix(1,1) + MassMatrix(7,7) + MassMatrix(13,13) + MassMatrix(19,19);
@@ -272,6 +279,9 @@ lin3DShell4::ComputeMassMatrix(){
 //Compute the stiffness matrix of the element using gauss-integration.
 Eigen::MatrixXd 
 lin3DShell4::ComputeStiffnessMatrix(){
+    //Starts profiling this funtion.
+    PROFILE_FUNCTION();
+
     //Computes the transformation matrix.
     Eigen::MatrixXd localAxes = ComputeLocalAxes();
 
@@ -325,6 +335,9 @@ lin3DShell4::ComputeStiffnessMatrix(){
 //Compute the damping matrix of the element gauss-integration.
 Eigen::MatrixXd 
 lin3DShell4::ComputeDampingMatrix(){
+    //Starts profiling this funtion.
+    PROFILE_FUNCTION();
+
     //Damping matrix definition.
     Eigen::MatrixXd DampingMatrix(24, 24);
     DampingMatrix.fill(0.0);
@@ -361,6 +374,9 @@ lin3DShell4::ComputePMLMatrix(){
 //Compute the element the internal forces acting on the element.
 Eigen::VectorXd 
 lin3DShell4::ComputeInternalForces(){
+    //Starts profiling this funtion.
+    PROFILE_FUNCTION();
+
     //TODO: compute internal forces for shell should be done by integration of stresses.
     //Gets the element coordinates in deformed configuration. 
     Eigen::VectorXd U1 = theNodes[0]->GetDisplacements() + theNodes[0]->GetIncrementalDisplacements();
@@ -405,8 +421,9 @@ lin3DShell4::ComputeInternalDynamicForces(){
 
 //Compute the surface forces acting on the element.
 Eigen::VectorXd 
-lin3DShell4::ComputeSurfaceForces(const std::shared_ptr<Load> &surfaceLoad, unsigned int face){
-    UNUNSED_PARAMETER(face);
+lin3DShell4::ComputeSurfaceForces(const std::shared_ptr<Load> &surfaceLoad, unsigned int UNUSED(face)){
+    //Starts profiling this funtion.
+    PROFILE_FUNCTION();
 
     //Gets Node Local coordinates.
     Eigen::MatrixXd xyloc = ComputeLocalCoordinates();
@@ -454,6 +471,9 @@ lin3DShell4::ComputeSurfaceForces(const std::shared_ptr<Load> &surfaceLoad, unsi
 //Compute the body forces acting on the element.
 Eigen::VectorXd 
 lin3DShell4::ComputeBodyForces(const std::shared_ptr<Load> &bodyLoad, unsigned int k){
+    //Starts profiling this funtion.
+    PROFILE_FUNCTION();
+
     //Gets Node Local coordinates.
     Eigen::MatrixXd xyloc = ComputeLocalCoordinates();
 
@@ -502,9 +522,9 @@ lin3DShell4::ComputeBodyForces(const std::shared_ptr<Load> &bodyLoad, unsigned i
 
 //Compute the domain reduction forces acting on the element.
 Eigen::VectorXd 
-lin3DShell4::ComputeDomainReductionForces(const std::shared_ptr<Load> &drm, unsigned int k){
-    UNUNSED_PARAMETER(k);
-    UNUNSED_PARAMETER(drm);
+lin3DShell4::ComputeDomainReductionForces(const std::shared_ptr<Load>& UNUSED(drm), unsigned int UNUSED(k)){
+    //Starts profiling this funtion.
+    PROFILE_FUNCTION();
 
     //TODO: Domain reduction forces are not implemented for shell.
     Eigen::VectorXd DRMForces(24);

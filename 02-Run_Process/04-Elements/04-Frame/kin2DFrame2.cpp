@@ -2,6 +2,7 @@
 #include <iostream>
 #include "kin2DFrame2.hpp"
 #include "Definitions.hpp"
+#include "Profiler.hpp"
 
 //Define constant tolerance value:
 const double TOL = 0.9999995;
@@ -10,8 +11,8 @@ const double TOL = 0.9999995;
 const unsigned int VTKCELL = 3;
 
 //Overload constructor.
-kin2DFrame2::kin2DFrame2(const std::vector<unsigned int> nodes, std::unique_ptr<Section> &section, bool massform) :
-Element("kin2DFrame2", nodes, 6, VTKCELL), MassForm(massform) {
+kin2DFrame2::kin2DFrame2(const std::vector<unsigned int> nodes, std::unique_ptr<Section> &section) :
+Element("kin2DFrame2", nodes, 6, VTKCELL){
     //The element nodes.
     theNodes.resize(2);
 
@@ -159,10 +160,18 @@ kin2DFrame2::GetVTKResponse(std::string response) const{
     return theResponse;
 }
 
+//Computes the element energy for a given deformation.
+double 
+kin2DFrame2::ComputeEnergy(){
+    //TODO: Integrate over element volume to compute the energy
+    return 0.0;
+}
 
 //Compute the mass matrix of the element.
 Eigen::MatrixXd 
 kin2DFrame2::ComputeMassMatrix(){
+    PROFILE_FUNCTION();
+
     //Gets section density.
     Eigen::MatrixXd rho = theSection->GetDensity();
 
@@ -173,7 +182,7 @@ kin2DFrame2::ComputeMassMatrix(){
     Eigen::MatrixXd MassMatrix(6,6);
 
     //Construct mass matrix according to formulation.
-    if(MassForm){
+    if(MassFormulation){
         //Gets the total mass.
         double m11 = mass/2.0;
         double m33 = mass*Lo*Lo/105.0;
@@ -216,6 +225,8 @@ kin2DFrame2::ComputeMassMatrix(){
 //Compute the stiffness matrix of the element.
 Eigen::MatrixXd 
 kin2DFrame2::ComputeStiffnessMatrix(){
+    PROFILE_FUNCTION();
+
     //Computes the current element length.
     double L = ComputeLength();
 
@@ -255,6 +266,8 @@ kin2DFrame2::ComputeStiffnessMatrix(){
 //Compute the damping matrix of the element.
 Eigen::MatrixXd 
 kin2DFrame2::ComputeDampingMatrix(){
+    PROFILE_FUNCTION();
+
     //Damping matrix definition.
     Eigen::MatrixXd DampingMatrix(6,6);
     DampingMatrix.fill(0.0);
@@ -291,6 +304,8 @@ kin2DFrame2::ComputePMLMatrix(){
 //Compute the element the internal forces acting on the element.
 Eigen::VectorXd 
 kin2DFrame2::ComputeInternalForces(){
+    PROFILE_FUNCTION();
+
     //Computes the current bending moments.
     Eigen::VectorXd Qlocal = ComputeLocalForces();
 
@@ -328,8 +343,8 @@ kin2DFrame2::ComputeInternalDynamicForces(){
 
 //Compute the surface forces acting on the element.
 Eigen::VectorXd 
-kin2DFrame2::ComputeSurfaceForces(const std::shared_ptr<Load> &surfaceLoad, unsigned int face){
-    UNUNSED_PARAMETER(face);
+kin2DFrame2::ComputeSurfaceForces(const std::shared_ptr<Load>& surfaceLoad, unsigned int UNUSED(face)){
+    PROFILE_FUNCTION();
 
     //Local surface load vector:
     Eigen::VectorXd surfaceForces(6);
@@ -360,6 +375,8 @@ kin2DFrame2::ComputeSurfaceForces(const std::shared_ptr<Load> &surfaceLoad, unsi
 //Compute the body forces acting on the element.
 Eigen::VectorXd 
 kin2DFrame2::ComputeBodyForces(const std::shared_ptr<Load> &bodyLoad, unsigned int k){
+    PROFILE_FUNCTION();
+
     //Local body load vector:
     Eigen::VectorXd bodyForces(6);
 
@@ -391,9 +408,8 @@ kin2DFrame2::ComputeBodyForces(const std::shared_ptr<Load> &bodyLoad, unsigned i
 
 //Compute the domain reduction forces acting on the element.
 Eigen::VectorXd 
-kin2DFrame2::ComputeDomainReductionForces(const std::shared_ptr<Load> &drm, unsigned int k){
-    UNUNSED_PARAMETER(k);
-    UNUNSED_PARAMETER(drm);
+kin2DFrame2::ComputeDomainReductionForces(const std::shared_ptr<Load>& UNUSED(drm), unsigned int UNUSED(k)){
+    PROFILE_FUNCTION();
 
     //TODO: Domain reduction forces not implemented for frame.
     Eigen::VectorXd DRMForces(6);

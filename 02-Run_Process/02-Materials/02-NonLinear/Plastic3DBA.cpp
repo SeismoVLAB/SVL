@@ -7,7 +7,6 @@
 //Overload constructor.
 Plastic3DBA::Plastic3DBA(const double K, const double G, const double rho, const double H0, const double h, const double m, const double Su, const double beta) :
 Material("Plastic3DBA", false), K(K), G(G), Rho(rho), H0(H0), h(h), m(m), Su(Su), beta(beta){
-
     //Initialize strain.
     Strain.resize(6);
     Strain.fill(0.0);
@@ -87,6 +86,13 @@ Plastic3DBA::GetShearModulus() const{
 double 
 Plastic3DBA::GetElasticityModulus() const{
     return 9.0*K*G/(3.0*K + G);
+}
+
+//Access the material's energy at current strain.
+double 
+Plastic3DBA::GetEnergy() const{
+    //TODO: Compute/write the energy density for this material 
+    return 0.0;
 }
 
 //Returns the material viscous damping.

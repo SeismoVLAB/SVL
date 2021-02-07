@@ -1,13 +1,14 @@
 #include <iostream>
 #include "ZeroLength1D.hpp"
 #include "Definitions.hpp"
+#include "Profiler.hpp"
 
 //Define VTK cell value for Paraview:
 const unsigned int VTKCELL = 3; 
 
 //Overload constructor.
-ZeroLength1D::ZeroLength1D(const std::vector<unsigned int> nodes, std::unique_ptr<Material> &material, const unsigned int dim, const unsigned int dir, bool massform) :
-Element("ZeroLength1D", nodes, 2*dim, VTKCELL), MassForm(massform), theDimension(dim), theDirection(dir){
+ZeroLength1D::ZeroLength1D(const std::vector<unsigned int> nodes, std::unique_ptr<Material> &material, const unsigned int dir) :
+Element("ZeroLength1D", nodes, 2*nDimensions, VTKCELL), theDirection(dir){
     //The element nodes.
     theNodes.resize(2);
 
@@ -58,9 +59,8 @@ ZeroLength1D::SetDomain(std::map<unsigned int, std::shared_ptr<Node> > &nodes){
 
 //Sets the damping model.
 void 
-ZeroLength1D::SetDamping(const std::shared_ptr<Damping> &damping){
+ZeroLength1D::SetDamping(const std::shared_ptr<Damping>& UNUSED(damping)){
     //does nothing.
-    UNUNSED_PARAMETER(damping);
 }
 
 //Gets the list of total-degree of freedom of this element.
@@ -116,12 +116,9 @@ ZeroLength1D::GetStrainRate() const{
 
 //Gets the material strain in section at  coordinate (x3,x2).
 Eigen::MatrixXd 
-ZeroLength1D::GetStrainAt(double x3, double x2) const{
-    UNUNSED_PARAMETER(x3);
-    UNUNSED_PARAMETER(x2);
-
+ZeroLength1D::GetStrainAt(double UNUSED(x3), double UNUSED(x2)) const{
     //Stress at coordinate is define within section.
-    unsigned int ndim = theDimension*(theDimension + 1)/2;
+    unsigned int ndim = nDimensions*(nDimensions + 1)/2;
     Eigen::MatrixXd theStrain(1, ndim);
     theStrain.fill(0.0);
 
@@ -130,12 +127,9 @@ ZeroLength1D::GetStrainAt(double x3, double x2) const{
 
 //Gets the material stress in section at  coordinate (x3,x2).
 Eigen::MatrixXd 
-ZeroLength1D::GetStressAt(double x3, double x2) const{
-    UNUNSED_PARAMETER(x3);
-    UNUNSED_PARAMETER(x2);
-
+ZeroLength1D::GetStressAt(double UNUSED(x3), double UNUSED(x2)) const{
     //Stress at coordinate is define within section.
-    unsigned int ndim = theDimension*(theDimension + 1)/2;
+    unsigned int ndim = nDimensions*(nDimensions + 1)/2;
     Eigen::MatrixXd theStress(1, ndim);
     theStress.fill(0.0);
 
@@ -160,11 +154,21 @@ ZeroLength1D::GetVTKResponse(std::string response) const{
     return theResponse;
 }
 
+//Computes the element energy for a given deformation.
+double 
+ZeroLength1D::ComputeEnergy(){
+    //TODO: Integrate over element volume to compute the energy
+    return 0.0;
+}
+
 //Compute the mass matrix of the element.
 Eigen::MatrixXd 
 ZeroLength1D::ComputeMassMatrix(){
+    //Starts profiling this funtion.
+    PROFILE_FUNCTION();
+
     //The matrix dimension.
-    unsigned int nDim = 2*theDimension;
+    unsigned int nDim = 2*nDimensions;
 
     //Consistent mass definition.
     Eigen::MatrixXd MassMatrix(nDim, nDim);
@@ -176,6 +180,9 @@ ZeroLength1D::ComputeMassMatrix(){
 //Compute the stiffness matrix of the element.
 Eigen::MatrixXd 
 ZeroLength1D::ComputeStiffnessMatrix(){
+    //Starts profiling this funtion.
+    PROFILE_FUNCTION();
+
     //Gets material tangent matrix.
     Eigen::MatrixXd E = theMaterial->GetTangentStiffness();
 
@@ -194,6 +201,9 @@ ZeroLength1D::ComputeStiffnessMatrix(){
 //Compute damping matrix of the element.
 Eigen::MatrixXd 
 ZeroLength1D::ComputeDampingMatrix(){
+    //Starts profiling this funtion.
+    PROFILE_FUNCTION();
+
     //Gets material damping matrix.
     Eigen::MatrixXd eta = theMaterial->GetDamping();
     
@@ -219,6 +229,9 @@ ZeroLength1D::ComputePMLMatrix(){
 //Compute the element internal forces acting on the element.
 Eigen::VectorXd 
 ZeroLength1D::ComputeInternalForces(){
+    //Starts profiling this funtion.
+    PROFILE_FUNCTION();
+
     //The global axes transformation.
     Eigen::VectorXd localAxes = ComputeLocalAxes(); 
 
@@ -238,7 +251,7 @@ ZeroLength1D::ComputeInternalDynamicForces(){
     Eigen::VectorXd InternalForces;
 
     if( HasFixedNode(theNodes) ){
-        unsigned int ndims = 2*theDimension;
+        unsigned int ndims = 2*nDimensions;
 
         //Allocate memory for velocity/acceleraton. 
         Eigen::VectorXd V(ndims); 
@@ -257,12 +270,12 @@ ZeroLength1D::ComputeInternalDynamicForces(){
 
 //Compute the surface forces acting on the element.
 Eigen::VectorXd 
-ZeroLength1D::ComputeSurfaceForces(const std::shared_ptr<Load> &surface, unsigned int face){
-    UNUNSED_PARAMETER(face);
-    UNUNSED_PARAMETER(surface);
+ZeroLength1D::ComputeSurfaceForces(const std::shared_ptr<Load>& UNUSED(surface), unsigned int UNUSED(face)){
+    //Starts profiling this funtion.
+    PROFILE_FUNCTION();
 
     //Local surface load vector.
-    Eigen::VectorXd surfaceForces(2*theDimension);
+    Eigen::VectorXd surfaceForces(2*nDimensions);
     surfaceForces.fill(0.0);
 
     return surfaceForces;
@@ -270,12 +283,12 @@ ZeroLength1D::ComputeSurfaceForces(const std::shared_ptr<Load> &surface, unsigne
 
 //Compute the body forces acting on the element.
 Eigen::VectorXd 
-ZeroLength1D::ComputeBodyForces(const std::shared_ptr<Load> &body, unsigned int k){
-    UNUNSED_PARAMETER(k);
-    UNUNSED_PARAMETER(body);
+ZeroLength1D::ComputeBodyForces(const std::shared_ptr<Load>& UNUSED(body), unsigned int UNUSED(k)){
+    //Starts profiling this funtion.
+    PROFILE_FUNCTION();
 
     //Local body load vector.
-    Eigen::VectorXd bodyForces(2*theDimension);
+    Eigen::VectorXd bodyForces(2*nDimensions);
     bodyForces.fill(0.0);
 
     return bodyForces;
@@ -283,9 +296,9 @@ ZeroLength1D::ComputeBodyForces(const std::shared_ptr<Load> &body, unsigned int 
 
 //Compute the domain reduction forces acting on the element.
 Eigen::VectorXd 
-ZeroLength1D::ComputeDomainReductionForces(const std::shared_ptr<Load> &drm, unsigned int k){
-    UNUNSED_PARAMETER(k);
-    UNUNSED_PARAMETER(drm);
+ZeroLength1D::ComputeDomainReductionForces(const std::shared_ptr<Load>& UNUSED(drm), unsigned int UNUSED(k)){
+    //Starts profiling this funtion.
+    PROFILE_FUNCTION();
 
     //Domain reduction force vector.
     unsigned int nDofs = GetNumberOfDegreeOfFreedom();
@@ -301,11 +314,11 @@ ZeroLength1D::ComputeLocalAxes() const{
     //The global axes transformation:
     Eigen::VectorXd localAxes;
 
-    if(theDimension == 1){
+    if(nDimensions == 1){
         localAxes.resize(2);
         localAxes << -1.0, 1.0;
     }
-    else if(theDimension == 2){
+    else if(nDimensions == 2){
         localAxes.resize(4);
         if (theDirection == 0){
             localAxes << -1.0, 0.0, 1.0, 0.0;
@@ -314,7 +327,7 @@ ZeroLength1D::ComputeLocalAxes() const{
             localAxes << 0.0, -1.0, 0.0, 1.0;
         }
     }
-    else if(theDimension == 3){
+    else if(nDimensions == 3){
         localAxes.resize(6);
         if (theDirection == 0){
             localAxes << -1.0, 0.0, 0.0, 1.0, 0.0, 0.0;

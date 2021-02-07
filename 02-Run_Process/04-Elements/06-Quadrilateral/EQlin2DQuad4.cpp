@@ -6,13 +6,14 @@
 #include "GaussQuadrature.hpp"
 #include "LobattoQuadrature.hpp"
 #include "Definitions.hpp"
+#include "Profiler.hpp"
 
 //Define VTK cell value for Paraview:
 const unsigned int VTKCELL = 9;
 
 //Overload constructor.
-EQlin2DQuad4::EQlin2DQuad4(const std::vector<unsigned int> nodes, std::unique_ptr<Material> &material, const double th, const std::string quadrature, const unsigned int nGauss, bool massform, const std::string Type, const double zref, const double cf1, const double cf2) :
-Element("EQlin2DQuad4", nodes, 8, VTKCELL), t(th), MassForm(massform), cf1(cf1), cf2(cf2), zref(zref), Type(Type) {
+EQlin2DQuad4::EQlin2DQuad4(const std::vector<unsigned int> nodes, std::unique_ptr<Material> &material, const double th, const std::string quadrature, const unsigned int nGauss, const std::string Type, const double zref, const double cf1, const double cf2) :
+Element("EQlin2DQuad4", nodes, 8, VTKCELL), t(th), cf1(cf1), cf2(cf2), zref(zref), Type(Type) {
     //The element nodes.
     theNodes.resize(4);
 
@@ -57,10 +58,8 @@ EQlin2DQuad4::UpdateState(){
     Eigen::VectorXd X3 = theNodes[2]->GetCoordinates();
     Eigen::VectorXd X4 = theNodes[3]->GetCoordinates();
 
-    Eigen::VectorXd X;
-    X.resize(8,1);
+    Eigen::VectorXd X(8);
     X << X1(0), X1(1), X2(0), X2(1), X3(0), X3(1), X4(0), X4(1);
-
 
     //Update material states.
     for(unsigned int k = 0; k < wi.size(); k++){
@@ -216,10 +215,7 @@ EQlin2DQuad4::GetStrainRate() const{
 
 //Gets the material strain in section at  coordinate (x3,x2).
 Eigen::MatrixXd 
-EQlin2DQuad4::GetStrainAt(double x3, double x2) const{
-    UNUNSED_PARAMETER(x3);
-    UNUNSED_PARAMETER(x2);
-
+EQlin2DQuad4::GetStrainAt(double UNUSED(x3), double UNUSED(x2)) const{
     //number of integration points.
     unsigned int nPoints = QuadraturePoints->GetNumberOfQuadraturePoints();
 
@@ -232,10 +228,7 @@ EQlin2DQuad4::GetStrainAt(double x3, double x2) const{
 
 //Gets the material stress in section at  coordinate (x3,x2).
 Eigen::MatrixXd 
-EQlin2DQuad4::GetStressAt(double x3, double x2) const{
-    UNUNSED_PARAMETER(x3);
-    UNUNSED_PARAMETER(x2);
-
+EQlin2DQuad4::GetStressAt(double UNUSED(x3), double UNUSED(x2)) const{
     //number of integration points.
     unsigned int nPoints = QuadraturePoints->GetNumberOfQuadraturePoints();
 
@@ -266,9 +259,19 @@ EQlin2DQuad4::GetVTKResponse(std::string response) const{
     return theResponse;
 }
 
+//Computes the element energy for a given deformation.
+double 
+EQlin2DQuad4::ComputeEnergy(){
+    //TODO: Integrate over element volume to compute the energy
+    return 0.0;
+}
+
 //Compute the mass matrix of the element using gauss-integration.
 Eigen::MatrixXd 
 EQlin2DQuad4::ComputeMassMatrix(){
+    //Starts profiling this funtion.
+    PROFILE_FUNCTION();
+
     //Use consistent mass definition:
     Eigen::MatrixXd MassMatrix(8,8);
     MassMatrix.fill(0.0);
@@ -294,7 +297,7 @@ EQlin2DQuad4::ComputeMassMatrix(){
     }
 
     //Lumped Mass Formulation
-    if(MassForm){
+    if(MassFormulation){
         //Lumped Mass in diagonal terms.
         for (unsigned int i = 0; i < 8; i++){
             for (unsigned int j = 0; j < 8; j++){
@@ -312,6 +315,9 @@ EQlin2DQuad4::ComputeMassMatrix(){
 //Compute the stiffness matrix of the element using gauss-integration.
 Eigen::MatrixXd 
 EQlin2DQuad4::ComputeStiffnessMatrix(){
+    //Starts profiling this funtion.
+    PROFILE_FUNCTION();
+
     //Stiffness matrix definition:
     Eigen::MatrixXd StiffnessMatrix(8,8);
     StiffnessMatrix.fill(0.0);
@@ -371,6 +377,9 @@ EQlin2DQuad4::ComputeStiffnessMatrix(){
 //Compute the damping matrix of the element using gauss-integration.
 Eigen::MatrixXd 
 EQlin2DQuad4::ComputeDampingMatrix(){
+    //Starts profiling this funtion.
+    PROFILE_FUNCTION();
+
     //Damping matrix definition.
     Eigen::MatrixXd DampingMatrix(8,8);
     DampingMatrix.fill(0.0);
@@ -440,6 +449,9 @@ EQlin2DQuad4::ComputePMLMatrix(){
 //Compute the internal forces acting on the element.
 Eigen::VectorXd 
 EQlin2DQuad4::ComputeInternalForces(){
+    //Starts profiling this funtion.
+    PROFILE_FUNCTION();
+
     //Stiffness matrix definition:
     Eigen::VectorXd InternalForces(8);
     InternalForces.fill(0.0);
@@ -523,6 +535,9 @@ EQlin2DQuad4::ComputeInternalDynamicForces(){
 //Compute the surface forces acting on the element.
 Eigen::VectorXd 
 EQlin2DQuad4::ComputeSurfaceForces(const std::shared_ptr<Load> &surfaceLoad, unsigned int face){
+    //Starts profiling this funtion.
+    PROFILE_FUNCTION();
+
     //Local surface load vector:
     Eigen::VectorXd surfaceForces(8);
     surfaceForces.fill(0.0);
@@ -610,6 +625,9 @@ EQlin2DQuad4::ComputeSurfaceForces(const std::shared_ptr<Load> &surfaceLoad, uns
 //Compute the body forces acting on the element.
 Eigen::VectorXd 
 EQlin2DQuad4::ComputeBodyForces(const std::shared_ptr<Load> &bodyLoad, unsigned int k){
+    //Starts profiling this funtion.
+    PROFILE_FUNCTION();
+
     //Local body load vector:
     Eigen::VectorXd bodyForces;
     bodyForces.resize(8);
@@ -644,6 +662,9 @@ EQlin2DQuad4::ComputeBodyForces(const std::shared_ptr<Load> &bodyLoad, unsigned 
 //Compute the domain reduction forces acting on the element.
 Eigen::VectorXd 
 EQlin2DQuad4::ComputeDomainReductionForces(const std::shared_ptr<Load> &drm, unsigned int k){
+    //Starts profiling this funtion.
+    PROFILE_FUNCTION();
+
     Eigen::VectorXd DRMForces;
     DRMForces.resize(8);
 
@@ -716,9 +737,7 @@ EQlin2DQuad4::ComputeStrain(const Eigen::MatrixXd &Bij) const{
 
 //Update strain rate in the element.
 Eigen::VectorXd 
-EQlin2DQuad4::ComputeStrainRate(const Eigen::MatrixXd &Bij) const{
-    UNUNSED_PARAMETER(Bij);
-
+EQlin2DQuad4::ComputeStrainRate(const Eigen::MatrixXd& UNUSED(Bij)) const{
     //TODO: Compute strain rate.
     //Strain vector definition:
     Eigen::VectorXd strainrate;
@@ -862,8 +881,7 @@ EQlin2DQuad4::ComputeGGmaxDamping(const double vs, const double z, const double 
         xi    = Dmin;
     }
 
-    Eigen::VectorXd result;
-    result.resize(2);
+    Eigen::VectorXd result(2);
     result << GGmax, xi;
 
     return result;

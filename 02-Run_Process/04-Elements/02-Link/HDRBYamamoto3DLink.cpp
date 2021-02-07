@@ -3,6 +3,7 @@
 #include <iostream>
 #include "HDRBYamamoto3DLink.hpp"
 #include "Definitions.hpp"
+#include "Profiler.hpp"
 
 //Define constant tolerance value:
 const double TOL = 0.9999995;
@@ -11,8 +12,8 @@ const double TOL = 0.9999995;
 const unsigned int VTKCELL = 3; 
 
 //Overload constructor.
-HDRBYamamoto3DLink::HDRBYamamoto3DLink(const std::vector<unsigned int> nodes, double De, double Di, double hr, unsigned int dim, bool massform) :
-Element("HDRBYamamoto3DLink", nodes, 2*dim, VTKCELL), Hr(hr), Dimension(dim), MassForm(massform){
+HDRBYamamoto3DLink::HDRBYamamoto3DLink(const std::vector<unsigned int> nodes, double De, double Di, double hr, unsigned int dim) :
+Element("HDRBYamamoto3DLink", nodes, 2*dim, VTKCELL), Hr(hr), Dimension(dim){
     //The element nodes.
     theNodes.resize(2);
 
@@ -111,9 +112,8 @@ HDRBYamamoto3DLink::SetDomain(std::map<unsigned int, std::shared_ptr<Node> > &no
 
 //Sets the damping model.
 void 
-HDRBYamamoto3DLink::SetDamping(const std::shared_ptr<Damping> &damping){
+HDRBYamamoto3DLink::SetDamping(const std::shared_ptr<Damping>& UNUSED(damping)){
     //does nothing.
-    UNUNSED_PARAMETER(damping);
 }
 
 //Gets the list of total-degree of freedom of this element.
@@ -168,10 +168,7 @@ HDRBYamamoto3DLink::GetStrainRate() const{
 
 //Gets the material strain in section at  coordinate (x3,x2).
 Eigen::MatrixXd 
-HDRBYamamoto3DLink::GetStrainAt(double x3, double x2) const{
-    UNUNSED_PARAMETER(x3);
-    UNUNSED_PARAMETER(x2);
-
+HDRBYamamoto3DLink::GetStrainAt(double UNUSED(x3), double UNUSED(x2)) const{
     //Stress at coordinate is define within section.
     Eigen::MatrixXd theStrain(1, 6); 
     theStrain.fill(0.0);
@@ -181,10 +178,7 @@ HDRBYamamoto3DLink::GetStrainAt(double x3, double x2) const{
 
 //Gets the material stress in section at  coordinate (x3,x2).
 Eigen::MatrixXd 
-HDRBYamamoto3DLink::GetStressAt(double x3, double x2) const{
-    UNUNSED_PARAMETER(x3);
-    UNUNSED_PARAMETER(x2);
-
+HDRBYamamoto3DLink::GetStressAt(double UNUSED(x3), double UNUSED(x2)) const{
     //Stress at coordinate is define within section.
     Eigen::MatrixXd theStress(1, 6); 
     theStress.fill(0.0);
@@ -194,9 +188,7 @@ HDRBYamamoto3DLink::GetStressAt(double x3, double x2) const{
 
 //Gets the element internal response in VTK format.
 Eigen::VectorXd 
-HDRBYamamoto3DLink::GetVTKResponse(std::string response) const{
-    UNUNSED_PARAMETER(response);
-
+HDRBYamamoto3DLink::GetVTKResponse(std::string UNUSED(response)) const{
     //TODO: Stress/Strain responses
     //The VTK response vector.
     Eigen::VectorXd theResponse(6);
@@ -205,9 +197,18 @@ HDRBYamamoto3DLink::GetVTKResponse(std::string response) const{
     return theResponse;
 }
 
+//Computes the element energy for a given deformation.
+double 
+HDRBYamamoto3DLink::ComputeEnergy(){
+    //TODO: Integrate over element volume to compute the energy
+    return 0.0;
+}
+
 //Compute the mass matrix of the element.
 Eigen::MatrixXd 
 HDRBYamamoto3DLink::ComputeMassMatrix(){
+    PROFILE_FUNCTION();
+
     //The matrix dimension.
     unsigned int nDim = 2*Dimension;
 
@@ -221,6 +222,8 @@ HDRBYamamoto3DLink::ComputeMassMatrix(){
 //Compute the stiffness matrix of the element.
 Eigen::MatrixXd 
 HDRBYamamoto3DLink::ComputeStiffnessMatrix(){
+    PROFILE_FUNCTION();
+
     //The vector dimension.
     unsigned int nDim = 2*Dimension;
 
@@ -245,6 +248,8 @@ HDRBYamamoto3DLink::ComputeStiffnessMatrix(){
 //Compute damping matrix of the element.
 Eigen::MatrixXd 
 HDRBYamamoto3DLink::ComputeDampingMatrix(){
+    PROFILE_FUNCTION();
+
     //The matrix dimension.
     unsigned int nDim = 2*Dimension;
 
@@ -265,6 +270,8 @@ HDRBYamamoto3DLink::ComputePMLMatrix(){
 //Compute the element internal forces acting on the element.
 Eigen::VectorXd 
 HDRBYamamoto3DLink::ComputeInternalForces(){
+    PROFILE_FUNCTION();
+
     //The vector dimension.
     unsigned int nDim = 2*Dimension;
 
@@ -312,9 +319,8 @@ HDRBYamamoto3DLink::ComputeInternalDynamicForces(){
 
 //Compute the surface forces acting on the element.
 Eigen::VectorXd 
-HDRBYamamoto3DLink::ComputeSurfaceForces(const std::shared_ptr<Load> &surface, unsigned int face){
-    UNUNSED_PARAMETER(face);
-    UNUNSED_PARAMETER(surface);
+HDRBYamamoto3DLink::ComputeSurfaceForces(const std::shared_ptr<Load>& UNUSED(surface), unsigned int UNUSED(face)){
+    PROFILE_FUNCTION();
 
     //Local surface load vector.
     Eigen::VectorXd surfaceForces(2*Dimension);
@@ -325,9 +331,8 @@ HDRBYamamoto3DLink::ComputeSurfaceForces(const std::shared_ptr<Load> &surface, u
 
 //Compute the body forces acting on the element.
 Eigen::VectorXd 
-HDRBYamamoto3DLink::ComputeBodyForces(const std::shared_ptr<Load> &body, unsigned int k){
-    UNUNSED_PARAMETER(k);
-    UNUNSED_PARAMETER(body);
+HDRBYamamoto3DLink::ComputeBodyForces(const std::shared_ptr<Load>& UNUSED(body), unsigned int UNUSED(k)){
+    PROFILE_FUNCTION();
 
     //Local body load vector.
     Eigen::VectorXd bodyForces(2*Dimension);
@@ -338,9 +343,8 @@ HDRBYamamoto3DLink::ComputeBodyForces(const std::shared_ptr<Load> &body, unsigne
 
 //Compute the domain reduction forces acting on the element.
 Eigen::VectorXd 
-HDRBYamamoto3DLink::ComputeDomainReductionForces(const std::shared_ptr<Load> &drm, unsigned int k){
-    UNUNSED_PARAMETER(k);
-    UNUNSED_PARAMETER(drm);
+HDRBYamamoto3DLink::ComputeDomainReductionForces(const std::shared_ptr<Load>& UNUSED(drm), unsigned int UNUSED(k)){
+    PROFILE_FUNCTION();
 
     //Domain reduction force vector.
     unsigned int nDofs = GetNumberOfDegreeOfFreedom();

@@ -85,6 +85,10 @@ class Hertzian1DLinear : public Material{
         ///@return The material Elasticity's (E) modulus.
         double GetElasticityModulus() const;
 
+        ///Access the material's energy at current strain.
+        ///@return Scalar with the material energy value.
+        double GetEnergy() const;
+
         ///Returns the material viscous damping.
         ///@return Vector with the material damping components.
         Eigen::MatrixXd GetDamping() const;

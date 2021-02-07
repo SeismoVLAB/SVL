@@ -33,13 +33,15 @@ Material("PlasticPlaneStrainBA", false), K(K), G(G), Rho(rho), H0(H0), h(h), m(m
     Eigen::MatrixXd Id = ComputeDeviatoricTensor();
 
     //Initialize stiffness matrix.
-    TangentStiffness.resize(6,6); TangentStiffness = K*D + 2.0*G*Id;
+    TangentStiffness.resize(6,6); 
+    TangentStiffness = K*D + 2.0*G*Id;
 
     //Bounding surface radius
     R = sqrt(8.0/3.0)*Su;
 
     //initialize hardening internal variables
-    psi   = 2.0*G ; kappa = 1.0E12;
+    psi = 2.0*G; 
+    kappa = 1.0E12;
 
     FirstLoadFlag = 0;
 
@@ -85,6 +87,13 @@ PlasticPlaneStrainBA::GetShearModulus() const{
 double 
 PlasticPlaneStrainBA::GetElasticityModulus() const{
     return 9.0*K*G/(3.0*K + G);
+}
+
+//Access the material's energy at current strain.
+double 
+PlasticPlaneStrainBA::GetEnergy() const{
+    //TODO: Compute/write the energy density for this material 
+    return 0.0;
 }
 
 //Returns the material viscous damping.

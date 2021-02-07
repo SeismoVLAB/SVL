@@ -133,6 +133,7 @@ CentralDifference::ComputeNewStep(std::shared_ptr<Mesh> &mesh, unsigned int k){
 //Gets the reaction force ins this step.
 Eigen::VectorXd 
 CentralDifference::ComputeReactionForce(std::shared_ptr<Mesh> &mesh, unsigned int k){
+    //TODO:Include some if statement that performs the addition only if there is support motion applied.
     //Starts profiling this function.
     PROFILE_FUNCTION();
 
@@ -149,10 +150,8 @@ CentralDifference::ComputeReactionForce(std::shared_ptr<Mesh> &mesh, unsigned in
 }
 
 //Gets the incremental nodal support motion vector.
-Eigen::VectorXd 
-CentralDifference::ComputeSupportMotionVector(std::shared_ptr<Mesh> &mesh, double factor, unsigned int k){
-    UNUNSED_PARAMETER(factor);
-
+void
+CentralDifference::ComputeSupportMotionVector(std::shared_ptr<Mesh> &mesh, Eigen::VectorXd &Feff, double UNUSED(factor), unsigned int k){
     //Starts profiling this function.
     PROFILE_FUNCTION();
 
@@ -162,14 +161,13 @@ CentralDifference::ComputeSupportMotionVector(std::shared_ptr<Mesh> &mesh, doubl
     //Computes the required forces to impose these displacements.
     Eigen::VectorXd Lg = Total2FreeMatrix.transpose()*(K*SupportMotion);
 
-    return Lg;
+    //Add the contribution to the current effective force vector.
+    Feff -= Lg;
 }
 
 //Gets the effective force associated to this integrator.
 void
-CentralDifference::ComputeEffectiveForce(std::shared_ptr<Mesh> &mesh, Eigen::VectorXd &Feff, double factor, unsigned int k){
-    UNUNSED_PARAMETER(factor);
-
+CentralDifference::ComputeEffectiveForce(std::shared_ptr<Mesh> &mesh, Eigen::VectorXd &Feff, double UNUSED(factor), unsigned int k){
     //Starts profiling this function.
     PROFILE_FUNCTION();
 
@@ -188,9 +186,7 @@ CentralDifference::ComputeEffectiveForce(std::shared_ptr<Mesh> &mesh, Eigen::Vec
 
 //Gets the effective stiffness assiciated to this integrator.
 void
-CentralDifference::ComputeEffectiveStiffness(std::shared_ptr<Mesh> &mesh, Eigen::SparseMatrix<double> &Keff){
-    UNUNSED_PARAMETER(mesh);
-
+CentralDifference::ComputeEffectiveStiffness(std::shared_ptr<Mesh>& UNUSED(mesh), Eigen::SparseMatrix<double> &Keff){
     //Starts profiling this function.
     PROFILE_FUNCTION();
 

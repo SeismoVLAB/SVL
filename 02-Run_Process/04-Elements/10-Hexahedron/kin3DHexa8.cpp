@@ -6,13 +6,14 @@
 #include "GaussQuadrature.hpp"
 #include "LobattoQuadrature.hpp"
 #include "Definitions.hpp"
+#include "Profiler.hpp"
 
 //Define VTK cell value for Paraview:
 const unsigned int VTKCELL = 12;
 
 //Overload constructor.
-kin3DHexa8::kin3DHexa8(const std::vector<unsigned int> nodes, std::unique_ptr<Material> &material, const std::string quadrature, const unsigned int nGauss, bool massform) :
-Element("kin3DHexa8", nodes, 24, VTKCELL), MassForm(massform) {
+kin3DHexa8::kin3DHexa8(const std::vector<unsigned int> nodes, std::unique_ptr<Material> &material, const std::string quadrature, const unsigned int nGauss) :
+Element("kin3DHexa8", nodes, 24, VTKCELL){
     //The element nodes.
     theNodes.resize(8);
 
@@ -186,10 +187,7 @@ kin3DHexa8::GetStrainRate() const{
 
 //Gets the material strain in section at  coordinate (x3,x2).
 Eigen::MatrixXd 
-kin3DHexa8::GetStrainAt(double x3, double x2) const{
-    UNUNSED_PARAMETER(x3);
-    UNUNSED_PARAMETER(x2);
-
+kin3DHexa8::GetStrainAt(double UNUSED(x3), double UNUSED(x2)) const{
     //number of integration points.
     unsigned int nPoints = QuadraturePoints->GetNumberOfQuadraturePoints();
 
@@ -202,10 +200,7 @@ kin3DHexa8::GetStrainAt(double x3, double x2) const{
 
 //Gets the material stress in section at  coordinate (x3,x2).
 Eigen::MatrixXd 
-kin3DHexa8::GetStressAt(double x3, double x2) const{
-    UNUNSED_PARAMETER(x3);
-    UNUNSED_PARAMETER(x2);
-
+kin3DHexa8::GetStressAt(double UNUSED(x3), double UNUSED(x2)) const{
     //number of integration points.
     unsigned int nPoints = QuadraturePoints->GetNumberOfQuadraturePoints();
 
@@ -236,9 +231,18 @@ kin3DHexa8::GetVTKResponse(std::string response) const{
     return theResponse;
 }
 
+//Computes the element energy for a given deformation.
+double 
+kin3DHexa8::ComputeEnergy(){
+    //TODO: Integrate over element volume to compute the energy
+    return 0.0;
+}
+
 //Compute the mass matrix of the element using gauss-integration.
 Eigen::MatrixXd 
 kin3DHexa8::ComputeMassMatrix(){
+    PROFILE_FUNCTION();
+
     //Use consistent mass definition:
     Eigen::MatrixXd MassMatrix(24,24);
     MassMatrix.fill(0.0);
@@ -264,7 +268,7 @@ kin3DHexa8::ComputeMassMatrix(){
     }
 
     //Lumped Mass Formulation.
-    if(MassForm){
+    if(MassFormulation){
         //Lumped Mass in diagonal terms.
         for (unsigned int i = 0; i < 24; i++){
             for (unsigned int j = 0; j < 24; j++){
@@ -282,6 +286,8 @@ kin3DHexa8::ComputeMassMatrix(){
 //Compute the stiffness matrix of the element using gauss-integration.
 Eigen::MatrixXd 
 kin3DHexa8::ComputeStiffnessMatrix(){
+    PROFILE_FUNCTION();
+
     //Stiffness matrix definition:
     Eigen::MatrixXd StiffnessMatrix(24,24);
     StiffnessMatrix.fill(0.0);
@@ -322,6 +328,8 @@ kin3DHexa8::ComputeStiffnessMatrix(){
 //Compute the damping matrix of the element using gauss-integration.
 Eigen::MatrixXd 
 kin3DHexa8::ComputeDampingMatrix(){
+    PROFILE_FUNCTION();
+
     //Damping matrix definition
     Eigen::MatrixXd DampingMatrix(24,24);
     DampingMatrix.fill(0.0);
@@ -380,6 +388,8 @@ kin3DHexa8::ComputePMLMatrix(){
 //Compute the internal forces acting on the element.
 Eigen::VectorXd 
 kin3DHexa8::ComputeInternalForces(){
+    PROFILE_FUNCTION();
+
     //Stiffness matrix definition.
     Eigen::VectorXd InternalForces(24);
     InternalForces.fill(0.0);
@@ -435,6 +445,8 @@ kin3DHexa8::ComputeInternalDynamicForces(){
 //Compute the surface forces acting on the element.
 Eigen::VectorXd 
 kin3DHexa8::ComputeSurfaceForces(const std::shared_ptr<Load> &surfaceLoad, unsigned int face){
+    PROFILE_FUNCTION();
+
     //Local surface load vector:
     Eigen::VectorXd surfaceForces(24);
     surfaceForces.fill(0.0);
@@ -616,6 +628,8 @@ kin3DHexa8::ComputeSurfaceForces(const std::shared_ptr<Load> &surfaceLoad, unsig
 //Compute the body forces acting on the element.
 Eigen::VectorXd 
 kin3DHexa8::ComputeBodyForces(const std::shared_ptr<Load> &bodyLoad, unsigned int k){
+    PROFILE_FUNCTION();
+
     //Local body load vector:
     Eigen::VectorXd bodyForces(24);
     bodyForces.fill(0.0);
@@ -649,6 +663,8 @@ kin3DHexa8::ComputeBodyForces(const std::shared_ptr<Load> &bodyLoad, unsigned in
 //Compute the domain reduction forces acting on the element.
 Eigen::VectorXd 
 kin3DHexa8::ComputeDomainReductionForces(const std::shared_ptr<Load> &drm, unsigned int k){
+    PROFILE_FUNCTION();
+
     //Local domain-reduction load vector.
     Eigen::VectorXd DRMForces(24);
 
@@ -802,12 +818,7 @@ kin3DHexa8::ComputeStrain(const double ri, const double si, const double ti, con
 
 //Update strain rate in the element.
 Eigen::VectorXd 
-kin3DHexa8::ComputeStrainRate(const double ri, const double si, const double ti, const Eigen::MatrixXd &Bij) const{
-    UNUNSED_PARAMETER(ri);
-    UNUNSED_PARAMETER(si);
-    UNUNSED_PARAMETER(ti);
-    UNUNSED_PARAMETER(Bij);
-
+kin3DHexa8::ComputeStrainRate(const double UNUSED(ri), const double UNUSED(si), const double UNUSED(ti), const Eigen::MatrixXd& UNUSED(Bij)) const{
     //TODO: Compute strain rate.
     //Strain vector definition:
     Eigen::VectorXd strainrate(6);
