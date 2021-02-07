@@ -73,6 +73,7 @@ def main():
     files.append("E02-ST_Lin_2DPointLoad_Elastic_Quad8")
     files.append("E03-ST_Lin_2DSurfaceLoad_Elastic_Quad4")
     files.append("E04-ST_Lin_2DSurfaceLoad_Elastic_Quad8")
+    files.append("E05-ST_Lin_2DRigidLink_Elastic_Frame2")
     files.append("F01-ST_Lin_2DPointLoad_ElasticPStrain_Quad4")
     files.append("F02-DY_Lin_2DPointLoad_ElasticPStrain_Quad4")
     files.append("F03-DY_Lin_2DPointLoad_J2PStrain_Quad4")
@@ -154,7 +155,7 @@ def RunValidationCases(files):
         subprocess.check_output(cmdline, shell=True)
 
         #Excecutes the Run-Analysis and Generate Files.
-        cmdline = cwd + "/../../02-Run_Process/SeismoVLAB.exe -dir " + cwd + "/../01-Debugging/" + files[k] + "/Partition -file Debugging_" + files[k][0:3] + ".$.svl"
+        cmdline = cwd + "/../../02-Run_Process/SeismoVLAB.exe -dir " + cwd + "/../01-Debugging/" + files[k] + "/Partition -file Debugging_" + files[k][0:3] + ".$.json"
         subprocess.check_output(cmdline, shell=True)
 
         #Removes the unnecessary Files.
@@ -242,7 +243,7 @@ def MainTeX(LaTeXFiles, files):
     LaTeXfile.write("\\usepackage{caption}\n")
     LaTeXfile.write("\\usepackage{array}\n")
     LaTeXfile.write("\\usepackage{multirow}\n")
-    LaTeXfile.write("\\usepackage[left=2.00cm,right=2.00cm, bottom=2.0cm, top=1.5cm]{geometry}\n")
+    LaTeXfile.write("\\usepackage[left=2.00cm,right=2.00cm, bottom=2.0cm, top=1.5cm]{geometry} \n")
     LaTeXfile.write("\\usepackage{amsmath,amsfonts,amssymb, bbm}\n")
     LaTeXfile.write("\n")
     LaTeXfile.write("\\usepackage{tikz}\n")
