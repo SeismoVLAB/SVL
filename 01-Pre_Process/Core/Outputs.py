@@ -11,13 +11,19 @@ class NumpyArrayEncoder(JSONEncoder):
     """
     This simple class allow to serialize numpy multi-dimensional
     arrays when using JSON python module. Essentially it transform
-    a numpy array into a list.\n
+    a numpy array into a json list.\n
     @visit  https://github.com/SeismoVLAB/SVL\n
     @author Danilo S. Kusanovic 2020
     """
     def default(self, obj):
-        if isinstance(obj, np.ndarray):
+        if isinstance(obj, np.integer):
+            return int(obj)
+        elif isinstance(obj, np.floating):
+            return float(obj)
+        elif isinstance(obj, np.ndarray):
             return obj.tolist()
+        else:
+            return super(JSONEncoder, self).default(obj)
         return JSONEncoder.default(self, obj)
 
 def dict2json(d, np):
@@ -193,23 +199,12 @@ def dict2svl(d, np):
     for cTag in d['Constraints']:
         #Unpack dictionary for simpler writing
         Constraint = d['Constraints'][cTag]
-
-        #Slave information
-        stag = Constraint['stag']
-        sdof = Constraint['sdof' ]
-
-        #Master information
-        mtag = Constraint['mtag']
-        mdof = Constraint['mdof' ]
         factor = Constraint['factor']
-
         nCombinations = len(factor)       
-        SeismoVLABfile.write("CONSTRAINT %s %d %d" %(cTag, d['Nodes'][str(stag)]['totaldof'][sdof], nCombinations))
+        SeismoVLABfile.write("CONSTRAINT %s %d %d" %(cTag, Constraint['stag'], nCombinations))
 
         for k in range(nCombinations):
-            node = mtag[k]
-            dof  = mdof[k]
-            SeismoVLABfile.write(" %d %f" % (d['Nodes'][str(node)]['freedof'][dof], factor[k]))
+            SeismoVLABfile.write(" %d %f" % (Constraint['mtag'][k], factor[k]))
         SeismoVLABfile.write('\n')
 
     #[8] Elements
@@ -304,10 +299,10 @@ def dict2svl(d, np):
             SeismoVLABfile.write("%1.5f %1.5f %1.5f %d\n" %(attributes['De'], attributes['Di'], attributes['Hr'], attributes['dim']))
         elif NAME == 'EQLIN2DQUAD4':
             nParaview +=5
-            SeismoVLABfile.write("%d %1.5f %s %d %s %1.5f %1.5f %1.5f \n" %(attributes['material'], attributes['THICKNESS'], attributes['rule'], attributes['np'], attributes['TYPE'], attributes['ZREF'], attributes['CF1'], attributes['CF2']))
+            SeismoVLABfile.write("%d %1.5f %s %d %s %1.5f %1.5f %1.5f \n" %(attributes['material'], attributes['th'], attributes['rule'], attributes['np'], attributes['type'], attributes['zref'], attributes['cf1'], attributes['cf2']))
         elif NAME == 'TIEQLIN2DQUAD4':
             nParaview +=5
-            SeismoVLABfile.write("%d %1.5f %s %d %s %1.5f %1.5f %1.5f %1.10f \n" %(attributes['material'], attributes['THICKNESS'], attributes['rule'], attributes['np'], attributes['TYPE'], attributes['ZREF'], attributes['CF1'], attributes['CF2'], attributes['EREF']))
+            SeismoVLABfile.write("%d %1.5f %s %d %s %1.5f %1.5f %1.5f %1.10f \n" %(attributes['material'], attributes['th'], attributes['rule'], attributes['np'], attributes['type'], attributes['zref'], attributes['cf1'], attributes['cf2'], attributes['eref']))
         elif  NAME == 'NULL2DFRAME2':
             nParaview += 3
             SeismoVLABfile.write("\n")
@@ -350,16 +345,15 @@ def dict2svl(d, np):
             
         #Point load case
         if NAME == 'POINTLOAD':
-            fTag  = Load['attributes']['fun']
-            fName = Entities['Functions'][fTag]['name']
+            fName = Load['attributes']['name']
 
             SeismoVLABfile.write("%s %s %s " % (NAME, lTag, fName))
             #The Load Condition
-            DIR = Entities['Functions'][fTag]['attributes']['dir']
-            if 'mag' in Entities['Functions'][fTag]['attributes']:
-                SeismoVLABfile.write("%E %d" % (Entities['Functions'][fTag]['attributes']['mag'], len(DIR)))
-            elif 'file' in Entities['Functions'][fTag]['attributes']:
-                path = Entities['Functions'][fTag]['attributes']['file']
+            DIR = Load['attributes']['dir'] 
+            if 'mag' in Load['attributes']: 
+                SeismoVLABfile.write("%E %d" % (Load['attributes']['mag'], len(DIR)))
+            elif 'file' in Load['attributes']:
+                path = Load['attributes']['file']
                 SeismoVLABfile.write("%s %d" % (path, len(DIR)))
             #The Load direction
             for k in DIR:
@@ -372,17 +366,16 @@ def dict2svl(d, np):
 
         #Element Load case
         elif NAME == 'ELEMENTLOAD':
-            fTag  = Load['attributes']['fun']
-            fName = Entities['Functions'][fTag]['name']
+            fName = Load['attributes']['name']
+            lType = Load['attributes']['type']
 
             SeismoVLABfile.write("%s %s %s " % (NAME, lTag, fName))
             #The Load Condition
-            lType = Load['attributes']['type']
             if lType == 'SURFACE':
-                DIR = Entities['Functions'][fTag]['attributes']['dir']
+                DIR = Load['attributes']['dir']
                 #The Load Condition
-                if 'mag' in Entities['Functions'][fTag]['attributes']:
-                    SeismoVLABfile.write("%s %E %d" % (lType, Entities['Functions'][fTag]['attributes']['mag'], len(DIR)))
+                if 'mag' in Load['attributes']:
+                    SeismoVLABfile.write("%s %E %d" % (lType, Load['attributes']['mag'], len(DIR)))
                     #The Load direction
                     for k in DIR:
                         SeismoVLABfile.write(" %1.5f" % k)
@@ -398,12 +391,12 @@ def dict2svl(d, np):
                     print(' \x1B[31m ERROR \x1B[0m: In dict2svl() SURFACE (Dynamic) ELEMENTLOAD is not Implemented yet')
                     sys.exit(-1)
             elif lType == 'BODY':
-                DIR = Entities['Functions'][fTag]['attributes']['dir']
+                DIR = Load['attributes']['dir']
                 #The Load Condition
-                if 'mag' in Entities['Functions'][fTag]['attributes']:
-                    SeismoVLABfile.write("%s %E %d" % (lType, Entities['Functions'][fTag]['attributes']['mag'], len(DIR)))
-                elif 'file' in Entities['Functions'][fTag]['attributes']:
-                    path = Entities['Functions'][fTag]['attributes']['file']
+                if 'mag' in Load['attributes']:
+                    SeismoVLABfile.write("%s %E %d" % (lType, Load['attributes']['mag'], len(DIR)))
+                elif 'file' in Load['attributes']:
+                    path = Load['attributes']['file']
                     SeismoVLABfile.write("%s %s %d" % (lType, path, len(DIR)))
                 #The Load direction
                 for k in DIR:
@@ -414,16 +407,16 @@ def dict2svl(d, np):
                     SeismoVLABfile.write(" %d" % k)
                 SeismoVLABfile.write("\n")
             elif lType == 'PLANEWAVE':
-                path = Entities['Functions'][fTag]['attributes']['file']
+                path = Load['attributes']['file']
                 SeismoVLABfile.write("GENERALWAVE %s %d" % (path, len(LIST)))
                 #Elements that are employed for DRM genral forces
                 for k in LIST:
                     SeismoVLABfile.write(" %d" % k)
                 SeismoVLABfile.write("\n")
             elif lType == 'GENERALWAVE':
-                path = Entities['Functions'][fTag]['attributes']['file']
+                path = Load['attributes']['file']
                 SeismoVLABfile.write("%s %s %d" % (lType, path, len(LIST)))
-                #Elements that are employed for DRM genral forces
+                #Elements that are employed for DRM general forces
                 for k in LIST:
                     SeismoVLABfile.write(" %d" % k)
                 SeismoVLABfile.write("\n")
