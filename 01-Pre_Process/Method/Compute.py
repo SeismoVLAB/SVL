@@ -110,8 +110,71 @@ def RigidLinkConstraints():
 
     #TODO: Implement rigid link constraints
     for rlTag in Entities['RigidLinks']:
-        print('\x1B[33m ALERT \x1B[0m: The RigidLinks constraints have not been implemented\n')
-        break
+        #Rigid link master node and coordinate.
+        mTag = Entities['RigidLinks'][rlTag]['tag']
+        Center = Entities['Nodes'][mTag]['coords']
+
+        #Rigid link nodes.
+        nTags = Entities['RigidLinks'][rlTag]['list']
+
+        for sTag in nTags:
+            Coordinates = Entities['Nodes'][sTag]['coords']
+            
+            if Options['dimension'] == 3:
+                dx = Coordinates[0] - Center[0]
+                dy = Coordinates[1] - Center[1]
+                dz = Coordinates[2] - Center[2]
+
+                #Constraint in direction 1
+                cTag -= 1
+                Entities['Constraints'][cTag] = {'name': 'RIGIDLINK', 'stag': sTag, 'sdof': 0, 'mtag': [mTag,mTag,mTag], 'mdof': [0,4,5], 'factor': [1.00, dz, -dy]}
+                Entities['Nodes'][sTag]['freedof'][0] = cTag
+
+                #Constraint in direction 2
+                cTag -= 1
+                Entities['Constraints'][cTag] = {'name': 'RIGIDLINK', 'stag': sTag, 'sdof': 1, 'mtag': [mTag,mTag,mTag], 'mdof': [1,3,5], 'factor': [1.00, -dz, dx]}
+                Entities['Nodes'][sTag]['freedof'][1] = cTag
+
+                #Constraint in direction 3
+                cTag -= 1
+                Entities['Constraints'][cTag] = {'name': 'RIGIDLINK', 'stag': sTag, 'sdof': 2, 'mtag': [mTag,mTag,mTag], 'mdof': [2,3,4], 'factor': [1.00, dy, -dx]}
+                Entities['Nodes'][sTag]['freedof'][2] = cTag
+
+                if Entities['RigidLinks'][rlTag]['type'] == 'STRUCTURAL':
+                    #Constraint in rotation 1
+                    cTag -= 1
+                    Entities['Constraints'][cTag] = {'name': 'RIGIDLINK', 'stag': sTag, 'sdof': 3, 'mtag': [mTag], 'mdof': [3], 'factor': [1.00]}
+                    Entities['Nodes'][sTag]['freedof'][3] = cTag
+
+                    #Constraint in rotation 2
+                    cTag -= 1
+                    Entities['Constraints'][cTag] = {'name': 'RIGIDLINK', 'stag': sTag, 'sdof': 4, 'mtag': [mTag], 'mdof': [4], 'factor': [1.00]}
+                    Entities['Nodes'][sTag]['freedof'][4] = cTag
+
+                    #Constraint in rotation 3
+                    cTag -= 1
+                    Entities['Constraints'][cTag] = {'name': 'RIGIDLINK', 'stag': sTag, 'sdof': 5, 'mtag': [mTag], 'mdof': [5], 'factor': [1.00]}
+                    Entities['Nodes'][sTag]['freedof'][5] = cTag
+
+            elif Options['dimension'] == 2:
+                dx = Coordinates[0] - Center[0]
+                dy = Coordinates[1] - Center[1]
+
+                #Constraint in direction 1
+                cTag -= 1
+                Entities['Constraints'][cTag] = {'name': 'RIGIDLINK', 'stag': sTag, 'sdof': 0, 'mtag': [mTag,mTag], 'mdof': [0,2], 'factor': [1.00, -dy]}
+                Entities['Nodes'][sTag]['freedof'][0] = cTag
+
+                #Constraint in direction 2
+                cTag -= 1
+                Entities['Constraints'][cTag] = {'name': 'RIGIDLINK', 'stag': sTag, 'sdof': 1, 'mtag': [mTag,mTag], 'mdof': [1,2], 'factor': [1.00, dx]}
+                Entities['Nodes'][sTag]['freedof'][1] = cTag
+
+                if Entities['RigidLinks'][rlTag]['type'] == 'STRUCTURAL':
+                    #Constraint in rotation 3
+                    cTag -= 1
+                    Entities['Constraints'][cTag] = {'name': 'RIGIDLINK', 'stag': sTag, 'sdof': 2, 'mtag': [mTag], 'mdof': [2], 'factor': [1.00]}
+                    Entities['Nodes'][sTag]['freedof'][2] = cTag
 
 def DiaphragmConstraints():
     """
@@ -273,12 +336,12 @@ def RigidBodyConstraints():
 
                 #Constraint in direction 1
                 cTag -= 1
-                Entities['Constraints'][cTag] = {'name': 'RIGIDBODY', 'stag': sTag, 'sdof': 0, 'mtag': [mTag,mTag], 'mdof': [0,2], 'factor': [1.00, dy]}
+                Entities['Constraints'][cTag] = {'name': 'RIGIDBODY', 'stag': sTag, 'sdof': 0, 'mtag': [mTag,mTag], 'mdof': [0,2], 'factor': [1.00, -dy]}
                 Entities['Nodes'][sTag]['freedof'][0] = cTag
 
                 #Constraint in direction 2
                 cTag -= 1
-                Entities['Constraints'][cTag] = {'name': 'RIGIDBODY', 'stag': sTag, 'sdof': 1, 'mtag': [mTag,mTag], 'mdof': [1,2], 'factor': [1.00, -dx]}
+                Entities['Constraints'][cTag] = {'name': 'RIGIDBODY', 'stag': sTag, 'sdof': 1, 'mtag': [mTag,mTag], 'mdof': [1,2], 'factor': [1.00, dx]}
                 Entities['Nodes'][sTag]['freedof'][1] = cTag
 
                 if Entities['Nodes'][sTag]['ndof'] == 3:

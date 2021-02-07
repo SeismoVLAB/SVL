@@ -125,6 +125,31 @@ def delConstraint(tag=None):
         print('\x1B[33m ALERT \x1B[0m: In file=\'%s\' at line=%d Constraint associated to Node[%s] cannot be deleted.' %(info.filename,info.lineno,tag))
         return False
 
+def delRigidLink(tag=None):
+    """
+    Deletes an specified rigid link constraint\n
+    @visit  https://github.com/SeismoVLAB/SVL\n
+    @author Danilo S. Kusanovic 2021
+
+    Parameters
+    ----------
+    tag : int
+        The identifier of the rigid link, i.e., tag > 1
+
+    Returns
+    -------
+    bool
+        Whether the deletion was successful (True) of failed (False)
+    """
+    #Check whether the Material exists
+    if tag in Entities['RigidLinks']:
+        del Entities['RigidLinks'][tag]
+        return True
+    else:
+        info = debugInfo(2) 
+        print('\x1B[33m ALERT \x1B[0m: In file=\'%s\' at line=%d RigidLinks[%s] cannot be deleted.' %(info.filename,info.lineno,tag))
+        return False
+
 def delDiaphragm(tag=None):
     """
     Deletes an specified diaphragm constraint\n

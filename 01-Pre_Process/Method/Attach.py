@@ -213,21 +213,37 @@ def addRigidLink(tag=np.nan, attributes={}):
     Parameters
     ----------
     tag : int
-        The identifier of the rigid body, i.e., tag > 1 (defferent from Nodes)
+        The identifier of the rigid link
     attributes : dict
         Dictionary containing the diaphragm action and Nodes
-        'tag'   : (int) the node tag that the rigid body node will take (must be different from 'Nodes')
-        'ndof'  : (int) the number of degree of freedom of the rigid body i.e., 3 (2D) and 6 (3D)
-        'list'  : (int or list) list of Nodes that belong to the rigid body
-        'center' : (str) center of rotation of the rigid body
+        'tag'   : (int) the master rigid link node
+        'type'  : (str) solid or structural
+        'list'  : (int or list) list of Nodes that this rigid link will connect
 
     Returns
     -------
     bool
         Whether the rigid link/s was/were successful (True) of failed (False)
     """
-    #TODO: 
-    return False
+    if 'type' in attributes:
+        attributes['type'] = attributes['type'].upper()
+    if 'tag' not in attributes:
+        info = debugInfo(2)
+        print('\x1B[33m ALERT \x1B[0m: In file=\'%s\' at line=%d in RigidLink[%d] attributes[\'tag\'] must be specified.' %(info.filename,info.lineno,tag))
+        return False
+    if 'list' not in attributes:
+        info = debugInfo(2)
+        print('\x1B[33m ALERT \x1B[0m: In file=\'%s\' at line=%d in RigidLink[%d] attributes[\'list\'] must be specified.' %(info.filename,info.lineno,tag))
+        return False
+
+    #Check whether the Rigid Body exists
+    if tag not in Entities['RigidLinks']:
+        Entities['RigidLinks'][tag] = attributes
+        return True
+    else:
+        info = debugInfo(2)
+        print('\x1B[33m ALERT \x1B[0m: In file=\'%s\' at line=%d RigidLinks[%d] has been already defined.' %(info.filename,info.lineno,tag))
+        return False
 
 def addDiaphragm(tag=np.nan, attributes={}):
     """

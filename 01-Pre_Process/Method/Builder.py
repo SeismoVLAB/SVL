@@ -512,7 +512,7 @@ def mergeDomain(mesh1={}, mesh2={}):
         The mesh that merge will be performed. This is it will be and 
         augmented mesh with information from mesh2 
     mesh2 : dict
-        The mesh from wich data will be copied. 
+        The mesh from which data will be copied. 
 
     Returns
     -------

@@ -3,7 +3,7 @@
 
 import vtk
 from Core.Utilities import debugInfo
-from Core.Definitions import Entities, Options, VTKelems, VTKcolors
+from Core.Definitions import Entities, Options, VTKelems, VTKcolors, SVLclasses
 
 def setVTKtype(option=None):
     """
@@ -27,162 +27,162 @@ def setVTKtype(option=None):
         name = Entities['Elements'][eTag]['name']
         if name == 'ZEROLENGTH1D':
             VTKelems['VTKtype'][eTag] = 3
-            VTKelems['VTKname'][eTag] = VTKelems['VTKsvl'][name]
+            VTKelems['VTKname'][eTag] = SVLclasses['Elements'][name]['type']
             if option.upper() == 'ELEMENT':
                 VTKelems['VTKcolor'][eTag] = VTKcolors['elem']['TRUSS']
         elif name == 'LIN2DTRUSS2':
             VTKelems['VTKtype'][eTag] = 3
-            VTKelems['VTKname'][eTag] = VTKelems['VTKsvl'][name]
+            VTKelems['VTKname'][eTag] = SVLclasses['Elements'][name]['type']
             if option.upper() == 'ELEMENT':
                 VTKelems['VTKcolor'][eTag] = VTKcolors['elem']['TRUSS']
         elif name == 'KIN2DTRUSS2':
             VTKelems['VTKtype'][eTag] = 3
-            VTKelems['VTKname'][eTag] = VTKelems['VTKsvl'][name]
+            VTKelems['VTKname'][eTag] = SVLclasses['Elements'][name]['type']
             if option.upper() == 'ELEMENT':
                 VTKelems['VTKcolor'][eTag] = VTKcolors['elem']['TRUSS']
         elif name == 'LIN3DTRUSS2':
             VTKelems['VTKtype'][eTag] = 3
-            VTKelems['VTKname'][eTag] = VTKelems['VTKsvl'][name]
+            VTKelems['VTKname'][eTag] = SVLclasses['Elements'][name]['type']
             if option.upper() == 'ELEMENT':
                 VTKelems['VTKcolor'][eTag] = VTKcolors['elem']['TRUSS']
         elif name == 'KIN3DTRUSS2':
             VTKelems['VTKtype'][eTag] = 3
-            VTKelems['VTKname'][eTag] = VTKelems['VTKsvl'][name]
+            VTKelems['VTKname'][eTag] = SVLclasses['Elements'][name]['type']
             if option.upper() == 'ELEMENT':
                 VTKelems['VTKcolor'][eTag] = VTKcolors['elem']['TRUSS']
         elif name == 'LIN3DTRUSS3':
             VTKelems['VTKtype'][eTag] = 21
-            VTKelems['VTKname'][eTag] = VTKelems['VTKsvl'][name]
+            VTKelems['VTKname'][eTag] = SVLclasses['Elements'][name]['type']
             if option.upper() == 'ELEMENT':
                 VTKelems['VTKcolor'][eTag] = VTKcolors['elem']['TRUSS']
         elif name == 'LIN2DTRIA3':
             VTKelems['VTKtype'][eTag] = 5
-            VTKelems['VTKname'][eTag] = VTKelems['VTKsvl'][name]
+            VTKelems['VTKname'][eTag] = SVLclasses['Elements'][name]['type']
             if option.upper() == 'ELEMENT':
                 VTKelems['VTKcolor'][eTag] = VTKcolors['elem']['TRIA']
         elif name == 'LIN2DTRIA6':
             VTKelems['VTKtype'][eTag] = 22
-            VTKelems['VTKname'][eTag] = VTKelems['VTKsvl'][name]
+            VTKelems['VTKname'][eTag] = SVLclasses['Elements'][name]['type']
             if option.upper() == 'ELEMENT':
                 VTKelems['VTKcolor'][eTag] = VTKcolors['elem']['TRIA']
         elif name == 'LIN2DQUAD4':
             VTKelems['VTKtype'][eTag] = 9
-            VTKelems['VTKname'][eTag] = VTKelems['VTKsvl'][name]
+            VTKelems['VTKname'][eTag] = SVLclasses['Elements'][name]['type']
             if option.upper() == 'ELEMENT':
                 VTKelems['VTKcolor'][eTag] = VTKcolors['elem']['QUAD']
         elif name == 'LIN2DQUAD8':
             VTKelems['VTKtype'][eTag] = 23
-            VTKelems['VTKname'][eTag] = VTKelems['VTKsvl'][name]
+            VTKelems['VTKname'][eTag] = SVLclasses['Elements'][name]['type']
             if option.upper() == 'ELEMENT':
                 VTKelems['VTKcolor'][eTag] = VTKcolors['elem']['QUAD']
         elif name == 'PML2DQUAD4':
             VTKelems['VTKtype'][eTag] = 9
-            VTKelems['VTKname'][eTag] = VTKelems['VTKsvl'][name]
+            VTKelems['VTKname'][eTag] = SVLclasses['Elements'][name]['type']
             if option.upper() == 'ELEMENT':
                 VTKelems['VTKcolor'][eTag] = VTKcolors['elem']['QPML']
         elif name == 'PML2DQUAD8':
             VTKelems['VTKtype'][eTag] = 23
-            VTKelems['VTKname'][eTag] = VTKelems['VTKsvl'][name]
+            VTKelems['VTKname'][eTag] = SVLclasses['Elements'][name]['type']
             if option.upper() == 'ELEMENT':
                 VTKelems['VTKcolor'][eTag] = VTKcolors['elem']['QPML']
         elif name == 'LIN2DFRAME2':
             VTKelems['VTKtype'][eTag] = 3
-            VTKelems['VTKname'][eTag] = VTKelems['VTKsvl'][name]
+            VTKelems['VTKname'][eTag] = SVLclasses['Elements'][name]['type']
             if option.upper() == 'ELEMENT':
                 VTKelems['VTKcolor'][eTag] = VTKcolors['elem']['FRAME']
         elif name == 'KIN2DFRAME2':
             VTKelems['VTKtype'][eTag] = 3
-            VTKelems['VTKname'][eTag] = VTKelems['VTKsvl'][name]
+            VTKelems['VTKname'][eTag] = SVLclasses['Elements'][name]['type']
             if option.upper() == 'ELEMENT':
                 VTKelems['VTKcolor'][eTag] = VTKcolors['elem']['FRAME']
         elif name == 'LIN3DFRAME2':
             VTKelems['VTKtype'][eTag] = 3
-            VTKelems['VTKname'][eTag] = VTKelems['VTKsvl'][name]
+            VTKelems['VTKname'][eTag] = SVLclasses['Elements'][name]['type']
             if option.upper() == 'ELEMENT':
                 VTKelems['VTKcolor'][eTag] = VTKcolors['elem']['FRAME']
         elif name == 'LIN3DSHELL3':
             VTKelems['VTKtype'][eTag] = 5
-            VTKelems['VTKname'][eTag] = VTKelems['VTKsvl'][name]
+            VTKelems['VTKname'][eTag] = SVLclasses['Elements'][name]['type']
             if option.upper() == 'ELEMENT':
                 VTKelems['VTKcolor'][eTag] = VTKcolors['elem']['SHELL']
         elif name == 'LIN3DSHELL4':
             VTKelems['VTKtype'][eTag] = 9
-            VTKelems['VTKname'][eTag] = VTKelems['VTKsvl'][name]
+            VTKelems['VTKname'][eTag] = SVLclasses['Elements'][name]['type']
             if option.upper() == 'ELEMENT':
                 VTKelems['VTKcolor'][eTag] = VTKcolors['elem']['SHELL']
         elif name == 'LIN3DTETRA4':
             VTKelems['VTKtype'][eTag] = 10
-            VTKelems['VTKname'][eTag] = VTKelems['VTKsvl'][name]
+            VTKelems['VTKname'][eTag] = SVLclasses['Elements'][name]['type']
             if option.upper() == 'ELEMENT':
                 VTKelems['VTKcolor'][eTag] = VTKcolors['elem']['TETRA']
         elif name == 'LIN3DTETRA10':
             VTKelems['VTKtype'][eTag] = 24
-            VTKelems['VTKname'][eTag] = VTKelems['VTKsvl'][name]
+            VTKelems['VTKname'][eTag] = SVLclasses['Elements'][name]['type']
             if option.upper() == 'ELEMENT':
                 VTKelems['VTKcolor'][eTag] = VTKcolors['elem']['TETRA']
         elif name == 'LIN3DHEXA8':
             VTKelems['VTKtype'][eTag] = 12
-            VTKelems['VTKname'][eTag] = VTKelems['VTKsvl'][name]
+            VTKelems['VTKname'][eTag] = SVLclasses['Elements'][name]['type']
             if option.upper() == 'ELEMENT':
                 VTKelems['VTKcolor'][eTag] = VTKcolors['elem']['HEXA']
         elif name == 'LIN3DHEXA20':
             VTKelems['VTKtype'][eTag] = 25
-            VTKelems['VTKname'][eTag] = VTKelems['VTKsvl'][name]
+            VTKelems['VTKname'][eTag] = SVLclasses['Elements'][name]['type']
             if option.upper() == 'ELEMENT':
                 VTKelems['VTKcolor'][eTag] = VTKcolors['elem']['HEXA']
         elif name == 'PML3DHEXA8':
             VTKelems['VTKtype'][eTag] = 12
-            VTKelems['VTKname'][eTag] = VTKelems['VTKsvl'][name]
+            VTKelems['VTKname'][eTag] = SVLclasses['Elements'][name]['type']
             if option.upper() == 'ELEMENT':
                 VTKelems['VTKcolor'][eTag] = VTKcolors['elem']['HPML']
         elif name == 'PML3DHEXA20':
             VTKelems['VTKtype'][eTag] = 25
-            VTKelems['VTKname'][eTag] = VTKelems['VTKsvl'][name]
+            VTKelems['VTKname'][eTag] = SVLclasses['Elements'][name]['type']
             if option.upper() == 'ELEMENT':
                 VTKelems['VTKcolor'][eTag] = VTKcolors['elem']['HPML']
         elif name == 'UNXBOUCWEN2DLINK':
             VTKelems['VTKtype'][eTag] = 3
-            VTKelems['VTKname'][eTag] = VTKelems['VTKsvl'][name]
+            VTKelems['VTKname'][eTag] = SVLclasses['Elements'][name]['type']
             if option.upper() == 'ELEMENT':
                 VTKelems['VTKcolor'][eTag] = VTKcolors['elem']['LINK']
         elif name == 'UNXBOUCWEN3DLINK':
             VTKelems['VTKtype'][eTag] = 3
-            VTKelems['VTKname'][eTag] = VTKelems['VTKsvl'][name]
+            VTKelems['VTKname'][eTag] = SVLclasses['Elements'][name]['type']
             if option.upper() == 'ELEMENT':
                 VTKelems['VTKcolor'][eTag] = VTKcolors['elem']['LINK']
         elif name == 'HDRBYAMAMOTO2DLINK':
             VTKelems['VTKtype'][eTag] = 3
-            VTKelems['VTKname'][eTag] = VTKelems['VTKsvl'][name]
+            VTKelems['VTKname'][eTag] = SVLclasses['Elements'][name]['type']
             if option.upper() == 'ELEMENT':
                 VTKelems['VTKcolor'][eTag] = VTKcolors['elem']['LINK']
         elif name == 'HDRBYAMAMOTO3DLINK':
             VTKelems['VTKtype'][eTag] = 3
-            VTKelems['VTKname'][eTag] = VTKelems['VTKsvl'][name]
+            VTKelems['VTKname'][eTag] = SVLclasses['Elements'][name]['type']
             if option.upper() == 'ELEMENT':
                 VTKelems['VTKcolor'][eTag] = VTKcolors['elem']['LINK']
         elif name == 'EQLIN2DQUAD4':
             VTKelems['VTKtype'][eTag] = 9
-            VTKelems['VTKname'][eTag] = VTKelems['VTKsvl'][name]
+            VTKelems['VTKname'][eTag] = SVLclasses['Elements'][name]['type']
             if option.upper() == 'ELEMENT':
                 VTKelems['VTKcolor'][eTag] = VTKcolors['elem']['QUAD']
         elif name == 'TIEQLIN2DQUAD4':
             VTKelems['VTKtype'][eTag] = 9
-            VTKelems['VTKname'][eTag] = VTKelems['VTKsvl'][name]
+            VTKelems['VTKname'][eTag] = SVLclasses['Elements'][name]['type']
             if option.upper() == 'ELEMENT':
                 VTKelems['VTKcolor'][eTag] = VTKcolors['elem']['QUAD']
         elif name == 'NULL2DFRAME2':
             VTKelems['VTKtype'][eTag] = 3
-            VTKelems['VTKname'][eTag] = VTKelems['VTKsvl'][name]
+            VTKelems['VTKname'][eTag] = SVLclasses['Elements'][name]['type']
             if option.upper() == 'ELEMENT':
                 VTKelems['VTKcolor'][eTag] = VTKcolors['elem']['NONE']
         elif name == 'NULL3DFRAME2':
             VTKelems['VTKtype'][eTag] = 3
-            VTKelems['VTKname'][eTag] = VTKelems['VTKsvl'][name]
+            VTKelems['VTKname'][eTag] = SVLclasses['Elements'][name]['type']
             if option.upper() == 'ELEMENT':
                 VTKelems['VTKcolor'][eTag] = VTKcolors['elem']['NONE']
         elif name == 'LINK':
             VTKelems['VTKtype'][eTag] = 3
-            VTKelems['VTKname'][eTag] = VTKelems['VTKsvl'][name]
+            VTKelems['VTKname'][eTag] = SVLclasses['Elements'][name]['type']
             if option.upper() == 'ELEMENT':
                 VTKelems['VTKcolor'][eTag] = VTKcolors['elem']['NONE']
 
