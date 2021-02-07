@@ -35,7 +35,7 @@ Options = {
     'run'         : '',
     'path'        : '',
     'file'        : 'SeismoVLAB',
-    'format'      : 'SVL',
+    'format'      : 'svl',
     'description' : '\n',
     'execfile'    : '',
     'execpath'    : '',
@@ -72,83 +72,6 @@ SolverOption = {
     'KSPBCGS' : 1,
     'KSPCGS'  : 2,
     'KSPBICG' : 3
-}
-
-SVLclasses = {
-    #VTK dictionary with the SVL associated material, section, and element classes
-    # https://github.com/SeismoVLAB/SVL
-    # @author Danilo S. Kusanovic 2020
-    #  'Materials' : Stores the material classes defined in SVL
-    #  'Sections'  : Stores the section classes defined in SVL
-    #  'Elements'  : Stores the elements classes defined in SVL
-    'Materials': [
-        'ELASTIC1DLINEAR',
-        'HERTZIAN1DLINEAR',
-        'VISCOUS1DLINEAR',
-        'PLASTIC1DJ2',
-        'ELASTIC2DPLANESTRAIN',
-        'ELASTIC2DPLANESTRESS',
-        'PLASTICPLANESTRAINJ2',
-        'PLASTICPLANESTRAINBA',
-        'ELASTIC3DLINEAR',
-        'PLASTIC3DJ2',
-        'PLASTIC3DBA'
-        ],
-    'Sections': [
-        'LIN2DANGLE',
-        'LIN2DCHANNEL',
-        'LIN2DCIRCULAR',
-        'LIN2DCIRCULARTUBE',
-        'LIN2DRECTANGULAR',
-        'LIN2DRECTANGULARTUBE',
-        'LIN2DTEE',
-        'LIN2DWIDEFLANGE',
-        'LIN3DANGLE',
-        'LIN3DCHANNEL',
-        'LIN3DCIRCULAR',
-        'LIN3DCIRCULARTUBE',
-        'LIN3DRECTANGULAR',
-        'LIN3DRECTANGULARTUBE',
-        'LIN3DTEE',
-        'LIN3DTHINAREA',
-        'LIN3DWIDEFLANGE',
-        ],
-    'Elements': [
-        'ZEROLENGTH1D',
-        'LIN2DTRUSS2',
-        'KIN2DTRUSS2',
-        'LIN3DTRUSS2',
-        'KIN3DTRUSS2',
-        'LIN2DTRUSS3',
-        'LIN3DTRUSS3',
-        'LIN2DTRIA3',
-        'LIN2DTRIA6',
-        'LIN2DQUAD4',
-        'KIN2DQUAD4',
-        'LIN2DQUAD8',
-        'PML2DQUAD4',
-        'PML2DQUAD8',
-        'LIN2DFRAME2',
-        'KIN2DFRAME2',
-        'LIN3DFRAME2',
-        'LIN3DSHELL3',
-        'LIN3DSHELL4',
-        'LIN3DTETRA4',
-        'LIN3DTETRA10',
-        'LIN3DHEXA8',
-        'KIN3DHEXA8',
-        'LIN3DHEXA20',
-        'PML3DHEXA8',
-        'PML3DHEXA20',
-        'UNXBOUCWEN2DLINK',
-        'UNXBOUCWEN3DLINK',
-        'HDRBYAMAMOTO2DLINK',
-        'HDRBYAMAMOTO3DLINK',
-        'EQLIN2DQUAD4',
-        'TIEQLIN2DQUAD4',
-        'NULL2DFRAME2',
-        'NULL3DFRAME2'
-        ]
 }
 
 VTKcolors = {
@@ -198,50 +121,343 @@ VTKcolors = {
 }
 
 VTKelems = {
-    #VTK dictionary with associated element properties
+    #VTK dictionary with associated element properties to be display in VTK
     # https://github.com/SeismoVLAB/SVL
     # @author Danilo S. Kusanovic 2020
     #  'VTKname'  : stores the basic element type (LINE, QUAD, HEXA) for the SVL (element class) 
     #  'VTKtype'  : stores the VTK cell element type for rendering
     #  'VTKcolor' : stores the color to be applied to each element in domain
-    #  'VTKsvl'   : defines a map between the SVL (element class) and VTKcolors (dictionary)
     'VTKname'  : {},
     'VTKtype'  : {},
-    'VTKcolor' : {},
-    'VTKsvl'   : {
-        'ZEROLENGTH1D': 'LINE',
-        'LIN2DTRUSS2' : 'LINE',
-        'LIN2DTRUSS3' : 'LINE',
-        'KIN2DTRUSS2' : 'LINE',
-        'LIN3DTRUSS2' : 'LINE',
-        'KIN3DTRUSS2' : 'LINE',
-        'LIN3DTRUSS3' : 'LINE',
-        'LIN2DTRIA3'  : 'TRIA',
-        'LIN2DTRIA6'  : 'TRIA',
-        'LIN2DQUAD4'  : 'QUAD',
-        'KIN2DQUAD4'  : 'QUAD',
-        'LIN2DQUAD8'  : 'QUAD',
-        'PML2DQUAD4'  : 'QUAD',
-        'PML2DQUAD8'  : 'QUAD',
-        'LIN2DFRAME2' : 'LINE',
-        'KIN2DFRAME2' : 'LINE',
-        'LIN3DFRAME2' : 'LINE',
-        'LIN3DSHELL3' : 'TRIA',
-        'LIN3DSHELL4' : 'QUAD',
-        'LIN3DTETRA4' : 'TETRA',
-        'LIN3DTETRA10': 'TETRA',
-        'LIN3DHEXA8'  : 'HEXA',
-        'KIN3DHEXA8'  : 'HEXA',
-        'LIN3DHEXA20' : 'HEXA',
-        'PML3DHEXA8'  : 'HEXA',
-        'PML3DHEXA20' : 'HEXA',
-        'EQLIN2DQUAD4'  : 'QUAD',
-        'TIEQLIN2DQUAD4': 'QUAD',
-        'NULL2DFRAME2'  : 'LINE',
-        'NULL3DFRAME2'  : 'LINE',
-        'UNXBOUCWEN2DLINK'  : 'LINE',
-        'UNXBOUCWEN3DLINK'  : 'LINE',
-        'HDRBYAMAMOTO2DLINK': 'LINE',
-        'HDRBYAMAMOTO3DLINK': 'LINE'
+    'VTKcolor' : {}
+}
+
+SVLclasses = {
+    #VTK dictionary with the SVL associated material, section, and element classes
+    # https://github.com/SeismoVLAB/SVL
+    # @author Danilo S. Kusanovic 2021
+    #  'Materials' : Stores the material classes defined in SVL
+    #  'Sections'  : Stores the section classes defined in SVL
+    #  'Elements'  : Stores the elements classes defined in SVL
+    'Materials': {
+        'ELASTIC1DLINEAR': {
+            'color': [0,255,255], 
+            'dim'  : [1,2,3]
+        },
+        'HERTZIAN1DLINEAR': {
+            'color': [29,249,20], 
+            'dim': [1,2,3]
+        },
+        'VISCOUS1DLINEAR': {
+            'color': [255,0,255], 
+            'dim': [1,2,3]
+        },
+        'PLASTIC1DJ2': {
+            'color': [146,110,174], 
+            'dim': [1,2,3]
+        },
+        'ELASTIC2DPLANESTRAIN': {
+            'color': [0,255,0], 
+            'dim': [2]
+        },
+        'ELASTIC2DPLANESTRESS': {
+            'color': [255,0,0], 
+            'dim': [2]
+        },
+        'PLASTICPLANESTRAINJ2': {
+            'color': [59,176,143], 
+            'dim': [2]
+        },
+        'PLASTICPLANESTRAINBA': {
+            'color': [165,105,79], 
+            'dim': [2]
+        },
+        'ELASTIC3DLINEAR': {
+            'color': [0,0,255], 
+            'dim': [3]
+        },
+        'PLASTIC3DJ2': {
+            'color': [237,237,237], 
+            'dim': [3]
+        },
+        'PLASTIC3DBA': {
+            'color': [255,182, 83], 
+            'dim': [3]
+        }
+    },
+    'Sections': {
+        'LIN2DANGLE': {
+            'color': [0,255,255], 
+            'dim': [2]
+        },
+        'LIN2DCHANNEL': {
+            'color': [29,249,20], 
+            'dim': [2]
+        },
+        'LIN2DCIRCULAR': {
+            'color': [255,0,255], 
+            'dim': [2]
+        },
+        'LIN2DCIRCULARTUBE': {
+            'color': [146,110,174], 
+            'dim': [2]
+        },
+        'LIN2DRECTANGULAR': {
+            'color': [255,0,0], 
+            'dim': [2]
+        },
+        'LIN2DRECTANGULARTUBE' : {
+            'color': [0,255,0], 
+            'dim': [2]
+        },
+        'LIN2DTEE': {
+            'color': [165,105,79], 
+            'dim': [2]
+        },
+        'LIN2DWIDEFLANGE': {
+            'color': [255,182,83], 
+            'dim': [2]
+        },
+        'LIN3DANGLE': {
+            'color': [0,255,255], 
+            'dim': [3]
+        },
+        'LIN3DCHANNEL': {
+            'color': [29,249,20], 
+            'dim': [3]
+        },
+        'LIN3DCIRCULAR': {
+            'color': [255,0,255], 
+            'dim': [3]
+        },
+        'LIN3DCIRCULARTUBE': {
+            'color': [146,110,174], 
+            'dim': [3]
+        },
+        'LIN3DRECTANGULAR': {
+            'color': [255,0,0], 
+            'dim': [3]
+        },
+        'LIN3DRECTANGULARTUBE': {
+            'color': [0,255,0], 
+            'dim': [3]
+        },
+        'LIN3DTEE': {
+            'color': [165,105,79], 
+            'dim': [3]
+        },
+        'LIN3DTHINAREA': {
+            'color': [0,0,255], 
+            'dim': [3]
+        },
+        'LIN3DWIDEFLANGE': {
+            'color': [255,182,83], 
+            'dim': [3]
+        },
+    },
+    'Elements': {
+        'ZEROLENGTH1D': {
+            'type': 'LINE' , 
+            'color': [29,249, 20], 
+            'paraview': 3, 
+            'dim': [1,2,3]
+        },
+        'LIN2DTRUSS2': {
+            'type': 'LINE', 
+            'color': [25,25,25], 
+            'paraview': 3, 
+            'dim': [2]
+        },
+        'KIN2DTRUSS2': {
+            'type': 'LINE', 
+            'color': [25,25,25], 
+            'paraview': 3, 
+            'dim': [2]
+        },
+        'LIN3DTRUSS2': {
+            'type': 'LINE' , 
+            'color': [25,25,25], 
+            'paraview': 3, 
+            'dim': [3]
+        },
+        'KIN3DTRUSS2': {
+            'type': 'LINE', 
+            'color': [25,25,25], 
+            'paraview': 3, 
+            'dim': [3]
+        },
+        'LIN2DTRUSS3': {
+            'type': 'LINE', 
+            'color': [ 25, 25, 25], 
+            'paraview': 4, 
+            'dim': [2]
+        },
+        'LIN3DTRUSS3': {
+            'type': 'LINE', 
+            'color': [25,25,25], 
+            'paraview': 4, 
+            'dim': [3]
+        },
+        'LIN2DTRIA3': {
+            'type': 'TRIA' , 
+            'color': [146,110,174], 
+            'paraview': 4, 
+            'dim': [2]
+        },
+        'LIN2DTRIA6': {
+            'type': 'TRIA' , 
+            'color': [146,110,174], 
+            'paraview': 7, 
+            'dim': [2]
+        },
+        'LIN2DQUAD4': {
+            'type': 'QUAD', 
+            'color': [ 59,176,143], 
+            'paraview': 5, 
+            'dim': [2]
+        },
+        'KIN2DQUAD4': {
+            'type': 'QUAD' , 
+            'color': [ 59,176,143], 
+            'paraview': 5, 
+            'dim': [2]
+        },
+        'LIN2DQUAD8': {
+            'type': 'QUAD', 
+            'color': [ 59,176,143], 
+            'paraview': 9, 
+            'dim': [2]
+        },
+        'PML2DQUAD4': {
+            'type': 'QUAD', 
+            'color': [255,182, 83], 
+            'paraview': 5, 
+            'dim': [2]
+        },
+        'PML2DQUAD8': {
+            'type': 'QUAD', 
+            'color': [255,182, 83], 
+            'paraview': 9, 
+            'dim': [2]
+        },
+        'LIN2DFRAME2': {
+            'type': 'LINE', 
+            'color': [165,105, 79], 
+            'paraview': 3, 
+            'dim': [2]
+        },
+        'KIN2DFRAME2': {
+            'type': 'LINE', 
+            'color': [165,105, 79], 
+            'paraview': 3, 'dim': [2]
+        },
+        'LIN3DFRAME2': {
+            'type': 'LINE', 
+            'color': [165,105, 79], 
+            'paraview': 3, 
+            'dim': [3]
+        },
+        'LIN3DSHELL3': {
+            'type': 'TRIA', 
+            'color': [128,218,235], 
+            'paraview': 4, 
+            'dim': [3]
+        },
+        'LIN3DSHELL4': {
+            'type': 'QUAD', 
+            'color': [128,218,235], 
+            'paraview': 5, 
+            'dim': [3]
+        },
+        'LIN3DTETRA4': {
+            'type': 'TETRA', 
+            'color': [255,155,170], 
+            'paraview': 5, 
+            'dim': [3]
+        },
+        'LIN3DTETRA10': {
+            'type': 'TETRA', 
+            'color': [255,155,170], 
+            'paraview': 11, 
+            'dim': [3]
+        },
+        'LIN3DHEXA8': {
+            'type': 'HEXA', 
+            'color': [255,255,159], 
+            'paraview': 9, 
+            'dim': [3]
+        },
+        'KIN3DHEXA8': {
+            'type': 'HEXA', 
+            'color': [255,255,159], 
+            'paraview': 9, 
+            'dim': [3]
+        },
+        'LIN3DHEXA20': {
+            'type': 'HEXA', 
+            'color': [255,255,159], 
+            'paraview': 21, 
+            'dim': [3]
+        },
+        'PML3DHEXA8': {
+            'type': 'HEXA', 
+            'color': [176,183,198], 
+            'paraview': 9, 
+            'dim': [3]
+        },
+        'PML3DHEXA20': {
+            'type': 'HEXA', 
+            'color': [176,183,198], 
+            'paraview': 21, 
+            'dim': [3]
+        },
+        'NULL2DFRAME2': {
+            'type': 'LINE', 
+            'color': [29,249, 20], 
+            'paraview': 3, 
+            'dim': [2]
+        },
+        'NULL3DFRAME2': {
+            'type': 'LINE', 
+            'color': [29,249, 20], 
+            'paraview': 3, 
+            'dim': [3]
+        },
+        'EQLIN2DQUAD4': {
+            'type': 'QUAD', 
+            'color': [59,176,143], 
+            'paraview': 5, 
+            'dim': [2]
+        },
+        'TIEQLIN2DQUAD4': {
+            'type': 'QUAD', 
+            'color': [59,176,143], 
+            'paraview': 5, 
+            'dim': [2]
+        },
+        'UNXBOUCWEN2DLINK': {
+            'type': 'LINE', 
+            'color': [0,0,0], 
+            'paraview': 3, 
+            'dim': [2]
+        },
+        'UNXBOUCWEN3DLINK': {
+            'type': 'LINE', 
+            'color': [0,0,0], 
+            'paraview': 3, 
+            'dim': [3]
+        },
+        'HDRBYAMAMOTO2DLINK': {
+            'type': 'LINE', 
+            'color': [0,0,0], 
+            'paraview': 3, 
+            'dim': [2]
+        },
+        'HDRBYAMAMOTO3DLINK': {
+            'type': 'LINE', 
+            'color': [0,0,0], 
+            'paraview': 3, 
+            'dim': [3]
+        }
     }
 }
