@@ -51,19 +51,16 @@ class Recorder{
 
     public:
         ///Creates a Recorder object to store Paraview solutions.
-        ///@param path The address where the results are going to be stored.
         ///@param file The file name where the results are going to be stored.
         ///@param name The object name where the response is computed.
         ///@param nparaview The number of features (for elements) to be written in Paraview.
-        ///@param nDimensions The model dimensions.
         ///@param nsample The number of sampling points to record the solution.
         ///@param precision The precision number to store the results.
         ///@note More details can be found at @ref linkRecorder.
         ///@see Recorder::Path, Recorder::Name, Recorder::Response, Recorder::IDs.
-        Recorder(std::string path, std::string file, std::string name, unsigned int nparaview, unsigned int nDimensions, unsigned int nsample = 1, unsigned int precision = 10);
+        Recorder(std::string file, std::string name, unsigned int nparaview, unsigned int nsample = 1, unsigned int precision = 10);
 
         ///Creates a Recorder object to store Node / Element solutions.
-        ///@param path The address where the results are going to be stored.
         ///@param file The file name where the results are going to be stored.
         ///@param name The object name where the response is computed.
         ///@param type The response to be stored.
@@ -72,10 +69,9 @@ class Recorder{
         ///@param precision The precision number to store the results.
         ///@note More details can be found at @ref linkRecorder.
         ///@see Recorder::Path, Recorder::Name, Recorder::Response, Recorder::IDs.
-        Recorder(std::string path, std::string file, std::string name, std::string type, std::vector<unsigned int> index, unsigned int nsample = 1, unsigned int precision = 10);
+        Recorder(std::string file, std::string name, std::string type, std::vector<unsigned int> index, unsigned int nsample = 1, unsigned int precision = 10);
 
         ///Creates a Recorder object to store Section solutions.
-        ///@param path The address where the results are going to be stored.
         ///@param file The file name where the results are going to be stored.
         ///@param name The object name where the response is computed.
         ///@param type The response to be stored.
@@ -85,7 +81,7 @@ class Recorder{
         ///@param precision The precision number to store the results.
         ///@note More details can be found at @ref linkRecorder.
         ///@see Recorder::Path, Recorder::Name, Recorder::Response, Recorder::IDs.
-        Recorder(std::string path, std::string file, std::string name, std::string type, std::vector<double> coordinates, std::vector<unsigned int> index, unsigned int nsample = 1, unsigned int precision = 10);
+        Recorder(std::string file, std::string name, std::string type, std::vector<double> coordinates, std::vector<unsigned int> index, unsigned int nsample = 1, unsigned int precision = 10);
 
         ///Destroys this Recorder object.
         ~Recorder();
@@ -116,9 +112,6 @@ class Recorder{
         void MakeFolder(std::string dirname);
         
     private:
-        ///The path were files are located.    
-        std::string Path;
-
         ///The name of the file to record.    
         std::string File;
 
@@ -139,9 +132,6 @@ class Recorder{
 
         ///The number of features to be written in paraview.
         unsigned int nParaview;
-
-        ///Model dimension.    
-        unsigned int nDimensions;
 
         ///The precision for results.    
         unsigned int Precision;

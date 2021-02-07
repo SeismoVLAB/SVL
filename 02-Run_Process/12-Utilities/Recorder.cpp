@@ -7,19 +7,20 @@
 #include "Profiler.hpp"
 
 //Paraview Overload constructor.
-Recorder::Recorder(std::string path, std::string file, std::string name, unsigned int nparaview, unsigned int ndims, unsigned int nsample, unsigned int precision) :
-Path(path), File(file), Name(name), nSample(nsample), Counter(0), nParaview(nparaview), nDimensions(ndims), Precision(precision) { 
+Recorder::Recorder(std::string file, std::string name, unsigned int nparaview, unsigned int nsample, unsigned int precision) :
+File(file), Name(name), nSample(nsample), Counter(0), nParaview(nparaview), Precision(precision) { 
     //Does nothing.
 }
 
 //Point/Element Overload constructor.
-Recorder::Recorder(std::string path, std::string file, std::string name, std::string type, std::vector<unsigned int> index, unsigned int nsample, unsigned int precision) :
-Path(path), File(file), Name(name), Response(type), nSample(nsample), Counter(0), Precision(precision), IDs(index){ 
+Recorder::Recorder(std::string file, std::string name, std::string type, std::vector<unsigned int> index, unsigned int nsample, unsigned int precision) :
+File(file), Name(name), Response(type), nSample(nsample), Counter(0), Precision(precision), IDs(index){ 
     //Does nothing.
 }
 
 //Section Overload constructor.
-Recorder::Recorder(std::string path, std::string file, std::string name, std::string type, std::vector<double> coordinates, std::vector<unsigned int> index, unsigned int nsample, unsigned int precision) : Path(path), File(file), Name(name), Response(type), nSample(nsample), Counter(0), Precision(precision), Position(coordinates), IDs(index){ 
+Recorder::Recorder(std::string file, std::string name, std::string type, std::vector<double> coordinates, std::vector<unsigned int> index, unsigned int nsample, unsigned int precision) : 
+File(file), Name(name), Response(type), nSample(nsample), Counter(0), Precision(precision), Position(coordinates), IDs(index){ 
     //In case the section is an area.
     if(Position.size() == 1)
         Position.push_back(0.0);
@@ -35,13 +36,13 @@ std::unique_ptr<Recorder>
 Recorder::CopyRecorder(){
     //Selects the recorder type.
     if(strcasecmp(Name.c_str(),"paraview") == 0){
-        return std::make_unique<Recorder>(Path, File, Name, nParaview, nDimensions, nSample, Precision);
+        return std::make_unique<Recorder>(File, Name, nParaview, nSample, Precision);
     }
     else if(strcasecmp(Name.c_str(),"section") == 0){
-        return std::make_unique<Recorder>(Path, File, Name, Response, Position, IDs, nSample, Precision);
+        return std::make_unique<Recorder>(File, Name, Response, Position, IDs, nSample, Precision);
     }
     else{
-        return std::make_unique<Recorder>(Path, File, Name, Response, IDs, nSample, Precision);
+        return std::make_unique<Recorder>(File, Name, Response, IDs, nSample, Precision);
     }
 }
 
@@ -71,7 +72,7 @@ Recorder::Initialize(std::shared_ptr<Mesh> &mesh, unsigned int nsteps){
         MakeFolder("/../Solution/");
         
         //Update the file path if is element recorder
-        std::string secondPath = GetSpacedName(Path, " ");
+        std::string secondPath = GetSpacedName(filePath, " ");
         std::string theFile = secondPath + "/../Solution/" + Combo + "/" + File;
 
         //Creates the output file.
@@ -108,7 +109,7 @@ Recorder::Initialize(std::shared_ptr<Mesh> &mesh, unsigned int nsteps){
         MakeFolder("/../Solution/");
 
         //Update the file path if is element recorder
-        std::string secondPath = GetSpacedName(Path, " ");
+        std::string secondPath = GetSpacedName(filePath, " ");
         std::string theFile = secondPath + "/../Solution/" + Combo + "/" + File;
 
         //Creates the output file.
@@ -171,7 +172,7 @@ Recorder::Initialize(std::shared_ptr<Mesh> &mesh, unsigned int nsteps){
         MakeFolder("/../Solution/");
 
         //Update the file path if is element recorder
-        std::string secondPath = GetSpacedName(Path, " ");
+        std::string secondPath = GetSpacedName(filePath, " ");
         std::string theFile = secondPath + "/../Solution/" + Combo + "/" + File;
 
         //Creates the output file.
@@ -369,7 +370,7 @@ Recorder::WriteVTKFiles(std::shared_ptr<Mesh> &mesh, unsigned int step){
         iter << Counter;
 
         //Update the file path for the paraview output
-        std::string firstPath = GetSpacedName(Path, " ");
+        std::string firstPath = GetSpacedName(filePath, " ");
         std::string Paraview  = firstPath  + "/../Paraview/" +  Combo + "/" + File + "." + iter.str() + ".vtk";
 
         //Creates the output file.
@@ -518,19 +519,19 @@ Recorder::WriteVTKFiles(std::shared_ptr<Mesh> &mesh, unsigned int step){
 std::string 
 Recorder::GetSpacedName(std::string theFile, std::string toReplace){
     //Auxiliar variables.
-    std::string dumm0 = theFile;
+    std::string auxName = theFile;
     std::string correctedFile;
 
     //Replace strings.
     size_t pos;
-    pos = dumm0.find("~");
+    pos = auxName.find("~");
     while(pos != std::string::npos){
-        dumm0.replace(pos, std::string("~").length(), toReplace);
-        pos = dumm0.find("~");
+        auxName.replace(pos, std::string("~").length(), toReplace);
+        pos = auxName.find("~");
     }
 
     //Modified File Name.
-    correctedFile = dumm0;
+    correctedFile = auxName;
 
     return correctedFile;
 }
@@ -539,7 +540,7 @@ Recorder::GetSpacedName(std::string theFile, std::string toReplace){
 void 
 Recorder::MakeFolder(std::string dirname){
     //Creates the folder where solutions are stored.
-    std::string firstPath = GetSpacedName(Path, "\\ ");
+    std::string firstPath = GetSpacedName(filePath, "\\ ");
     std::string theFolder = firstPath + dirname + Combo;
     mkdir(theFolder.c_str(), S_IRWXU | S_IRWXG | S_IRWXO);
 }
