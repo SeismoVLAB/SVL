@@ -239,7 +239,7 @@ ParseMesh(std::shared_ptr<Mesh> &theMesh, std::vector<std::shared_ptr<Recorder> 
             //Creates a constaint object.
             std::unique_ptr<Constraint> theConstraint = std::make_unique<Constraint>(stag, mtag, factors);
 
-            //Stores the information in material container.
+            //Stores the information in constraint container.
             theMesh->AddConstraint(Tag, theConstraint);
         }
 
@@ -279,7 +279,7 @@ ParseMesh(std::shared_ptr<Mesh> &theMesh, std::vector<std::shared_ptr<Recorder> 
                 }
                 dof = it->second["dof"][k].as<int>();
 
-                //Assign damping to group of elements.
+                //Assign support motion to the node.
                 theMesh->SetSupportMotion(Tag, dof, Xo);
             }
         }
@@ -870,11 +870,11 @@ ParseMesh(std::shared_ptr<Mesh> &theMesh, std::vector<std::shared_ptr<Recorder> 
                 theElement = std::make_shared<EQlin2DQuad4>(nodes, theMesh->GetMaterial(matID), thickness, Quadrature, nGauss, eType, zref, cf1, cf2);
             }
             else if(strcasecmp(Name.c_str(),"null2DFrame2") == 0){
-                //Instantiate the lin2DTruss2 element.
+                //Instantiate the null2DFrame2 element.
                 theElement = std::make_shared<null2DFrame2>(nodes);
             }
             else if(strcasecmp(Name.c_str(),"null3DFrame2") == 0){
-                //Instantiate the lin2DTruss2 element.
+                //Instantiate the null3DFrame2 element.
                 theElement = std::make_shared<null3DFrame2>(nodes);
             }
 
@@ -884,7 +884,7 @@ ParseMesh(std::shared_ptr<Mesh> &theMesh, std::vector<std::shared_ptr<Recorder> 
             theMesh->AddElement(Tag, theElement);
         }
 
-        //Damping Load Objects
+        //Damping Objects
         for(auto it = jsonFile["Dampings"].as_object().begin(); it != jsonFile["Dampings"].as_object().end(); ++it){
             //Damping name and identifier.
             unsigned int Tag = std::stoi(it->first);
