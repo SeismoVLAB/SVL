@@ -35,10 +35,11 @@ Options = {
     'run'         : '',
     'path'        : '',
     'file'        : 'SeismoVLAB',
-    'format'      : 'svl',
     'description' : '\n',
     'execfile'    : '',
     'execpath'    : '',
+    'preanalysis' : '',
+    'runanalysis' : '',
     'allocation'  : 'NO',
     'numbering'   : 'Plain',
     'metispath'   : '',
@@ -158,11 +159,11 @@ SVLclasses = {
         },
         'ELASTIC2DPLANESTRAIN': {
             'color': [0,255,0], 
-            'dim': [2]
+            'dim': [2,3]
         },
         'ELASTIC2DPLANESTRESS': {
             'color': [255,0,0], 
-            'dim': [2]
+            'dim': [2,3]
         },
         'PLASTICPLANESTRAINJ2': {
             'color': [59,176,143], 
