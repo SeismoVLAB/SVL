@@ -177,10 +177,8 @@ class Timer{
             auto endTimepoint = std::chrono::high_resolution_clock::now();
 
             long long start = std::chrono::time_point_cast<std::chrono::microseconds>(m_StartTimepoint).time_since_epoch().count();
-            long long end   = std::chrono::time_point_cast<std::chrono::microseconds>(endTimepoint).time_since_epoch().count();
-
-            //TODO: Check that "threadID = omp_get_num_threads()" generates leaks for some reason.
-            int threadID = 1;
+            long long end = std::chrono::time_point_cast<std::chrono::microseconds>(endTimepoint).time_since_epoch().count();
+            int threadID = omp_get_num_threads();
             Profiler::Get().WriteProfile({ m_Name, start, end, threadID });
 
             m_Stopped = true;
