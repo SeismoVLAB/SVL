@@ -37,6 +37,8 @@ def cleanAll():
 
     #Sets the Options to pre-defined values
     metis = Options['metispath']
+    preanalysis = Options['preanalysis']
+    runanalysis = Options['runanalysis']
     for key in Options:
         if isinstance(Options[key], str):
             Options[key] = ''
@@ -47,12 +49,13 @@ def cleanAll():
 
     Options['file'       ] = 'SeismoVLAB'
     Options['metispath'  ] = metis
-    Options['format'     ] = 'SVL'
     Options['description'] = '\n'
     Options['allocation' ] = 'NO'
     Options['numbering'  ] = 'Plain'
     Options['massform'   ] = 'consistent'
     Options['nparts'     ] =  1
+    Options['preanalysis'] = preanalysis
+    Options['runanalysis'] = runanalysis
     setFilePath()
 
 def setFilePath():
@@ -67,7 +70,13 @@ def setFilePath():
     """
     Options['path'] = os.path.abspath(os.path.dirname(sys.argv[0]))
     try:
-        Options['metispath'] = os.environ['PYTHONPATH'] + '/Metis/mpmetis'
+        pythonpath =  os.environ['PYTHONPATH']
+        pythonpath =  pythonpath.split('/')
+        pythonpath =  pythonpath[:-1]
+        pythonpath =  "/".join(pythonpath)
+        Options['preanalysis'] = pythonpath + '/01-Pre_Process'
+        Options['runanalysis'] = pythonpath + '/02-Run_Process'
+        Options['metispath'] =  Options['preanalysis'] + '/Metis/mpmetis'
     except KeyError:
         Options['metispath'] = []
         print('\x1B[31m ERROR \x1B[0m: The \'PYTHONPATH\' variable has not been defined')

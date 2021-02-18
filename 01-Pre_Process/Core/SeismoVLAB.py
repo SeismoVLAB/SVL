@@ -271,11 +271,10 @@ def Entities2Processor(matSubdomain, secSubdomain, nodeSubdomain, massSubdomain,
         ToProcessor['Simulations'][sTag] = {'combo': ctag, 'attributes': attributes} 
 
     #Removes the empty fields
-    if Options['format'].upper() == 'JSON':
-        keys = list(ToProcessor.keys())
-        for key in keys:
-            if not ToProcessor[key]:
-                del ToProcessor[key]
+    keys = list(ToProcessor.keys())
+    for key in keys:
+        if not ToProcessor[key]:
+            del ToProcessor[key]
     return ToProcessor
 
 def createPartitions():
@@ -359,21 +358,18 @@ def createPartitions():
         ToProcessor = Entities2Processor(matSubdomain,secSubdomain,nodeSubdomain,massSubdomain,conSubdomain,elemSubdomain,k)
 
         #Writes the partition in separated files
-        if Options['format'].upper() == 'SVL':
-            dict2svl(ToProcessor, k)
-        elif Options['format'].upper() == 'JSON':
-            dict2json(ToProcessor, k)
+        dict2json(ToProcessor, k)
     
     #The generated partition file name (generic) path
-    Options['execfile'] = Options['file'] + '.$.' + Options['format']
-    Options['execpath'] = Options['path'] + '/' + 'Partition'
+    Options['execfile'] = Options['file'] + '.$.json'
+    Options['execpath'] = Options['path'] + '/Partition'
 
     #SeismoVLAB execution command line
     nparts = Options['nparts']
     if nparts == 1:
-        Options['run'] = ' ./SeismoVLAB.exe -dir ' + Options['execpath'] + ' -file ' + Options['execfile'] + '\n'
+        Options['run'] = ' ' + Options['runanalysis'] + '/SeismoVLAB.exe -dir ' + Options['execpath'] + ' -file ' + Options['execfile'] + '\n'
     elif nparts > 1:
-        Options['run'] = ' mpirun -np ' + str(nparts) + ' ./SeismoVLAB.exe -dir ' + Options['execpath'] + ' -file ' + Options['execfile'] + '\n'
+        Options['run'] = ' mpirun -np ' + str(nparts) + ' ' + Options['runanalysis'] + '/SeismoVLAB.exe -dir ' + Options['execpath'] + ' -file ' + Options['execfile'] + '\n'
 
     #Cleans generated auxiliar files
     os.remove(Options['execpath'] + '/Graph.out')
