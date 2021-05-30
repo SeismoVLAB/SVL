@@ -45,8 +45,7 @@ Finally, write in terminal:
 ```bash
 make -s DEBUG=False
 ```
-A detailed explanation on how to install **SVL** on Windows, MacOS, and Linux can be found at:\n
-http://seismovlab.com/documentation/linkInstallation.html
+A detailed explanation on how to install **SVL** on Windows, MacOS, and Linux can be found in [this link.](http://seismovlab.com/documentation/linkInstallation.html)
 
 License
 =======
