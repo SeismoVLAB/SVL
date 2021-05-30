@@ -10,21 +10,21 @@ The validation folder provides with several models (from simple to sophisticated
   * **L** is a letter that denotes complexity 
   * **Analysis** can be ST=Static, or DY=Dynamic
   * **Formulation** can be Lin=Linearized or Kin=kinematics
-  * **Comment** is a description 
+  * **Comment** is a short description 
   * **Material** and **Element** are the **SVL**'s class name.
 * `02-Performance`: Folder that contains sophisticated simulation cases that can be run to test the parallel features of **SVL**.
 * `03-Report`: Folder that run all debugging cases to verify the accuracy and well-behavior of the implemented features. 
   To generate the PDF report,  we advice to import the **01-Pre-Process** module as:
 
-  <pre>
+  ```bash
   export PYTHONPATH="/path/to/SVL/01-Pre_Process"
-  </pre>
+  ```
 
   Then execute in a python command prompt:
 
-  <pre>
+  ```python
   python3 runValidation.py
-  </pre>
+  ```
 
 All cases in folders `01-Debugging` and `02-Performance` are zipped (compressed); Therefore, they need to be unzipped before using them.
 
