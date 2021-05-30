@@ -5,7 +5,7 @@ Pre-Process
 
 The **Pre-Analysis** is a (user friendly) Python interface designed to handle large models in different formats. In this regard, the **Pre-Analysis** allows the user to parse formats from other software such as [ETABS](https://www.csiamerica.com/products/etabs), [SAP2000](https://www.csiamerica.com/products/sap2000), and [VTK](https://vtk.org/). The main **Pre-Analysis** task is orchestrated by two python files:`SeismoVLAB.py` that loads all required modules to generate a model; and `Definitions.py` that contains the data structure (dictionaries) that stores the finite element information. The Python routines also provided in **SVL** handles the degree-of-freedom numbering in `Numberer.py`, the domain partition in `Partition.py`, soil spatial variability in `RandomField.py`, and domain reduction forces in `PlaneWave.py`. Other features can be incorporated to meet the user's need as well.
 
-Installation of **Seismo-VLAB** (Pre-Process) on Linux/MacOSX/Windows requires a `python3` environment and the following libraries:
+Installation of **Seismo-VLAB** (Pre-Process) on Linux/MacOS/Windows requires a `python3` environment and the following libraries:
 
 * [Numpy](https://numpy.org/)
 * [Scipy](https://www.scipy.org/)
@@ -20,7 +20,7 @@ Further information can be obtained at:
 
 Starting with the Pre-Process
 -----------------------------
-The best way to start with the **Pre-Process** is to run some debugging cases on the official [documentation webSite.](https://github.com/SeismoVLAB/SVL/tree/master/03-Validations)
+The best way to start with the **Pre-Process** is to run some debugging cases on the official [documentation website.](https://github.com/SeismoVLAB/SVL/tree/master/03-Validations)
 
 It is convenient to set the **PYTHONPATH** environment variable to have the **Pre-Process** folder path as:
 
