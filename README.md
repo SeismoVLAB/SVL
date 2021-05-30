@@ -1,6 +1,6 @@
 ![SeismoVLAB Logo](Logo.png)
 
-**Seismo-VLAB** is a simple, fast, and extendable C++ multi-platform finite element software designed to optimize large-scale simulations of dynamic, nonlinear soil-structure interaction (SSI) problems. The software is intented to be used by academics researches in structural and geothecnical field but also for industrials, students, etc.
+**Seismo-VLAB** (a.k.a **SVL**) is a simple, fast, and extendable C++ finite element software designed to optimize meso-scale simulations of linear and nonlinear wave-propagation and soil-structure interaction. **SVL** is intended not only to be used by researchers in structural and geothecnical engineering, but also in industries, laboratories, universities, etc.
 
 * Official website: http://www.seismovlab.com
 * GitHub repository: https://github.com/SeismoVLAB/SVL
@@ -18,49 +18,43 @@ Visit the gallery for examples: http://www.seismovlab.com/gallery.html
 
 Installing Seismo-VLAB
 ----------------------
-Installation of **Seismo-VLab** (Pre-Process) on Linux/MacOSX/Windows requires a `python3` environment and the following libraries:
+Installation of **Seismo-VLab** (Pre-Process) on Linux/MacOS/Windows requires `python3` and the following libraries:
 
 * Numpy
 * Scipy
 * Matplotlib
-* VTK
 * JSON
 
-Installation of **Seismo-VLab** (Run-Process) on Linux/MacOSX/Windows requires to download `Eigen C++ library`, `MUMPS Library`, and `Pestc Library`. Also, python3 is needed along with libraries such as numpy, scipy, and matplotlib.
+Installation of **Seismo-VLab** (Run-Process) on Linux/MacOS/Windows requires to download `Eigen` C++ library, `MUMPS` Library, and `PETSc` Library.
 
-* The **Eigen C++ library** can be downloaded from the website http://eigen.tuxfamily.org/. This package needs to be unzip and its content move (for instnce) to `/usr/include/Eigen`. 
-* The **MUMPS library** can be downloaded from the website http://mumps.enseeiht.fr/. This package needs to be unzip and compiled (for instnce) at `/usr/include/Mumps`.
-* The **Pestc Library** library can be downloaded at the website https://www.mcs.anl.gov/petsc/. This package needs to be unzip and compiled (for instnce) at `/usr/include/Petsc`.
+* The **Eigen C++ library** can be downloaded from the website http://eigen.tuxfamily.org/. This package needs to be unzip and its content move (for instance) to `/usr/include/eigen`. 
+* The **MUMPS library** can be downloaded from the website http://mumps.enseeiht.fr/. This package needs to be unzip and compiled (for instance) at `/usr/include/mumps`.
+* The **Pestc Library** library can be downloaded at the website https://www.mcs.anl.gov/petsc/. This package needs to be unzip and compiled (for instance) at `/usr/include/petsc`.
 
 Assuming the previous libraries are successfully installed, then modify the `Makefile.inc` file such the previous path point to the right libraries:
 
 ```makefile
-EIGEN_DIR = /usr/include/Eigen
-PETSC_DIR = /usr/include/Petsc
-MUMPS_DIR = /usr/include/Mumps
+EIGEN_DIR = /usr/include/eigen
+PETSC_DIR = /usr/include/petsc
+MUMPS_DIR = /usr/include/mumps
 ```
 
-Also, check that : `MPI_DIR, METIS_DIR, SCOTCH_DIR` have the correct path where these libraries are installed. Make sure libraries such as: *-lscalapack-openmpi -lblacs-openmpi -llapack -lblas* and *-lparmetis -lmetis -lptesmumps -lptscotch -lptscotcherr* are also installed.
+Also, make sure that libraries such as: *libscalapack-openmpi*, *libblacs-openmpi*, *liblapack*, *libblas*, and *libparmetis*, *libmetis*, *libptscotch*, *libptscotcherr* are also installed.
 
 Finally, write in terminal:
 ```bash
 make -s DEBUG=False
 ```
-
-Some libraries can be easily installed using repositories:
-* **LAPACK :** sudo apt-get install liblapack-dev
-* **ATLAS  :** sudo apt-get install libatlas-dev libatlas-base-dev
-* **BLAS   :** sudo apt-get install libblas-dev libblas-common libblacs-mpi-dev
-* **METIS  :** sudo apt-get install metis libmetis-dev libparmetis-dev
-* **SCOTCH :** sudo apt-get install libscotch-dev libptscotch-dev libscotchmetis-dev libscotchparmetis-dev
+A detailed explanation on how to install **SVL** on Windows, MacOS, and Linux can be found at:\n
+http://seismovlab.com/documentation/linkInstallation.html
 
 License
 =======
 
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 
-Seismo-VLAB is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
-Seismo-VLAB is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details http://www.gnu.org/licenses.
+**Seismo-VLAB** is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+**Seismo-VLAB** is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details http://www.gnu.org/licenses.
 
 <!---
 Citation
