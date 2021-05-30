@@ -14,7 +14,7 @@ With **Seismo-VLAB** you can solve:
 * Linear and Nonlinear soil-structure interaction problems.
 * Standard mechanics-based nonlinear structural dynamic problems.
 
-Visit the gallery for examples: http://www.seismovlab.com/gallery.html
+Visit our gallery of [examples](http://www.seismovlab.com/gallery.html) for more information.
 
 Installing Seismo-VLAB
 ----------------------
@@ -27,9 +27,9 @@ Installation of **Seismo-VLab** (Pre-Process) on Linux/MacOS/Windows requires `p
 
 Installation of **Seismo-VLab** (Run-Process) on Linux/MacOS/Windows requires to download `Eigen` C++ library, `MUMPS` Library, and `PETSc` Library.
 
-* The **Eigen C++ library** can be downloaded from the website http://eigen.tuxfamily.org/. This package needs to be unzip and its content move (for instance) to `/usr/include/eigen`. 
-* The **MUMPS library** can be downloaded from the website http://mumps.enseeiht.fr/. This package needs to be unzip and compiled (for instance) at `/usr/include/mumps`.
-* The **Pestc Library** library can be downloaded at the website https://www.mcs.anl.gov/petsc/. This package needs to be unzip and compiled (for instance) at `/usr/include/petsc`.
+* The **Eigen C++ library** can be downloaded from this [website](http://eigen.tuxfamily.org/). This package needs to be unzip and its content move (for instance) to `/usr/include/eigen`. 
+* The **MUMPS library** can be downloaded from this [website](http://mumps.enseeiht.fr/). This package needs to be unzip and compiled (for instance) at `/usr/include/mumps`.
+* The **Pestc Library** library can be downloaded at this [website](https://www.mcs.anl.gov/petsc/). This package needs to be unzip and compiled (for instance) at `/usr/include/petsc`.
 
 Assuming the previous libraries are successfully installed, then modify the `Makefile.inc` file such the previous path point to the right libraries:
 
