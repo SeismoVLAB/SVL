@@ -3,13 +3,13 @@
 Run-Process
 ===========
 
-The **Run-Process** is the main core of this software, and it is in charge of generating the finite element model that comes from the Pre-Analysis and perform the desired analysis. This essentially generates the finite element matrices, assembles the contribution of each elements, and solves the resulting systems of equations. The solution generated in such process is then recorded in separated files whose format is discussed in Recorder. In the Run-Analysis component, the software's folder is divided in several sub-folder which contains all the objects needed to create a finite element model and then perform an analysis. This internal folder structure is deliberately chosen so that finding/modifying/adding new classes are simple for any user. These folders at the same time are divided into three categories,
+The **Run-Process** is the main core of this software, and it is in charge of performing the desired analysis. The **Run-Porcess** essentially generates the finite element matrices, assembles the contribution of each elements, and solves the resulting systems of equations. The **Run-Porcess** folder is divided in several sub-folder which contains all the objects needed to create a finite element model and then perform an analysis. This internal folder structure is deliberately chosen so that finding/modifying/adding new classes are simple for any user. These folders at the same time are divided into three categories:
 
-- **Geometry Module**: This module is conformed by Node, Material, Section, Elements, Load, and Mesh classes. On this level the mesh of the finite element model is generated, in which nodes are placed in space, elements are defined through node connectivity, materials are assigned to the elements, and loads are specified on nodes and elements, respectively. The mesh encapsulates all these objects, which is finally used by the assembler object to generate the global mass, damping and stiffness matrices as well as the global force vector. 
+- **Geometry Module**: This module is conformed by `Node`, `Material`, `Section`, `Elements`, `Load`, and `Mesh` classes. On this level the mesh of the finite element model is generated, in which nodes are placed in space, elements are defined through node connectivity, materials are assigned to the elements, and loads are specified on nodes and elements, respectively. The mesh encapsulates all these objects, which is finally used by the `Assembler` object to generate the global mass, damping and stiffness matrices as well as the global force vector. 
 
-- **Solution Module**: This module is conformed by Analysis, Algorithm, Integrator, LinearSystem, and Assembler classes. On this level an incremental analysis is performed for either static or dynamical purpose. The analysis uses the algorithm to take care of how the solution will be evolved for each time step. During each time step, the integrator combines the matrices and vectors using the assembler and gives this information to the solver. The solver finds the solution to the linear system (generated from the integrator) and returns it to the algorithm. The algorithm checks if convergence criteria are met, and continues to the next time step.
+- **Solution Module**: This module is conformed by `Analysis`, `Algorithm`, `Integrator`, `LinearSystem`, and `Assembler` classes. On this level an incremental analysis is performed for either static or dynamical purpose. The analysis uses the algorithm to take care of how the solution will be evolved for each time step. During each time step, the integrator combines the matrices and vectors using the assembler and gives this information to the solver. The solver finds the solution to the linear system (generated from the integrator) and returns it to the algorithm. The algorithm checks if convergence criteria are met, and continues to the next time step.
 
-- **Input/Output Module**: This module is conformed by Recorder and Parser classes. In this level the Parser reads the domain and analysis input file(s) and generates the Node, Element, Material, Load, Mesh objects to define a finite element problem. It also generates the analysis and how the finite element problem is going to be solved. The Recorders stores the solution at Node or Element obtained in the Solution Module in files specified by the user.
+- **Input/Output Module**: This module is conformed by `Recorder` and `Parser` classes. In this level the Parser reads the domain and analysis input file(s) and generates the `Node`, `Element`, `Material`, `Load`, `Mesh` objects to define a finite element problem. It also generates the analysis and how the finite element problem is going to be solved. The Recorders stores the solution at `Node` or `Element` obtained in the Solution Module in files specified by the user.
 
 Further information can be obtained at:
 
@@ -17,8 +17,8 @@ Further information can be obtained at:
 * [GitHub repository](https://github.com/SeismoVLAB/SVL)
 * [Official documentation](http://www.seismovlab.com/documentation/index.html)
 
-Compiling Run-Analysis
-----------------------
+Compiling the Run-Analysis
+--------------------------
 Installation of **Seismo-VLAB** on Linux/MacOSX requires to download `Eigen C++ library`, `MUMPS Library`, and `Pestc Library`. Also, python3 is needed along with libraries such as numpy, scipy, and matplotlib.
 
 * The **Eigen C++ library** can be downloaded from this [website](http://eigen.tuxfamily.org/). This package needs to be unzip and its content move to `/usr/include/eigen`. 
@@ -27,11 +27,11 @@ Installation of **Seismo-VLAB** on Linux/MacOSX requires to download `Eigen C++ 
 
 Assuming the previous libraries are successfully installed, then modify the `Makefile.mk` file such the previous path point to the right libraries:
 
-<pre>
+```bash
 EIGEN_DIR = /usr/include/eigen
 PETSC_DIR = /usr/include/petsc
 MUMPS_DIR = /usr/include/mumps
-</pre>
+```
 
 Also, make sure that libraries such as: *libscalapack-openmpi*, *libblacs-openmpi*, *liblapack*, *libblas*, and *libparmetis*, *libmetis*, *libptscotch*, *libptscotcherr* are also installed.
 
@@ -45,7 +45,7 @@ A detailed explanation on how to install **SVL** on Windows, MacOS, and Linux ca
 Running the Run-Analysis
 ------------------------
 
-Once **Seismo-VLAB** is compiled, write in a terminal window (Linux/MacOSX) or command prompt (cmd in Windows),
+Once **Seismo-VLAB** is compiled, write in a terminal (Linux/MacOSX) or command prompt (cmd in Windows),
 
 ```bash
 ./SeismoVLAB.exe --help
@@ -80,41 +80,41 @@ and the following message will be printed:
 
 Then, we can run a serial/parallel **Seismo-VLAB** in the following manner:
 
-* For a single-core execution,
-<pre>
-./SeismoVLAB.exe -dir '/path/to/Partition/folder' -file 'model.$.json'
-</pre>
+* For a single-core execution:
+  ```bash
+  ./SeismoVLAB.exe -dir '/path/to/Partition/folder' -file 'model.$.json'
+  ```
 
-* For a multiple-core execution,
-<pre>
-mpirun -np n ./SeismoVLAB.exe -dir '/path/to/Partition/folder' -file 'model.$.json'
-</pre>
+* For a multiple-core execution:
+  ```bash
+  mpirun -np n ./SeismoVLAB.exe -dir '/path/to/Partition/folder' -file 'model.$.json'
+  ```
 
 The flag `-np = n` specifies that the number of processors are `n`, this requires the mesh and simulation files to be partitioned in such number of files. The latter explains the `.$.` token which internally is replaced by the processor number.
 
 Folder Description
 ==================
 * **01-Node**:
-  This folder contains the Node and Constraint classes.
+  This folder contains the `Node` and `Constraint` classes.
 * **02-Materials**: 
-  This folder contains the Material class separated into Linear and NonLinear.
+  This folder contains the Material class separated into `01-Linear`, `02-NonLinear` and `03-Fiber`.
 * **03-Sections**:
-  This folder contains the Section class separated into Plain (one material) and Fiber (several materials).
+  This folder contains the `Section` class separated into `01-Plain` (one material) and `02-Fiber` (several materials).
 * **04-Elements**:
-  This folder contains the Element class. Here, solid and structural elements are defined. The integration class is defined as well.
+  This folder contains the `Element` class. Here, solid and structural elements are defined. The integration class is defined as well.
 * **05-Loads**:
-  This folder contains the Load and LoadCombo classes.
+  This folder contains the `Load` and `LoadCombo` classes.
 * **06-Mesh**:
-  This folder cotains the Mesh class. Node, Material, Element, Load Containers are defined in this class.
+  This folder cotains the `Mesh` class. Node, Material, Element, Load Containers are stored in this class.
 * **07-Assembler**:
-    This folder contains the Assembler class. This object is in charge of generating the Mass, Stiffness, damping matrices as well as the force vector. 
+    This folder contains the `Assembler` class. This object is in charge of generating the mass, stiffness, damping matrices as well as the force vector. 
 * **08-Analysis**:
-    This folder contains the Analysis class. Definition of Static and Dynamic analyses are provided in this folder.
+    This folder contains the `Analysis` class. Definition of `01-Static` and `02-Dynamic` analyses are provided in this folder.
 * **09-Algorithms**:
-  This folder contains the Algorithm class. Definition of Linear (linear) and NewtonRaphson (nonlinear) algorithm are provided in this folder.   
+  This folder contains the `Algorithm` class. Definition of `01-Linear` (linear) and `02-Newton` (nonlinear) algorithm are provided in this folder.   
 * **10-Integrators**:
-  This folder contains the Integrator class. Definition of QuasiStatic, CentralDifference, NewmarkBeta, and Bathe integrators are provided in this folder.
+  This folder contains the `Integrator` class. Definition of `01-QuasiStatic`, `02-CentralDifference`, `03-Newmark`, and `04-Bathe` integrators are provided in this folder.
 * **11-Solvers**:
-  This folder contains the LinearSystem class. Definition of EigenSolver (serial), MumpsSolver (parallel) and PetscSolver (parallel) are provided in this folder.
+  This folder contains the `LinearSystem` class. Definition of EigenSolver (serial), MumpsSolver (parallel) and PetscSolver (parallel) are provided in this folder.
 * **12-Utilities**:
-  This folder contains definition of several classes. Damping, Parser, and Recorder are defined in this folder.
+  This folder contains definition of several classes. `Damping`, `Parser`, and `Recorder` are defined in this folder.
