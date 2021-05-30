@@ -26,6 +26,7 @@ Installation of **Seismo-VLAB** on Linux/MacOS/Windows is perform in two steps:
     * [Scipy](https://www.scipy.org/)
     * [Matplotlib](https://matplotlib.org/)
     * [JSON](https://www.json.org/json-en.html)
+    
     These librarires can be installed using `pip3` or standard Linux and Mac repositories.
 
 * The Run-Process requires requires to download `Eigen` C++ library, `MUMPS` Library, and `PETSc` Library.
