@@ -23,7 +23,7 @@ The validation folder provides with several models (from simple to sophisticated
   Then execute in a python command prompt:
 
   ```python
-  python3 runValidation.py
+  python3 '/path/to/runValidation.py'
   ```
 
 All cases in folders `01-Debugging` and `02-Performance` are zipped (compressed); Therefore, they need to be unzipped before using them.
