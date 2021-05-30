@@ -3,14 +3,14 @@
 Pre-Process
 ===========
 
-The **Pre-Analysis** is a (user friendly) Python interface designed to handle large models in different formats. In this regard, the **Pre-Analysis** allows the user to parse formats from other software such as ETABS, SAP, and VTK. The main **Pre-Analysis** task is orchestrated by two python files:`SeismoVLAB.py` that loads all required modules to generate a model; and `Definitions.py` that contains the data structure (dictionaries) that stores the finite element information. The Python routines also provided in **SVL** handles the degree-of-freedom numbering in `Numberer.py`, the domain partition in `Partition.py`, soil spatial variability in `RandomField.py`, and domain reduction forces in `PlaneWave.py`. Other features can be incorporated to meet the user's need as well.
+The **Pre-Analysis** is a (user friendly) Python interface designed to handle large models in different formats. In this regard, the **Pre-Analysis** allows the user to parse formats from other software such as [ETABS](https://www.csiamerica.com/products/etabs), [SAP](https://www.csiamerica.com/products/sap2000), and [VTK](https://vtk.org/). The main **Pre-Analysis** task is orchestrated by two python files:`SeismoVLAB.py` that loads all required modules to generate a model; and `Definitions.py` that contains the data structure (dictionaries) that stores the finite element information. The Python routines also provided in **SVL** handles the degree-of-freedom numbering in `Numberer.py`, the domain partition in `Partition.py`, soil spatial variability in `RandomField.py`, and domain reduction forces in `PlaneWave.py`. Other features can be incorporated to meet the user's need as well.
 
 Installation of **Seismo-VLab** (Pre-Process) on Linux/MacOSX/Windows requires a `python3` environment and the following libraries:
 
-* Numpy
-* Scipy
-* Matplotlib
-* JSON
+* [Numpy](https://numpy.org/)
+* [Scipy](https://www.scipy.org/)
+* [Matplotlib](https://matplotlib.org/)
+* [JSON](https://www.json.org/json-en.html)
 
 Further information can be obtained at:
 
@@ -28,7 +28,7 @@ It is convenient to set the **PYTHONPATH** environment variable to have the **Pr
 export PYTHONPATH="/path/to/SVL/01-Pre_Process"
 ```
 
-The later will allow to import the the Pre-Process Python module as follows:
+The later will allow to import the the **Pre-Process**python module as follows:
 
 ```Python
 from Core import SeismoVLAB as SVL
@@ -59,9 +59,9 @@ Files Description
 * **Method**
   * `Attach.py`: Functions provided to populate the the finite element model
   * `Remove.py`: Functions provided to delete the finite element model
-  * `Builder.py`: Provides vith functions to create simple geometries in 1D, 2D, and 3D
+  * `Builder.py`: Provides with functions to create simple geometries in 1D, 2D, and 3D
   * `Display.py`: Creates a 3D visualization of the model defined
-  * `Compute.py`: Computes the kinematic constraints for diaphrag, rigid body, and rigid link.
+  * `Compute.py`: Computes the kinematic constraints for diaphragm, rigid body, and rigid link.
 * **Parser**
   * `Formats.py`: Parse a file provided with the format in which is written
   * `GMSH.py`: Parses a gmsh input file with .*mesh (INRIA) extension 
