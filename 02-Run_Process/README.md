@@ -11,41 +11,36 @@ The **Run-Process** is the main core of this software, and it is in charge of ge
 
 - **Input/Output Module**: This module is conformed by Recorder and Parser classes. In this level the Parser reads the domain and analysis input file(s) and generates the Node, Element, Material, Load, Mesh objects to define a finite element problem. It also generates the analysis and how the finite element problem is going to be solved. The Recorders stores the solution at Node or Element obtained in the Solution Module in files specified by the user.
 
-Further informatin can be obatained at:
+Further information can be obtained at:
 
-* Official website: http://www.seismovlab.com
-* GitHub repository: https://github.com/SeismoVLAB/SVL
-* Official documentation: http://www.seismovlab.com/documentation/index.html
+* [Official website](http://www.seismovlab.com)
+* [GitHub repository](https://github.com/SeismoVLAB/SVL)
+* [Official documentation](http://www.seismovlab.com/documentation/index.html)
 
 Compiling Run-Analysis
 ----------------------
 Installation of **Seismo-VLAB** on Linux/MacOSX requires to download `Eigen C++ library`, `MUMPS Library`, and `Pestc Library`. Also, python3 is needed along with libraries such as numpy, scipy, and matplotlib.
 
-* The **Eigen C++ library** can be downloaded from the website http://eigen.tuxfamily.org/. This package needs to be unzip and its content move (for instnce) to `/usr/include/Eigen`. 
-* The **MUMPS library** can be downloaded from the website http://mumps.enseeiht.fr/. This package needs to be unzip and compiled (for instnce) at `/usr/include/Mumps`.
-* The **Pestc Library** library can be downloaded at the website https://www.mcs.anl.gov/petsc/. This package needs to be unzip and compiled (for instnce) at `/usr/include/Petsc`.
+* The **Eigen C++ library** can be downloaded from this [website](http://eigen.tuxfamily.org/). This package needs to be unzip and its content move (for instance) to `/usr/include/eigen`. 
+* The **MUMPS library** can be downloaded from this [website](http://mumps.enseeiht.fr/). This package needs to be unzip and compiled (for instance) at `/usr/include/mumps`.
+* The **Pestc Library** library can be downloaded at this [website](https://www.mcs.anl.gov/petsc/). This package needs to be unzip and compiled (for instance) at `/usr/include/petsc`.
 
-Assuming the previous libraries are successfully installed, then modify the `Makefile.inc` file such the previous path point to the right libraries:
+Assuming the previous libraries are successfully installed, then modify the `Makefile.mk` file such the previous path point to the right libraries:
 
 <pre>
-EIGEN_DIR = /usr/include/Eigen
-PETSC_DIR = /usr/include/Petsc
-MUMPS_DIR = /usr/include/Mumps
+EIGEN_DIR = /usr/include/eigen
+PETSC_DIR = /usr/include/petsc
+MUMPS_DIR = /usr/include/mumps
 </pre>
 
-Also, check that : `MPI_DIR, METIS_DIR, SCOTCH_DIR` have the correct path where these libraries are installed. Make sure libraries such as: *-lscalapack-openmpi -lblacs-openmpi -llapack -lblas* and *-lparmetis -lmetis -lptesmumps -lptscotch -lptscotcherr* are also installed.
+Also, make sure that libraries such as: *libscalapack-openmpi*, *libblacs-openmpi*, *liblapack*, *libblas*, and *libparmetis*, *libmetis*, *libptscotch*, *libptscotcherr* are also installed.
 
 Finally, write in terminal:
-<pre>
+```bash
 make -s DEBUG=False
-</pre>
+```
+A detailed explanation on how to install **SVL** on Windows, MacOS, and Linux can be found in [this link.](http://seismovlab.com/documentation/linkInstallation.html)
 
-Some libraries can be easily installed using repositories:
-* **LAPACK :** sudo apt-get install liblapack-dev
-* **ATLAS  :** sudo apt-get install libatlas-dev libatlas-base-dev
-* **BLAS   :** sudo apt-get install libblas-dev libblas-common libblacs-mpi-dev
-* **METIS  :** sudo apt-get install metis libmetis-dev libparmetis-dev
-* **SCOTCH :** sudo apt-get install libscotch-dev libptscotch-dev libscotchmetis-dev libscotchparmetis-dev
 
 Running the Run-Analysis
 ------------------------
@@ -53,7 +48,7 @@ Running the Run-Analysis
 Once **Seismo-VLAB** is compiled, write in a terminal window (Linux/MacOSX) or command prompt (cmd in Windows),
 
 ```bash
-./SeismoVLab --help
+./SeismoVLAB.exe --help
 ```
 
 and the following message will be printed:
@@ -80,22 +75,22 @@ and the following message will be printed:
                                                                         
  COMMAND LINE FLAGS TO PROVIDE:                                  
      -dir  : Location of the working directory.                  
-     -file : Name of the SeismoVLab input file to be loaded.      
+     -file : Name of the SeismoVLAB input file to be loaded.      
 </pre>
 
 Then, we can run a serial/parallel **Seismo-VLAB** in the following manner:
 
 * For a single-core execution,
 <pre>
-./SeismoVLab -dir /path/to/simulation/directory -file model.$.svl
+./SeismoVLAB.exe -dir '/path/to/Partition/folder' -file 'model.$.json'
 </pre>
 
 * For a multiple-core execution,
 <pre>
-mpirun -np n ./SeismoVLab -dir /path/to/simulation/directory -file model.$.svl
+mpirun -np n ./SeismoVLAB.exe -dir '/path/to/Partition/folder' -file 'model.$.json'
 </pre>
 
-The flag <span style="color:blue">`-np = n`</span> specifies that the number of processors are <span style="color:blue">`n`</span>, this requieres the mesh and simulation files to be partitioned in such number of files. The latter explains the <span style="color:blue">`.$.`</span> token which internally is replaced by the processor number.
+The flag `-np = n` specifies that the number of processors are `n`, this requires the mesh and simulation files to be partitioned in such number of files. The latter explains the `.$.` token which internally is replaced by the processor number.
 
 Folder Description
 ==================
@@ -120,6 +115,6 @@ Folder Description
 * **10-Integrators**:
   This folder contains the Integrator class. Definition of QuasiStatic, CentralDifference, NewmarkBeta, and Bathe integrators are provided in this folder.
 * **11-Solvers**:
-  This folder contains the LunearSystem class. Definition of EigenSoler (serial), MumpsSolver (parallel) and PetscSolver (parallel) are provided in this folder.
+  This folder contains the LinearSystem class. Definition of EigenSolver (serial), MumpsSolver (parallel) and PetscSolver (parallel) are provided in this folder.
 * **12-Utilities**:
   This folder contains definition of several classes. Damping, Parser, and Recorder are defined in this folder.
