@@ -32,6 +32,7 @@ Installation of **Seismo-VLAB** on Linux/MacOS/Windows is perform in two steps:
     * The **Eigen C++ library** can be downloaded from this [website](http://eigen.tuxfamily.org/). This package needs to be unzip and its content move (for instance) to `/usr/include/eigen`. 
     * The **MUMPS library** can be downloaded from this [website](http://mumps.enseeiht.fr/). This package needs to be unzip and compiled (for instance) at `/usr/include/mumps`.
     * The **Pestc Library** library can be downloaded at this [website](https://www.mcs.anl.gov/petsc/). This package needs to be unzip and compiled (for instance) at `/usr/include/petsc`.
+    
     Assuming the previous libraries are successfully installed, then modify the `Makefile.inc` file such the previous path point to the right libraries:
     ```makefile
     EIGEN_DIR = /usr/include/eigen
