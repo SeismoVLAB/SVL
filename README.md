@@ -2,9 +2,9 @@
 
 **Seismo-VLAB** (a.k.a **SVL**) is a simple, fast, and extendable C++ finite element software designed to optimize meso-scale simulations of linear and nonlinear wave-propagation and soil-structure interaction. **SVL** is intended not only to be used by researchers in structural and geothecnical engineering, but also in industries, laboratories, universities, etc.
 
-* Official website: http://www.seismovlab.com
-* GitHub repository: https://github.com/SeismoVLAB/SVL
-* Official documentation: http://www.seismovlab.com/documentation/index.html
+* [Official website](http://www.seismovlab.com)
+* [GitHub repository](https://github.com/SeismoVLAB/SVL)
+* [Official documentation](http://www.seismovlab.com/documentation/index.html)
 
 What can Seismo-VLAB do?
 ------------------------
