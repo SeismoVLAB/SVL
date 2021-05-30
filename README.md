@@ -10,41 +10,41 @@ What can Seismo-VLAB do?
 ------------------------
 With **Seismo-VLAB** you can solve:
 
-* Linear and Nonlinear wave propagation problems in shallow crust.
-* Linear and Nonlinear soil-structure interaction problems.
-* Standard mechanics-based nonlinear structural dynamic problems.
+* Linear and nonlinear wave propagation problems in shallow crust
+* Linear and nonlinear soil-structure interaction problems
+* Standard structural-mechanics linear and nonlinear dynamic problems
 
-Visit our gallery of [examples](http://www.seismovlab.com/gallery.html) for more information.
+Visit our gallery to see some [examples](http://www.seismovlab.com/gallery.html) of simulations using **SVL**.
 
 Installing Seismo-VLAB
 ----------------------
-Installation of **Seismo-VLab** (Pre-Process) on Linux/MacOS/Windows requires `python3` and the following libraries:
+Installation of **Seismo-VLAB** on Linux/MacOS/Windows is perform in two steps: 
 
-* Numpy
-* Scipy
-* Matplotlib
-* JSON
 
-Installation of **Seismo-VLab** (Run-Process) on Linux/MacOS/Windows requires to download `Eigen` C++ library, `MUMPS` Library, and `PETSc` Library.
+* The Pre-Process requires `python3` and the following libraries:
+    * [Numpy](https://numpy.org/)
+    * [Scipy](https://www.scipy.org/)
+    * [Matplotlib](https://matplotlib.org/)
+    * [JSON](https://www.json.org/json-en.html)
+    These librarires can be installed using `pip3` or standard Linux and Mac repositories.
 
-* The **Eigen C++ library** can be downloaded from this [website](http://eigen.tuxfamily.org/). This package needs to be unzip and its content move (for instance) to `/usr/include/eigen`. 
-* The **MUMPS library** can be downloaded from this [website](http://mumps.enseeiht.fr/). This package needs to be unzip and compiled (for instance) at `/usr/include/mumps`.
-* The **Pestc Library** library can be downloaded at this [website](https://www.mcs.anl.gov/petsc/). This package needs to be unzip and compiled (for instance) at `/usr/include/petsc`.
+* The Run-Process requires requires to download `Eigen` C++ library, `MUMPS` Library, and `PETSc` Library.
+    * The **Eigen C++ library** can be downloaded from this [website](http://eigen.tuxfamily.org/). This package needs to be unzip and its content move (for instance) to `/usr/include/eigen`. 
+    * The **MUMPS library** can be downloaded from this [website](http://mumps.enseeiht.fr/). This package needs to be unzip and compiled (for instance) at `/usr/include/mumps`.
+    * The **Pestc Library** library can be downloaded at this [website](https://www.mcs.anl.gov/petsc/). This package needs to be unzip and compiled (for instance) at `/usr/include/petsc`.
+    Assuming the previous libraries are successfully installed, then modify the `Makefile.inc` file such the previous path point to the right libraries:
+    ```makefile
+    EIGEN_DIR = /usr/include/eigen
+    PETSC_DIR = /usr/include/petsc
+    MUMPS_DIR = /usr/include/mumps
+    ```
+    Also, make sure that libraries such as: *libscalapack-openmpi*, *libblacs-openmpi*, *liblapack*, *libblas*, and *libparmetis*, *libmetis*, *libptscotch*, *libptscotcherr* are also installed.
 
-Assuming the previous libraries are successfully installed, then modify the `Makefile.inc` file such the previous path point to the right libraries:
+    Finally, write in terminal:
+    ```bash
+    make -s DEBUG=False
+    ```
 
-```makefile
-EIGEN_DIR = /usr/include/eigen
-PETSC_DIR = /usr/include/petsc
-MUMPS_DIR = /usr/include/mumps
-```
-
-Also, make sure that libraries such as: *libscalapack-openmpi*, *libblacs-openmpi*, *liblapack*, *libblas*, and *libparmetis*, *libmetis*, *libptscotch*, *libptscotcherr* are also installed.
-
-Finally, write in terminal:
-```bash
-make -s DEBUG=False
-```
 A detailed explanation on how to install **SVL** on Windows, MacOS, and Linux can be found in [this link.](http://seismovlab.com/documentation/linkInstallation.html)
 
 License
