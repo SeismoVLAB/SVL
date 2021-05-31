@@ -46,7 +46,9 @@
 #include "Definitions.hpp"
 #include "Profiler.hpp"
 
-int main(int argc, char **argv){                                            
+int main(int argc, char **argv){ 
+    bool parsefile = false;
+                                           
     //Initialize MPI instance.
     PetscInitialize(&argc, &argv, NULL, NULL);
     MPI_Comm_rank(PETSC_COMM_WORLD, &rank);
@@ -56,7 +58,7 @@ int main(int argc, char **argv){
     printLogo();
 
     //Parse command line arguments.    
-    CommandLine(argc, argv);
+    CommandLine(argc, argv, parsefile);
 
     //Initialize the profiler.
     #if PROFILING
@@ -64,7 +66,7 @@ int main(int argc, char **argv){
     #endif
 
     //Performs the simulation using JSON input file.
-    RunFromJSON();
+    RunFromJSON(parsefile);
 
     //Finalize the profiler.
     #if PROFILING
