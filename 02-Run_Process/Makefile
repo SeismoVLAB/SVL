@@ -18,7 +18,7 @@
 #
 # Version     :
 # Date        : 12-12-2017
-# Modified	  : 02-11-2019
+# Modified	  : 04-18-2021
 # Source      : Makefile
 # Keywords    : <Compilation, Make, Executable>
 # Description : Compiles the Module for Serial/Parallel analysis.
@@ -76,4 +76,4 @@ wipe:
 
 clean:
 	@echo "$(RED)The executable and all objects were removed.$(NC)"
-	rm -rf $(OBJ) $(EXE) ../04-Documentation/html ../04-Documentation/latex
+	rm -rf $(OBJ) $(EXE) ../../WebSite/01-WebPage/documentation

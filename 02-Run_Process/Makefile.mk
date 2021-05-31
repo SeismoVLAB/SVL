@@ -4,28 +4,25 @@ NVCC  := nvcc
 MPICC := mpic++
 
 #LIBRARIES USED TO BE INCLUDED IN COMPILATION.
-MPI_DIR    = /usr/include/mpi
-EIGEN_DIR  = /home/danilo/Libraries/Eigen
-PETSC_DIR  = /home/danilo/Libraries/Petsc
-MUMPS_DIR  = /home/danilo/Libraries/Mumps
-METIS_DIR  = /usr/lib/x86_64-linux-gnu
-SCOTCH_DIR = /usr/lib/x86_64-linux-gnu
+EIGEN_DIR = /usr/include/eigen
+PETSC_DIR = /usr/lib/petsc
+MPI_DIR   = /usr/include/mpi
 
 #INCLUDE PETSC VARIABLES.
 include ${PETSC_DIR}/lib/petsc/conf/variables
 
 #ORDERING LIBRARIES.
-LPORD    = -L$(MUMPS_DIR)/PORD -lpord
-LMETIS   = -L$(METIS_DIR) -lparmetis -lmetis
-LSCOTCH  = -L$(SCOTCH_DIR) -lptesmumps -lptscotch -lptscotcherr
-LORDERS  = $(LMETIS) $(LPORD) $(LSCOTCH)
+LPORD   = -lpord
+LMETIS  = -lparmetis -lmetis
+LSCOTCH = -lptesmumps -lptscotch -lptscotcherr
+LORDERS = $(LMETIS) $(LPORD) $(LSCOTCH)
 
 #MUMPS LIBRARY.
-LIBMUMPS  = -L$(MUMPS_DIR) -ldmumps -lmumps_common -lpord
+LIBMUMPS  = -ldmumps -lmumps_common -lpord
 
 #OTHER LIBRARY.
-LIBSPAR   = -lscalapack-openmpi -lblacs-openmpi -llapack
-LIBOTHERS = -lblas -lpthread
+LIBSPAR   = 
+LIBOTHERS = 
 
 #LIBRARY PATH OPTIONS.
 LPATH = 
@@ -33,7 +30,7 @@ LIBS  = $(LORDERS) $(LIBMUMPS) $(LIBSPAR) $(LIBOTHERS)
 
 #COMPILATION MODE. 
 ifneq (, $(filter $(DEBUG), NO FALSE DISABLE No False Disable no false disable))
-	CFLAGS   = -O3 -m64 -fopenmp -std=c++14
+	CFLAGS   = -O3 -m64 -fopenmp -std=c++14 
 	EIGFLAGS = -DEIGEN_NO_DEBUG
 	NVFLAGS  = --ptxas-options=-O3 -m$(ARCH) -arch compute_$(NVARCH) -code sm_$(NVARCH)
 else
