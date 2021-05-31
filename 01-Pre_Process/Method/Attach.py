@@ -300,13 +300,13 @@ def addRigidBody(tag=np.nan, attributes={}):
     Parameters
     ----------
     tag : int
-        The identifier of the rigid body, i.e., tag > 1 (defferent from Nodes)
+        The identifier of the rigid body, i.e., tag > 1 (different from Nodes)
     attributes : dict
         Dictionary containing the diaphragm action and Nodes
         'tag'   : (int) the node tag that the rigid body node will take (must be different from 'Nodes')
         'ndof'  : (int) the number of degree of freedom of the rigid body i.e., 3 (2D) and 6 (3D)
         'list'  : (int or list) list of Nodes that belong to the rigid body
-        'center' : (str) center of rotation of the rigid body
+        'center' : (list) center of rotation of the rigid body
 
     Returns
     -------
@@ -347,7 +347,7 @@ def addSupportMotion(tag=np.nan, attributes={}):
         Dictionary containing the support motion action on a Nodes in a direction
         'type'  : (str) Constant or TimeSerie
         'value' : (float) displacement value if type=static 
-        'file'  : (str) displacement time serie file if type=dynamic
+        'file'  : (str) displacement time series file if type=dynamic
         'dof'   : (int) degree of freedom to apply the support motion
 
     Returns
@@ -410,7 +410,7 @@ def addMaterial(tag=np.nan, name='Unknown', attributes={}):
     """
     if name == 'Unknown':
         info = debugInfo(2)
-        print('\x1B[33m ALERT \x1B[0m: In file=\'%s\' at line=%d Section[%d] \'name\' must be specified.' %(info.filename,info.lineno,tag))
+        print('\x1B[33m ALERT \x1B[0m: In file=\'%s\' at line=%d Material[%d] \'name\' must be specified.' %(info.filename,info.lineno,tag))
         
     #Check whether the Material exists
     if tag not in Entities['Materials']:
@@ -546,8 +546,8 @@ def addDamping(tag=np.nan, name='Unknown', attributes={}):
     attributes : dict
         Specific properties for the created damping, for example
         'list' : The element identifier that share this damping
-        'ak'   : The stiffness proportinal factor used in Rayleigh Damping
-        'am'   : The mass proportinal factor used in Rayleigh Damping
+        'ak'   : The stiffness proportional factor used in Rayleigh Damping
+        'am'   : The mass proportional factor used in Rayleigh Damping
 
     Returns
     -------
@@ -622,7 +622,7 @@ def addLoad(tag=np.nan, name='Unknown', attributes={}):
         'list' (list) The identifier where this load acts upon
         'type' (str) The type of element load:
             type=Constant,TimeSeries (PointLoad)
-            type=Surcace,Body,PlaneWave,GeneralWave (ElementLoad)
+            type=Surface,Body,PlaneWave,GeneralWave (ElementLoad)
  
     Returns
     -------
@@ -712,7 +712,7 @@ def addRecorder(tag=np.nan, attributes={}):
         'file'  : (str) The output's file name
         'ndps'  : (int) Number of digit of precision for solution
         'nsamp' : (int) Number of point to skip when sampling the response
-        'resp'  : (str) The response associated to 'name' to be redorded
+        'resp'  : (str) The response associated to 'name' to be recorded
             Node     = disp, vel, accel, reaction
             Section  = strain, stress
             Element  = strain, stress, strainrate, internalforce

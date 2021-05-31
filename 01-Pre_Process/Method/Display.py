@@ -1,197 +1,17 @@
 #!/usr/bin/env python3
 # -*- coding: Utf-8 -*-
 
-import vtk
-from Core.Utilities import debugInfo
-from Core.Definitions import Entities, Options, VTKelems, VTKcolors, SVLclasses
+from Core.Utilities import debugInfo, setFileExtension
+from Core.Definitions import Entities, Options, SVLclasses
 
-def setVTKtype(option=None):
-    """
-    This function classifies each element depending on its name and
-    associate to it color, type, and name for VTK.\n
-    @visit  https://github.com/SeismoVLAB/SVL\n
-    @author Danilo S. Kusanovic 2020
-
-    Parameters
-    ----------
-    option : str
-        The color to be used in display: 
-        option = None, Elements, Partition
-
-    Returns
-    -------
-    None
-    """
-    count = 0
+def GetNumberOfFeatures():
+    #Gets the elements for this partition
+    nparaview = 0
     for eTag in Entities['Elements']:
-        name = Entities['Elements'][eTag]['name']
-        if name == 'ZEROLENGTH1D':
-            VTKelems['VTKtype'][eTag] = 3
-            VTKelems['VTKname'][eTag] = SVLclasses['Elements'][name]['type']
-            if option.upper() == 'ELEMENT':
-                VTKelems['VTKcolor'][eTag] = VTKcolors['elem']['TRUSS']
-        elif name == 'LIN2DTRUSS2':
-            VTKelems['VTKtype'][eTag] = 3
-            VTKelems['VTKname'][eTag] = SVLclasses['Elements'][name]['type']
-            if option.upper() == 'ELEMENT':
-                VTKelems['VTKcolor'][eTag] = VTKcolors['elem']['TRUSS']
-        elif name == 'KIN2DTRUSS2':
-            VTKelems['VTKtype'][eTag] = 3
-            VTKelems['VTKname'][eTag] = SVLclasses['Elements'][name]['type']
-            if option.upper() == 'ELEMENT':
-                VTKelems['VTKcolor'][eTag] = VTKcolors['elem']['TRUSS']
-        elif name == 'LIN3DTRUSS2':
-            VTKelems['VTKtype'][eTag] = 3
-            VTKelems['VTKname'][eTag] = SVLclasses['Elements'][name]['type']
-            if option.upper() == 'ELEMENT':
-                VTKelems['VTKcolor'][eTag] = VTKcolors['elem']['TRUSS']
-        elif name == 'KIN3DTRUSS2':
-            VTKelems['VTKtype'][eTag] = 3
-            VTKelems['VTKname'][eTag] = SVLclasses['Elements'][name]['type']
-            if option.upper() == 'ELEMENT':
-                VTKelems['VTKcolor'][eTag] = VTKcolors['elem']['TRUSS']
-        elif name == 'LIN3DTRUSS3':
-            VTKelems['VTKtype'][eTag] = 21
-            VTKelems['VTKname'][eTag] = SVLclasses['Elements'][name]['type']
-            if option.upper() == 'ELEMENT':
-                VTKelems['VTKcolor'][eTag] = VTKcolors['elem']['TRUSS']
-        elif name == 'LIN2DTRIA3':
-            VTKelems['VTKtype'][eTag] = 5
-            VTKelems['VTKname'][eTag] = SVLclasses['Elements'][name]['type']
-            if option.upper() == 'ELEMENT':
-                VTKelems['VTKcolor'][eTag] = VTKcolors['elem']['TRIA']
-        elif name == 'LIN2DTRIA6':
-            VTKelems['VTKtype'][eTag] = 22
-            VTKelems['VTKname'][eTag] = SVLclasses['Elements'][name]['type']
-            if option.upper() == 'ELEMENT':
-                VTKelems['VTKcolor'][eTag] = VTKcolors['elem']['TRIA']
-        elif name == 'LIN2DQUAD4':
-            VTKelems['VTKtype'][eTag] = 9
-            VTKelems['VTKname'][eTag] = SVLclasses['Elements'][name]['type']
-            if option.upper() == 'ELEMENT':
-                VTKelems['VTKcolor'][eTag] = VTKcolors['elem']['QUAD']
-        elif name == 'LIN2DQUAD8':
-            VTKelems['VTKtype'][eTag] = 23
-            VTKelems['VTKname'][eTag] = SVLclasses['Elements'][name]['type']
-            if option.upper() == 'ELEMENT':
-                VTKelems['VTKcolor'][eTag] = VTKcolors['elem']['QUAD']
-        elif name == 'PML2DQUAD4':
-            VTKelems['VTKtype'][eTag] = 9
-            VTKelems['VTKname'][eTag] = SVLclasses['Elements'][name]['type']
-            if option.upper() == 'ELEMENT':
-                VTKelems['VTKcolor'][eTag] = VTKcolors['elem']['QPML']
-        elif name == 'PML2DQUAD8':
-            VTKelems['VTKtype'][eTag] = 23
-            VTKelems['VTKname'][eTag] = SVLclasses['Elements'][name]['type']
-            if option.upper() == 'ELEMENT':
-                VTKelems['VTKcolor'][eTag] = VTKcolors['elem']['QPML']
-        elif name == 'LIN2DFRAME2':
-            VTKelems['VTKtype'][eTag] = 3
-            VTKelems['VTKname'][eTag] = SVLclasses['Elements'][name]['type']
-            if option.upper() == 'ELEMENT':
-                VTKelems['VTKcolor'][eTag] = VTKcolors['elem']['FRAME']
-        elif name == 'KIN2DFRAME2':
-            VTKelems['VTKtype'][eTag] = 3
-            VTKelems['VTKname'][eTag] = SVLclasses['Elements'][name]['type']
-            if option.upper() == 'ELEMENT':
-                VTKelems['VTKcolor'][eTag] = VTKcolors['elem']['FRAME']
-        elif name == 'LIN3DFRAME2':
-            VTKelems['VTKtype'][eTag] = 3
-            VTKelems['VTKname'][eTag] = SVLclasses['Elements'][name]['type']
-            if option.upper() == 'ELEMENT':
-                VTKelems['VTKcolor'][eTag] = VTKcolors['elem']['FRAME']
-        elif name == 'LIN3DSHELL3':
-            VTKelems['VTKtype'][eTag] = 5
-            VTKelems['VTKname'][eTag] = SVLclasses['Elements'][name]['type']
-            if option.upper() == 'ELEMENT':
-                VTKelems['VTKcolor'][eTag] = VTKcolors['elem']['SHELL']
-        elif name == 'LIN3DSHELL4':
-            VTKelems['VTKtype'][eTag] = 9
-            VTKelems['VTKname'][eTag] = SVLclasses['Elements'][name]['type']
-            if option.upper() == 'ELEMENT':
-                VTKelems['VTKcolor'][eTag] = VTKcolors['elem']['SHELL']
-        elif name == 'LIN3DTETRA4':
-            VTKelems['VTKtype'][eTag] = 10
-            VTKelems['VTKname'][eTag] = SVLclasses['Elements'][name]['type']
-            if option.upper() == 'ELEMENT':
-                VTKelems['VTKcolor'][eTag] = VTKcolors['elem']['TETRA']
-        elif name == 'LIN3DTETRA10':
-            VTKelems['VTKtype'][eTag] = 24
-            VTKelems['VTKname'][eTag] = SVLclasses['Elements'][name]['type']
-            if option.upper() == 'ELEMENT':
-                VTKelems['VTKcolor'][eTag] = VTKcolors['elem']['TETRA']
-        elif name == 'LIN3DHEXA8':
-            VTKelems['VTKtype'][eTag] = 12
-            VTKelems['VTKname'][eTag] = SVLclasses['Elements'][name]['type']
-            if option.upper() == 'ELEMENT':
-                VTKelems['VTKcolor'][eTag] = VTKcolors['elem']['HEXA']
-        elif name == 'LIN3DHEXA20':
-            VTKelems['VTKtype'][eTag] = 25
-            VTKelems['VTKname'][eTag] = SVLclasses['Elements'][name]['type']
-            if option.upper() == 'ELEMENT':
-                VTKelems['VTKcolor'][eTag] = VTKcolors['elem']['HEXA']
-        elif name == 'PML3DHEXA8':
-            VTKelems['VTKtype'][eTag] = 12
-            VTKelems['VTKname'][eTag] = SVLclasses['Elements'][name]['type']
-            if option.upper() == 'ELEMENT':
-                VTKelems['VTKcolor'][eTag] = VTKcolors['elem']['HPML']
-        elif name == 'PML3DHEXA20':
-            VTKelems['VTKtype'][eTag] = 25
-            VTKelems['VTKname'][eTag] = SVLclasses['Elements'][name]['type']
-            if option.upper() == 'ELEMENT':
-                VTKelems['VTKcolor'][eTag] = VTKcolors['elem']['HPML']
-        elif name == 'UNXBOUCWEN2DLINK':
-            VTKelems['VTKtype'][eTag] = 3
-            VTKelems['VTKname'][eTag] = SVLclasses['Elements'][name]['type']
-            if option.upper() == 'ELEMENT':
-                VTKelems['VTKcolor'][eTag] = VTKcolors['elem']['LINK']
-        elif name == 'UNXBOUCWEN3DLINK':
-            VTKelems['VTKtype'][eTag] = 3
-            VTKelems['VTKname'][eTag] = SVLclasses['Elements'][name]['type']
-            if option.upper() == 'ELEMENT':
-                VTKelems['VTKcolor'][eTag] = VTKcolors['elem']['LINK']
-        elif name == 'HDRBYAMAMOTO2DLINK':
-            VTKelems['VTKtype'][eTag] = 3
-            VTKelems['VTKname'][eTag] = SVLclasses['Elements'][name]['type']
-            if option.upper() == 'ELEMENT':
-                VTKelems['VTKcolor'][eTag] = VTKcolors['elem']['LINK']
-        elif name == 'HDRBYAMAMOTO3DLINK':
-            VTKelems['VTKtype'][eTag] = 3
-            VTKelems['VTKname'][eTag] = SVLclasses['Elements'][name]['type']
-            if option.upper() == 'ELEMENT':
-                VTKelems['VTKcolor'][eTag] = VTKcolors['elem']['LINK']
-        elif name == 'EQLIN2DQUAD4':
-            VTKelems['VTKtype'][eTag] = 9
-            VTKelems['VTKname'][eTag] = SVLclasses['Elements'][name]['type']
-            if option.upper() == 'ELEMENT':
-                VTKelems['VTKcolor'][eTag] = VTKcolors['elem']['QUAD']
-        elif name == 'TIEQLIN2DQUAD4':
-            VTKelems['VTKtype'][eTag] = 9
-            VTKelems['VTKname'][eTag] = SVLclasses['Elements'][name]['type']
-            if option.upper() == 'ELEMENT':
-                VTKelems['VTKcolor'][eTag] = VTKcolors['elem']['QUAD']
-        elif name == 'NULL2DFRAME2':
-            VTKelems['VTKtype'][eTag] = 3
-            VTKelems['VTKname'][eTag] = SVLclasses['Elements'][name]['type']
-            if option.upper() == 'ELEMENT':
-                VTKelems['VTKcolor'][eTag] = VTKcolors['elem']['NONE']
-        elif name == 'NULL3DFRAME2':
-            VTKelems['VTKtype'][eTag] = 3
-            VTKelems['VTKname'][eTag] = SVLclasses['Elements'][name]['type']
-            if option.upper() == 'ELEMENT':
-                VTKelems['VTKcolor'][eTag] = VTKcolors['elem']['NONE']
-        elif name == 'LINK':
-            VTKelems['VTKtype'][eTag] = 3
-            VTKelems['VTKname'][eTag] = SVLclasses['Elements'][name]['type']
-            if option.upper() == 'ELEMENT':
-                VTKelems['VTKcolor'][eTag] = VTKcolors['elem']['NONE']
+        nparaview += (len(Entities['Elements'][eTag]['conn']) + 1)
+    return nparaview
 
-        if option.upper() == 'PARTITION':
-            pTag = Options['partition'][count]
-            VTKelems['VTKcolor'][eTag] = VTKcolors['part'][pTag]
-        count += 1
-
-def renderData(option=None):
+def renderData(filename=''):
     """
     This function render a 3D view of the model created so far.\n
     @visit  https://github.com/SeismoVLAB/SVL\n
@@ -199,126 +19,135 @@ def renderData(option=None):
 
     Parameters
     ----------
-    option : str
-        The color to be used in display: 
-        option = None, Elements, Partition
+    filename : str
+        The file name for the ParaView VTK file
 
     Returns
     -------
-    None
+    The ParaView VTK file
     """
-    #Checks minimum parameters are provided
-    info = debugInfo(2) 
-    if not option:
-        option = 'element'
-    if option.upper() not in ['ELEMENT', 'PARTITION']:
-        print('\x1B[33m ALERT \x1B[0m: In file=\'%s\' at line=%d renderData(option=?) is not recognize.' %(info.filename,info.lineno))
-        option = 'element'
-    
-    #Sets color scheme and VTK types
-    setVTKtype(option)
+    #Pre-define variables
+    ThereAreNodes = False
+    ThereAreElems = False
+    ThereIsPartition = False
 
-    #Import VTK color schemes
-    colors = vtk.vtkNamedColors()
+    #Pre-defined VTK ParaView file name
+    filename = setFileExtension(filename, '.vtk')
+    filepath = Options['path'] + '/' + filename
 
-    renderer = vtk.vtkRenderer()
-    renderWindow = vtk.vtkRenderWindow()
-    renderWindow.SetSize(800, 800)
-    renderWindow.SetWindowName("Seismo-VLAB: Model Render Windows")
-    renderWindow.AddRenderer(renderer)
+    print(" Generating the VTK file : " + filename)
 
-    renderWindowInteractor = vtk.vtkRenderWindowInteractor()
-    renderWindowInteractor.SetRenderWindow(renderWindow)
-    axes = vtk.vtkAxesActor()
+    #Opens the ParaView File 
+    Paraviewfile = open(filepath, "w+")
+    Paraviewfile.write("# vtk DataFile Version 4.0\n")
+    Paraviewfile.write("SeismoVLAB: ParaView Visualization\n")
+    Paraviewfile.write("ASCII\n")
+    Paraviewfile.write("DATASET UNSTRUCTURED_GRID\n\n")
 
-    #Creates the Coordinate System
-    rgba = [0, 0, 0, 0]
-    colors.GetColor("Carrot", rgba)
-
-    widget = vtk.vtkOrientationMarkerWidget()
-    widget.SetOutlineColor(rgba[0], rgba[1], rgba[2])
-    widget.SetOrientationMarker(axes)
-    widget.SetInteractor(renderWindowInteractor)
-    widget.SetViewport(0.0, 0.0, 0.35, 0.35)
-    widget.SetEnabled(1)
-    widget.InteractiveOn()
-
-    #Color list for elements
-    Colors = vtk.vtkUnsignedCharArray()
-    Colors.SetNumberOfComponents(3)
-
-    #Generates the Node list for VTK
-    points = vtk.vtkPoints()
-
+    #Write Node Information in ParaView
     count = 0
-    VTKmap = dict()
+    options = 0
+    ParaviewMap = dict()
+    if Entities['Nodes']:
+        ThereAreNodes = True
+        Paraviewfile.write("POINTS %d float\n" % len(Entities['Nodes']))
+        for nTag in Entities['Nodes']:
+            coords = Entities['Nodes'][nTag]['coords']
+            if Options['dimension'] == 2:
+                coords = [coords[0], coords[1], 0.0]
+            elif Options['dimension'] == 1:
+                coords = [coords[0], 0.0, 0.0]
+            #Write the Node coordinates
+            Paraviewfile.write("%E %E %E\n" % (coords[0], coords[1], coords[2]))
+            #Creates the Node map
+            ParaviewMap[nTag] = count 
+            count += 1
+        Paraviewfile.write("\n")
+
+    #Write Element Information in ParaView
+    if ThereAreNodes and Entities['Elements']:
+        options += 3 
+        ThereAreElems = True
+        nfeatures = Options['nfeatures']
+        if Options['nfeatures'] == 0:
+            nfeatures = GetNumberOfFeatures()
+
+        Paraviewfile.write("CELLS %d %d\n" % (len(Entities['Elements']), nfeatures))
+        for eTag in Entities['Elements']:
+            connection = Entities['Elements'][eTag]['conn']
+            Paraviewfile.write("%d" % len(connection))
+            for nTag in connection:
+                Paraviewfile.write(" %d" % ParaviewMap[nTag])
+            Paraviewfile.write("\n")
+        Paraviewfile.write("\n")
+
+        #Element Rendering Type.
+        Paraviewfile.write("CELL_TYPES %d\n" % len(Entities['Elements']))
+        for eTag in Entities['Elements']:
+            name = Entities['Elements'][eTag]['name']
+            cell = SVLclasses['Elements'][name]['paraview']
+            Paraviewfile.write("%d\n" % cell)
+        Paraviewfile.write("\n")
+    elif ThereAreNodes and not ThereAreElems:
+        nNodes = len(Entities['Nodes'])
+        Paraviewfile.write("CELLS %d %d\n" % (nNodes, 2*nNodes))
+        for nTag in Entities['Nodes']:
+            Paraviewfile.write("1 %d\n" % ParaviewMap[nTag])
+        Paraviewfile.write("\n")
+
+        Paraviewfile.write("CELL_TYPES %d\n" % nNodes)
+        for nTag in Entities['Nodes']:
+            Paraviewfile.write("1\n")
+    elif not ThereAreNodes and not ThereAreElems:
+        print(" Entities['Nodes'] and Entities['Elements'] are empty")
+        Paraviewfile.close()
+        return
+
+    #Scalar Attributes (Node Tags) applied to Nodes.
+    Paraviewfile.write("POINT_DATA %d\n" % len(Entities['Nodes']))
+    Paraviewfile.write("SCALARS NodeIds int 1\n")
+    Paraviewfile.write("LOOKUP_TABLE pointIds\n")
     for nTag in Entities['Nodes']:
-        VTKmap[nTag] = count
-        coordinates = Entities['Nodes'][nTag]['coords']
-        if Options['dimension'] == 1:
-            coordinates = [coordinates[0], 0.0, 0.0]
-        if Options['dimension'] == 2:
-            coordinates = [coordinates[0], coordinates[1], 0.0]
-        elif Options['dimension'] == 3:
-            coordinates = [coordinates[0], coordinates[1], coordinates[2]]
-        points.InsertPoint(count, coordinates)
-        count += 1
+        Paraviewfile.write("%d\n" % nTag)
+    Paraviewfile.write("\n")
 
-    #Generate the VTK cell list
-    mesh = vtk.vtkUnstructuredGrid()
+    #Scalar Attributes (Partition) applied to Element.
+    if len(Options['partition']) > 0:
+        options += 1 
+        ThereIsPartition = True
 
-    nElems = len(Entities['Elements'])
-    mesh.Allocate(nElems)
+    if ThereAreElems:
+        Paraviewfile.write("CELL_DATA %d\n" % len(Entities['Elements']))
+        Paraviewfile.write("FIELD attributes %d\n" % options)
 
-    for eTag in Entities['Elements']:
-        name = VTKelems['VTKname'][eTag]
-        conn = Entities['Elements'][eTag]['conn']
-        if name == 'LINE':
-            connection = [VTKmap[conn[0]], VTKmap[conn[1]]]
-            mesh.InsertNextCell(vtk.VTK_LINE, 2, connection)
-        elif name == 'TRIA':
-            connection = [VTKmap[conn[0]], VTKmap[conn[1]], VTKmap[conn[2]]]
-            mesh.InsertNextCell(vtk.VTK_TRIANGLE, 3, connection)
-        elif name == 'QUAD':
-            connection = [VTKmap[conn[0]], VTKmap[conn[1]], VTKmap[conn[2]], VTKmap[conn[3]]]
-            mesh.InsertNextCell(vtk.VTK_QUAD, 4, connection)
-        elif name == 'TETRA':
-            connection = [VTKmap[conn[0]], VTKmap[conn[1]], VTKmap[conn[2]], VTKmap[conn[3]]]
-            mesh.InsertNextCell(vtk.VTK_TETRA, 4, connection)
-        elif name == 'HEXA':
-            connection = [VTKmap[conn[0]], VTKmap[conn[1]], VTKmap[conn[2]], VTKmap[conn[3]], VTKmap[conn[4]], VTKmap[conn[5]], VTKmap[conn[6]], VTKmap[conn[7]]]
-            mesh.InsertNextCell(vtk.VTK_HEXAHEDRON, 8, connection)
-        Colors.InsertNextTuple3(VTKelems['VTKcolor'][eTag][0], VTKelems['VTKcolor'][eTag][1], VTKelems['VTKcolor'][eTag][2])
-    mesh.SetPoints(points)
+        #Mesh Partition
+        if ThereIsPartition:
+            Paraviewfile.write("Partition 1 %d int\n" % len(Entities['Elements']))
+            for pid in Options['partition']:
+                Paraviewfile.write("%d\n" % pid)
+            Paraviewfile.write("\n")
 
-    #Assign the colors scheme
-    mesh.GetCellData().SetScalars(Colors)
-    mesh.Modified()
-    
-    meshMapper = vtk.vtkDataSetMapper()
-    meshMapper.SetInputData(mesh)
+        #Element's Material
+        Paraviewfile.write("Materials 1 %d int\n" % len(Entities['Elements']))
+        for eTag in Entities['Elements']:
+            if 'material' in Entities['Elements'][eTag]['attributes']:
+                Paraviewfile.write("%d\n" % Entities['Elements'][eTag]['attributes']['material'])
+            else:
+                Paraviewfile.write("-1\n")
+        Paraviewfile.write("\n")
 
-    meshActor = vtk.vtkActor()
-    meshActor.SetMapper(meshMapper)
-    meshActor.GetProperty().EdgeVisibilityOn()
-    meshActor.GetProperty().SetPointSize(5)
-    meshActor.GetProperty().SetLineWidth(0.5)
-    meshActor.GetProperty().SetSpecularColor(1.0, 1.0, 1.0)
-    meshActor.GetProperty().SetSpecularPower(100)
+        #Element's Section
+        Paraviewfile.write("Sections 1 %d int\n" % len(Entities['Elements']))
+        for eTag in Entities['Elements']:
+            if 'section' in Entities['Elements'][eTag]['attributes']:
+                Paraviewfile.write("%d\n" % Entities['Elements'][eTag]['attributes']['section'])
+            else:
+                Paraviewfile.write("-1\n")
+        Paraviewfile.write("\n")
 
-    #Creates the Renderer
-    renderer.AddActor(meshActor)
-    renderer.SetBackground2(colors.GetColor3d('LightBlue'))
-    renderer.SetBackground(colors.GetColor3d('LavenderBlush'))
-    renderer.GradientBackgroundOn()
-
-    #Loacte the Camera
-    renderer.ResetCamera()
-    renderer.GetActiveCamera().Elevation(95.0)
-    renderer.GetActiveCamera().Azimuth(30.0)
-    renderer.GetActiveCamera().Dolly(1.2)
-
-    #Starts and Display the Finite Element Mesh
-    renderWindowInteractor.Initialize()
-    renderWindow.Render()
-    renderWindowInteractor.Start()
+        #Mesh Partition
+        Paraviewfile.write("elemIds 1 %d int\n" % len(Entities['Elements']))
+        for eTag in Entities['Elements']:
+            Paraviewfile.write("%d\n" % eTag)
+    Paraviewfile.close()
+    print(" The VTK file can now be open in ParaView!\n")

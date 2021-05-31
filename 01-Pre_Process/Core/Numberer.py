@@ -1,17 +1,19 @@
 #!/usr/bin/python3
 # -*- coding: Utf-8 -*-
 
+import random
 import numpy as np
 import scipy.sparse as sps
 import matplotlib.pylab as plt
 from scipy.sparse import find
+from scipy.sparse import linalg as sla
 from Core.Definitions import Entities, Options
 
-#Estimates the memory allocation for PETSc
 def PetscAllocation():
     """
     This function computes (bruta fuerza) the number of non-zero for each 
-    diagonal and off-diagonal blocks required for allocation in PETSc.\n
+    diagonal and off-diagonal blocks required for allocation in PETSc. In
+    simple words, it estimates the memory allocation for PETSc.\n
     @visit  https://github.com/SeismoVLAB/SVL\n
     @author Danilo S. Kusanovic 2020
 
@@ -61,7 +63,6 @@ def PetscAllocation():
     Options['d_nz'] = n_nz
     Options['o_nz'] = o_nz
 
-#Plots the matrix sparsity pattern
 def plotSparsePattern(A):
     """
     This function display the sparsity pattern of a given matrix in
@@ -85,8 +86,7 @@ def plotSparsePattern(A):
 
     plt.close()
 
-#Crates the sparse matris in COO format
-def FormSparseMatrix():
+def FormSparseMatrix(format='coo'):
     """
     This function compute/emulates the Sparse Matrix Pattern to be employed 
     in the user's defined ordering scheme.\n
@@ -95,7 +95,8 @@ def FormSparseMatrix():
 
     Parameters
     ----------
-    None
+    format : str
+        The sparse matrix format: coo, csr, csc
 
     Output
     -------
@@ -123,7 +124,7 @@ def FormSparseMatrix():
             for jdof in total:
                 I[m] = idof
                 J[m] = jdof
-                V[m] = 1.00
+                V[m] = random.random()
                 m += 1
 
     A = sps.coo_matrix((V,(I, J)), shape=(N,N))
@@ -171,11 +172,14 @@ def FormSparseMatrix():
 
     #The Final Element Assembly pattern 
     A = T.transpose()*A*T
-    A = A.tocsr()
+
+    if format == 'csr':
+        A = A.tocsr()
+    elif format == 'csc':
+        A = A.tocsc()
 
     return A
 
-#Generates a plain ordering scheme
 def PlainScheme():
     """
     This function assign a Plain Scheme to the degree of freedom of each Node, 
@@ -226,33 +230,11 @@ def PlainScheme():
     Options['ntotal'] = count0
     Options['nconstraint'] = nConstraintDofs
 
-#Generates a minimum-degree ordering scheme
 def MinimumDegreeScheme():
     """
     This function performs the Minimum-Degree ordering Scheme to the free
     degree of freedom. First compute the Sparse Matrix Pattern, and then
-    computes the permutation vector. Such vercor is finally employed to
-    re-label the free-degree-of-freedom.\n
-    @visit  https://github.com/SeismoVLAB/SVL\n
-    @author Danilo S. Kusanovic 2020
-
-    Parameters
-    ----------
-    None
-
-    Output
-    -------
-    None
-    """
-    print('\x1B[33m ALERT \x1B[0m: The degree-of-freedom ordering MAXIMUM-DEGREE is not implemented yet.')
-    print(' The degree-of-freedom numbering will assume a Plain Scheme.')
-
-#Generates a CutHill-McKee ordering scheme
-def CutHillMcKeeScheme():
-    """
-    This function performs the CutHill-McKee ordering Scheme to the free
-    degree of freedom. First compute the Sparse Matrix Pattern, and then
-    computes the permutation vector. Such vercor is finally employed to
+    computes the permutation vector. Such vector is finally employed to
     re-label the free-degree-of-freedom.\n
     @visit  https://github.com/SeismoVLAB/SVL\n
     @author Danilo S. Kusanovic 2020
@@ -266,7 +248,53 @@ def CutHillMcKeeScheme():
     None
     """
     #Gets the Sparse Matrix to Perform Permutation
-    A = FormSparseMatrix()
+    A = FormSparseMatrix('csc')
+
+    #Computes the Permutation Vector for the Matrix
+    lu = sla.splu(A, permc_spec='MMD_ATA')
+    perm = lu.perm_c
+
+    #The New Free-Degree-Of-Freedom Numbering
+    N = len(perm)
+    I = np.zeros(N, dtype=int)
+    I[perm] = np.arange(0, N, 1)
+
+    #Transform the degree of freedom numbering form Plain to CutHill-McKee
+    for nTag in Entities['Nodes']:
+        ndof = Entities['Nodes'][nTag]['ndof']
+        free = Entities['Nodes'][nTag]['freedof']
+        aux  = np.zeros(ndof, dtype=int)  
+
+        #New-Free degree-of-freedom numbering.
+        for k in range(ndof):
+            if free[k] > -1:
+                aux[k] = I[free[k]]
+            else:
+                aux[k] = free[k]
+
+        #Assign the Free degree-of-freedom numbering.
+        Entities['Nodes'][nTag]['freedof'] = aux
+    print('\x1B[33m ALERT \x1B[0m: The Minimum Degree scheme has not been validated.')
+
+def CutHillMcKeeScheme():
+    """
+    This function performs the CutHill-McKee ordering Scheme to the free
+    degree of freedom. First compute the Sparse Matrix Pattern, and then
+    computes the permutation vector. Such vector is finally employed to
+    re-label the free-degree-of-freedom.\n
+    @visit  https://github.com/SeismoVLAB/SVL\n
+    @author Danilo S. Kusanovic 2020
+
+    Parameters
+    ----------
+    None
+
+    Output
+    -------
+    None
+    """
+    #Gets the Sparse Matrix to Perform Permutation
+    A = FormSparseMatrix('csr')
 
     #Computes the Permutation Vector for the Matrix
     perm = sps.csgraph.reverse_cuthill_mckee(A, True)
@@ -295,8 +323,8 @@ def CutHillMcKeeScheme():
 #Finds nodes that do not belong elements
 def FindDefectiveNodes():
     """
-    This function loops over the Element and identify Point that does not
-    belong to them. Then, it fix such Point that are defective. Constraints 
+    This function loops over the Element and identify Nodes that do not
+    belong to them. Then, it fix such Nodes that are defective. Constraints 
     of type Diaphragm or General are not considered defective.\n
     @visit  https://github.com/SeismoVLAB/SVL\n
     @author Danilo S. Kusanovic 2020
@@ -342,8 +370,7 @@ def FindDefectiveNodes():
     Options['nlumped'] = nLumpedStorage
     Options['nconsistent'] = nConsistentStorage
 
-#Generates the degree-of-freedom numbering
-def setDegreeOfFreedom(plot=None):
+def setDegreeOfFreedom(plot=False):
     """
     This function assigns the degree of freedom numbering for each Node 
     according to the User's numbering pattern.\n
@@ -365,7 +392,7 @@ def setDegreeOfFreedom(plot=None):
         pass
     elif Options['numbering'].upper() == 'CUTHILL-MCKEE':
         CutHillMcKeeScheme()
-    elif Options['numbering'].upper() == 'MAXIMUM-DEGREE':
+    elif Options['numbering'].upper() == 'MINIMUM DEGREE':
         MinimumDegreeScheme()
 
     #Gets the Sparse Matrix to Perform Permutation

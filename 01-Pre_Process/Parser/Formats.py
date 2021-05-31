@@ -19,7 +19,7 @@ def parseFile(filepath=None, fileformat=None):
     filepath : str
         The full-path where the files is located
     format : str
-        The file format or layout style (style=SAP, ETABS, gmsh, other)
+        The file format or layout style (style=SAP, ETABS, other)
 
     Returns
     -------

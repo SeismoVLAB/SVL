@@ -484,7 +484,7 @@ def parseETABS(filepath):
         if m not in mSet:
             del mesh['Materials'][m]
 
-    #Cleans the unused sectionss
+    #Cleans the unused sections
     sTags = list(mesh['Sections'].keys())
     for s in sTags:
         if s not in sSet:

@@ -43,7 +43,9 @@ Options = {
     'allocation'  : 'NO',
     'numbering'   : 'Plain',
     'metispath'   : '',
-    'massform'    : 'consistent',
+    'solution'    : 'Sequential',
+    'massform'    : 'Consistent',
+    'wasChecked'  : False,
     'nparts'      :  1,
     'dimension'   :  0,
     'nfree'       :  0,
@@ -73,64 +75,6 @@ SolverOption = {
     'KSPBCGS' : 1,
     'KSPCGS'  : 2,
     'KSPBICG' : 3
-}
-
-VTKcolors = {
-    #Default VTK colors associated to an option
-    # https://github.com/SeismoVLAB/SVL
-    # @author Danilo S. Kusanovic 2020
-    #  'part' : can handle up to 23 partitions
-    #  'elem' : defines the color for element type
-    'part': {
-        0      : [  0,  0,255],
-        1      : [  0,255,  0],
-        2      : [255,  0,  0],
-        3      : [  0,255,255],
-        4      : [255,  0,255],
-        5      : [255,255,  0],
-        6      : [ 29,249, 20], 
-        7      : [237,237,237],
-        8      : [165,105, 79],
-        9      : [146,110,174],
-        10     : [ 59,176,143],
-        11     : [255,182, 83],
-        12     : [128,218,235],
-        13     : [255,155,170],
-        14     : [255,255,159],
-        15     : [176,183,198],
-        16     : [ 25, 25, 25],
-        17     : [  0,  0,128],
-        18     : [  0,128,  0],
-        19     : [128,  0,  0],
-        20     : [  0,128,128],
-        21     : [128,  0,128],
-        22     : [128,128,  0]
-    },
-    'elem': {
-        'NONE' : [ 29,249, 20], 
-        'TRUSS': [ 25, 25, 25],
-        'FRAME': [165,105, 79],
-        'TRIA' : [146,110,174],
-        'QUAD' : [ 59,176,143],
-        'QPML' : [255,182, 83],
-        'SHELL': [128,218,235],
-        'TETRA': [255,155,170],
-        'HEXA' : [255,255,159],
-        'HPML' : [176,183,198],
-        'LINK' : [ 25, 25, 25]
-    }
-}
-
-VTKelems = {
-    #VTK dictionary with associated element properties to be display in VTK
-    # https://github.com/SeismoVLAB/SVL
-    # @author Danilo S. Kusanovic 2020
-    #  'VTKname'  : stores the basic element type (LINE, QUAD, HEXA) for the SVL (element class) 
-    #  'VTKtype'  : stores the VTK cell element type for rendering
-    #  'VTKcolor' : stores the color to be applied to each element in domain
-    'VTKname'  : {},
-    'VTKtype'  : {},
-    'VTKcolor' : {}
 }
 
 SVLclasses = {
@@ -184,6 +128,26 @@ SVLclasses = {
         'PLASTIC3DBA': {
             'color': [255,182, 83], 
             'dim': [3]
+        },
+        'ELASTIC1DFIBER': {
+            'color': [153,76,0], 
+            'dim': [1,2,3]
+        },
+        'STEEL1DFIBER': {
+            'color': [0,153,0], 
+            'dim': [1,2,3]
+        },
+        'CONCRETE1DFIBER': {
+            'color': [128,128, 128], 
+            'dim': [1,2,3]
+        },
+        'ELASTIC1DGAP': {
+            'color': [183, 149, 11], 
+            'dim': [1,2,3]
+        },
+        'PLASTIC1DGAP': {
+            'color': [44, 62, 80], 
+            'dim': [1,2,3]
         }
     },
     'Sections': {
@@ -253,6 +217,14 @@ SVLclasses = {
         },
         'LIN3DWIDEFLANGE': {
             'color': [255,182,83], 
+            'dim': [3]
+        },
+        'FIB3DLINESECTION': {
+            'color': [255,0,255], 
+            'dim': [3]
+        },
+        'FIB3DAREASECTION': {
+            'color': [221,160,221], 
             'dim': [3]
         },
     },

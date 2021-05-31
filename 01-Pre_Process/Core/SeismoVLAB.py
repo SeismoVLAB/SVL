@@ -45,7 +45,7 @@ def createFolders():
             if not os.path.exists(dirName):
                 os.mkdir(dirName)
 
-def Entities2Processor(matSubdomain, secSubdomain, nodeSubdomain, massSubdomain, conSubdomain, elemSubdomain, k):
+def Entities2Processor(matSubdomain, secSubdomain, nodeSubdomain, massSubdomain, conSubdomain, elemSubdomain, surfSubdomain, k):
     """
     This function creates a dictionary that holds all information required to
     be written in the k-th processor  
@@ -55,17 +55,17 @@ def Entities2Processor(matSubdomain, secSubdomain, nodeSubdomain, massSubdomain,
     Parameters
     ----------
     matSubdomain  : list
-        The material indexes tha belongs to the k-th partition
+        The material indexes that belongs to the k-th partition
     secSubdomain  : list
-        The section indexes tha belongs to the k-th partition
+        The section indexes that belongs to the k-th partition
     nodeSubdomain : list
-        The node indexes tha belongs to the k-th partition
+        The node indexes that belongs to the k-th partition
     conSubdomain  : list
-        The constraint indexes tha belongs to the k-th partition
+        The constraint indexes that belongs to the k-th partition
     elemSubdomain : list
-        The material indexes tha belongs to the k-th partition
-    loadSubdomain : list
-        The load indexes tha belongs to the k-th partition
+        The material indexes that belongs to the k-th partition
+    surfSubdomain : list
+        The surface indexes that belongs to the k-th partition
     k : int
         The processor (partition) number
 
@@ -76,7 +76,7 @@ def Entities2Processor(matSubdomain, secSubdomain, nodeSubdomain, massSubdomain,
     """
     #Empty dictionary to be written
     ToProcessor = {
-        'Global'      : {}, 
+        'Global'      : {},
         'Materials'   : {}, 
         'Sections'    : {}, 
         'Nodes'       : {}, 
@@ -93,7 +93,13 @@ def Entities2Processor(matSubdomain, secSubdomain, nodeSubdomain, massSubdomain,
         }
     
     #Global parameters stored in Entities for simulation
-    ToProcessor['Global'] = {'ndim': Options['dimension'], 'ntotal': Options['ntotal'], 'nfree': Options['nfree'], 'mass': Options['massform'].upper()} 
+    ToProcessor['Global'] = {
+        'ndim': Options['dimension'], 
+        'ntotal': Options['ntotal'], 
+        'nfree': Options['nfree'], 
+        'massform': Options['massform'].upper(), 
+        'solution': Options['solution'].upper()
+    } 
 
     #Gets the materials for this partition
     for tag in matSubdomain:
@@ -138,11 +144,10 @@ def Entities2Processor(matSubdomain, secSubdomain, nodeSubdomain, massSubdomain,
     Options['nfeatures'] += Options['nparaview']
 
     #Gets the surfaces for this partition
-    for sTag in Entities['Surfaces']:
+    for sTag in surfSubdomain:
         eTag = Entities['Surfaces'][sTag]['etag']
-        if eTag in elemSubdomain:
-            face = Entities['Surfaces'][sTag]['face']
-            ToProcessor['Surfaces'][str(sTag)] = {'element': eTag, 'face': face}
+        face = Entities['Surfaces'][sTag]['face']
+        ToProcessor['Surfaces'][str(sTag)] = {'element': eTag, 'face': face}
 
     #Gets the dampings for this partition
     for dTag in Entities['Dampings']:
@@ -172,7 +177,12 @@ def Entities2Processor(matSubdomain, secSubdomain, nodeSubdomain, massSubdomain,
                 loadSubdomain.append(lTag)
                 Entities['Loads'][lTag]['attributes']['list'] = list(set(Entities['Loads'][lTag]['attributes']['list']).difference(nTags))
         elif name == 'ELEMENTLOAD':
-            eTags = sorted(list(set(elemSubdomain).intersection(Entities['Loads'][lTag]['attributes']['list'])))
+            #Check the indexes correspond to element or surface
+            if Entities['Loads'][lTag]['attributes']['type'] == 'SURFACE':
+                eTags = sorted(list(set(surfSubdomain).intersection(Entities['Loads'][lTag]['attributes']['list'])))
+            else:
+                eTags = sorted(list(set(elemSubdomain).intersection(Entities['Loads'][lTag]['attributes']['list'])))
+
             if eTags:
                 fTag  = Entities['Loads'][lTag]['attributes']['fun']
                 fname = Entities['Functions'][fTag]['name']
@@ -234,6 +244,12 @@ def Entities2Processor(matSubdomain, secSubdomain, nodeSubdomain, massSubdomain,
                 ToProcessor['Recorders'][str(rTag)]['file'] = OUTFILE
                 ToProcessor['Recorders'][str(rTag)]['list'] = nTags.copy()
         elif Entities['Recorders'][rTag]['name'] == 'ELEMENT':
+            eTags = sorted(list(set(elemSubdomain).intersection(Entities['Recorders'][rTag]['list'])))
+            if eTags:
+                ToProcessor['Recorders'][str(rTag)] = copy.deepcopy(Entities['Recorders'][rTag])
+                ToProcessor['Recorders'][str(rTag)]['file'] = OUTFILE
+                ToProcessor['Recorders'][str(rTag)]['list'] = eTags.copy()
+        elif Entities['Recorders'][rTag]['name'] == 'SECTION':
             eTags = sorted(list(set(elemSubdomain).intersection(Entities['Recorders'][rTag]['list'])))
             if eTags:
                 ToProcessor['Recorders'][str(rTag)] = copy.deepcopy(Entities['Recorders'][rTag])
@@ -333,11 +349,12 @@ def createPartitions():
         for eTag in elemSubdomain:
             if 'section' in Entities['Elements'][eTag]['attributes']:
                 sTag = Entities['Elements'][eTag]['attributes']['section']
-                mTag = Entities['Sections'][sTag]['attributes']['material']
                 if Entities['Sections'][sTag]['model'] == 'PLAIN':
+                    mTag = Entities['Sections'][sTag]['attributes']['material']
                     matSubdomain.add(mTag)
-                elif  Entities['Sections'][mTag]['model'] == 'FIBER':
-                    matSubdomain.update(mTag)
+                elif  Entities['Sections'][sTag]['model'] == 'FIBER':
+                    fTag = list(np.unique(np.array(Entities['Sections'][sTag]['attributes']['fiber'])))
+                    matSubdomain.update(fTag)
                 secSubdomain.add(sTag)
 
         #Constraints (Equal, General, Diaphragm) that belong to this partition
@@ -354,8 +371,15 @@ def createPartitions():
             for mNode in Master:
                 nodeSubdomain.add(mNode)
 
+        #Surfaces that belong to this partition
+        surfSubdomain = set() 
+        for sTag in Entities['Surfaces']:
+            eTag = Entities['Surfaces'][sTag]['etag']
+            if eTag in elemSubdomain:
+                surfSubdomain.add(sTag)
+
         #Sets the Entities that belong to this partition
-        ToProcessor = Entities2Processor(matSubdomain,secSubdomain,nodeSubdomain,massSubdomain,conSubdomain,elemSubdomain,k)
+        ToProcessor = Entities2Processor(matSubdomain,secSubdomain,nodeSubdomain,massSubdomain,conSubdomain,elemSubdomain,surfSubdomain,k)
 
         #Writes the partition in separated files
         dict2json(ToProcessor, k)
@@ -366,12 +390,9 @@ def createPartitions():
 
     #SeismoVLAB execution command line
     nparts = Options['nparts']
-    if nparts == 1:
-        Options['run'] = ' ' + Options['runanalysis'] + '/SeismoVLAB.exe -dir ' + Options['execpath'] + ' -file ' + Options['execfile'] + '\n'
-    elif nparts > 1:
-        Options['run'] = ' mpirun -np ' + str(nparts) + ' ' + Options['runanalysis'] + '/SeismoVLAB.exe -dir ' + Options['execpath'] + ' -file ' + Options['execfile'] + '\n'
+    Options['run'] = ' mpirun -np ' + str(nparts) + ' ' + Options['runanalysis'] + '/SeismoVLAB.exe -dir \'' + Options['execpath'] + '\' -file \'' + Options['execfile'] + '\'\n'
 
-    #Cleans generated auxiliar files
+    #Cleans generated auxiliary files
     os.remove(Options['execpath'] + '/Graph.out')
     os.remove(Options['execpath'] + '/Graph.out.epart.' + str(nparts))
     os.remove(Options['execpath'] + '/Graph.out.npart.' + str(nparts)) 
@@ -475,9 +496,9 @@ def checkWarnings():
     for sTag in Entities['Surfaces']:
         eTag = Entities['Surfaces'][sTag]['etag']
         if eTag in Entities['Elements']:
-            name = Entities['Elements'][sTag]['name']
+            name = Entities['Elements'][eTag]['name']
             surf = Entities['Surfaces'][sTag]['conn']
-            conn = np.array(Entities['Elements'][sTag]['conn'])
+            conn = np.array(Entities['Elements'][eTag]['conn'])
             Entities['Surfaces'][sTag]['face'] = SurfaceFace(SVLclasses['Elements'][name]['type'], surf, conn)
         else:
             print('   *** Surface[%s] does not belong to Element[%s] ***' % (sTag, eTag))
@@ -486,7 +507,7 @@ def checkWarnings():
     for lTag in Entities['Loads']:
         Name = Entities['Loads'][lTag]['name']
         if Name == 'POINTLOAD':
-            #Prepare Node indeces for 'ALL' case in list
+            #Prepare Node indexes for 'ALL' case in list
             if isinstance(Entities['Loads'][lTag]['attributes']['list'], str):
                 Entities['Loads'][lTag]['attributes']['list'] = list(Entities['Nodes'].keys())
 
@@ -512,7 +533,7 @@ def checkWarnings():
                     else:
                         Entities['Functions'][fTag]['attributes']['file'] = filepath
         elif Name == 'ELEMENTLOAD':
-            #Prepare Node indeces for 'ALL' case in list
+            #Prepare Node indexes for 'ALL' case in list
             if isinstance(Entities['Loads'][lTag]['attributes']['list'], str):
                 Entities['Loads'][lTag]['attributes']['list'] = list(Entities['Elements'].keys())
 
@@ -700,6 +721,42 @@ def checkWarnings():
             print('   *** Simulation[%s] has no defined combination ***' % sTag)
            
     print(' Done checking!\n')
+    Options['wasChecked'] = True
+
+def CreateRunAnalysisFiles(plot=False):
+    """
+    This function gathers provided model information and post-process them 
+    generating constraints, fiber sections, degree of freedom numbering and
+    partitions to be written in Run-Analysis JSON format .\n
+    @visit  https://github.com/SeismoVLAB/SVL\n
+    @author Danilo S. Kusanovic 2020
+
+    Returns
+    -------
+    None
+    """
+    #Creates the fiber section
+    GenerateFiberSection()
+
+    #Enforce diaphragm constraints
+    ApplyConstraints()
+
+    #Check if the model is properly done
+    if not Options['wasChecked']:
+        checkWarnings()
+
+    #Generate DRM input files
+    GenerateDRMFiles()
+
+    #Set degree of freedom
+    setDegreeOfFreedom(plot)
+
+    #Generate the Entities group
+    createPartitions()
+
+    #Prints SVL Run-Analysis execution
+    print(Options['run'])
+
 
 #Functions to be run when SeismoVLAB is imported
 printHeader()

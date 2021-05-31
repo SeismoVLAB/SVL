@@ -53,7 +53,9 @@ def cleanAll():
     Options['allocation' ] = 'NO'
     Options['numbering'  ] = 'Plain'
     Options['massform'   ] = 'consistent'
+    Options['solution'   ] = 'Sequential'
     Options['nparts'     ] =  1
+    Options['wasChecked' ] = False
     Options['preanalysis'] = preanalysis
     Options['runanalysis'] = runanalysis
     setFilePath()
@@ -126,11 +128,11 @@ def debugInfo(level):
     Parameters
     ----------
     level : int
-        Level inside the dictionry to look for information
+        Level inside the dictionary to look for information
 
     Returns
     -------
-    info : struct
+    info : struc
         Structure containing information of the function called
     """
     callerframerecord = inspect.stack()[level]
@@ -187,7 +189,7 @@ def printAll(name):
 
 def tryOpenfile(filepath):
     """
-    This function attempst to open a file\n
+    This function attempts to open a file\n
     @visit  https://github.com/SeismoVLAB/SVL\n
     @author Danilo S. Kusanovic 2020
 
@@ -208,6 +210,42 @@ def tryOpenfile(filepath):
     except IOError:
         return True
 
+def setFileExtension(filename='', extension=''):
+    """
+    This function sets the file extension\n
+    @visit  https://github.com/SeismoVLAB/SVL\n
+    @author Danilo S. Kusanovic 2020
+
+    Parameters
+    ----------
+    filename : str
+        String containing the file name
+    extension : str
+        String containing the file extension
+
+    Returns
+    -------
+    str
+        The file name with extension
+    """
+    n = len(extension)
+    m = len(filename)
+    if m == 0:
+        if n == 0:
+            filename = 'output.out'
+        else:
+            filename = 'output' + extension
+    else:
+        if n == 0:
+            filename += '.out'
+        else:
+            if m > n:
+                if filename[-n:] != extension:
+                    filename += extension
+            else:
+                filename += extension
+    return filename
+
 def saveAs(filename='output'):
     """
     This function saves in a python file all entities defined so far in command prompt\n
@@ -223,9 +261,13 @@ def saveAs(filename='output'):
     -------
     None
     """
-    #TODO: FINISH THIS PROCESS
+    #Pre-defined python file name
+    filename = setFileExtension(filename, '.py')
+
     #The SVL output file name
-    filepath = Options['path'] + '/' + filename + '.py'
+    filepath = Options['path'] + '/' + filename
+
+    print(" Generating the python file : " + filename)
     
     pyFile = open(filepath, "w+")
 
@@ -244,10 +286,9 @@ def saveAs(filename='output'):
 
     pyFile.write("#User's (pre-defined) options\n")
     pyFile.write("SVL.Options[\'file\'     ] = \'%s\'\n" % Options['file'])
-    pyFile.write("SVL.Options[\'format\'   ] = \'%s\'\n" % Options['format'])
-    pyFile.write("SVL.Options[\'numbering\'] = \'%s\'\n" % Options['numbering'])
+    pyFile.write("SVL.Options[\'numbering\'] = \'%s\'\n" % Options['numbering'].upper())
+    pyFile.write("SVL.Options[\'massform\' ] = \'%s\'\n" % Options['massform'].upper())
     pyFile.write("SVL.Options[\'metispath\'] = \'%s\'\n" % Options['metispath'])
-    pyFile.write("SVL.Options[\'massform\' ] = \'%s\'\n" % Options['massform'])
     pyFile.write("SVL.Options[\'nparts\'   ] = %d\n" % Options['nparts'])
     pyFile.write("SVL.Options[\'dimension\'] = %d\n" % Options['dimension'])
     pyFile.write("\n")
@@ -349,7 +390,7 @@ def saveAs(filename='output'):
     if Entities['Simulations']:
         pyFile.write("#Create Analysis\n")
         for aTag in Entities['Simulations']:
-            #Indeces for each Entity
+            #Indexes for each Entity
             nTag = Entities['Simulations'][aTag]['attributes']['analysis']
             mTag = Entities['Simulations'][aTag]['attributes']['algorithm']
             iTag = Entities['Simulations'][aTag]['attributes']['integrator']
@@ -374,5 +415,6 @@ def saveAs(filename='output'):
             pyFile.write("SVL.addAlgorithm(tag=%d, attributes=%s)\n" % (mTag, str(algorithm)))
             pyFile.write("SVL.addIntegrator(tag=%d, attributes=%s)\n" % (iTag, str(Entities['Integrators'][iTag])))
             pyFile.write("SVL.addSolver(tag=%d, attributes=%s)\n" % (sTag, str(solver)))
-            pyFile.write("SVL.addSimulation(tag=%d, combo=%d, attributes=%s)\n" % (aTag, Entities['Simulations'][aTag]['combo'], str(Entities['Simulations'][aTag]['attributes'])))
+            pyFile.write("SVL.addSimulation(tag=%d, combo=%d, attributes=%s)\n\n" % (aTag, Entities['Simulations'][aTag]['combo'], str(Entities['Simulations'][aTag]['attributes'])))
     pyFile.close()
+    print(" The python file can now be used!\n")

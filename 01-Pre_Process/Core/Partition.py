@@ -7,7 +7,6 @@ import subprocess
 import numpy as np
 from Core.Definitions import Entities, Options
 
-#Creates the input file for Metis
 def SetMetisInputFile():
     """
     This function creates the input file for METIS - Serial Graph Partitioning
@@ -23,7 +22,7 @@ def SetMetisInputFile():
     Returns
     -------
     file : Graph.out 
-        Element connectivities of the Serial Graph.
+        Element connectivity's of the Serial Graph.
     """
 
     #Total number of elements
@@ -65,11 +64,10 @@ def SetMetisInputFile():
 
     MetisFile.close()
 
-#Obtains the elements indeces that belong to a certain partition
 def GetMetisOutputFile():
     """
     This function runs the METIS - Serial Graph Partitioning by George Karypis,
-    and gets the element indeces for each partition.\n
+    and gets the element indexes for each partition.\n
     @visit  https://github.com/SeismoVLAB/SVL\n
     @author Danilo S. Kusanovic 2020
 
@@ -84,7 +82,7 @@ def GetMetisOutputFile():
     #Generates the division according to the number of parts
     nparts = Options['nparts']
     if nparts > 1:
-       #Excecutes METIS - Serial Graph Partitioning.
+       #Executes METIS - Serial Graph Partitioning.
        cmdline = Options['metispath'] + ' \'' + filePath + '\' ' + str(nparts)
        subprocess.check_output(cmdline, shell=True)
 

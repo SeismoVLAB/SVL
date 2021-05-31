@@ -5,7 +5,6 @@ import numpy as np
 import collections.abc
 from json import JSONEncoder
 
-#https://stackoverflow.com/questions/50472095/how-can-i-solve-a-system-of-linear-equations-in-python-faster-than-with-numpy-li
 import time
 def lstsq(A, b):
     AA = A.T @ A
@@ -294,9 +293,9 @@ def EnsembleKalmanInversion(Options):
         for k in range(nParticles):
             uk = np.exp(uhat[:,k])
 
-            #FunctionWrapper(function, uk, ensemble, EnsembleOutputFile, k)
-            #WriteEnsemble(ensemble, EnsembleFolder, BackgroundFile, EnsembleFile, k)
-            #RunForwardModel(SeismoVLABFolder, EnsembleFolder, EnsembleFile, k)
+            FunctionWrapper(function, uk, ensemble, EnsembleOutputFile, k)
+            WriteEnsemble(ensemble, EnsembleFolder, BackgroundFile, EnsembleFile, k)
+            RunForwardModel(SeismoVLABFolder, EnsembleFolder, EnsembleFile, k)
 
             what[:,k] = GetMeasurements(SolutionFolder, EnsembleOutputFile, dofs, nLines, k)
 
@@ -316,12 +315,12 @@ def EnsembleKalmanInversion(Options):
             Cww += 1.0/(nParticles - 1.0)*np.outer(what[:,k] - wnp1, what[:,k] - wnp1)
 
         #Kalman Gain Matrix
-        print('starting')
-        start = time.time()
+        ####print('starting')
+        ####start = time.time()
         K = np.linalg.solve(Cww + Rmatrix, Cuw.T).T
         #K, *info_acc = lstsq(Cww + Rmatrix, Cuw.T).T
-        end = time.time()
-        print('ending in' + str(end - start) + ' [s]')
+        ####end = time.time()
+        ####print('ending in' + str(end - start) + ' [s]')
 
         #Update the Ensembles for next iteration
         for k in range(nParticles):

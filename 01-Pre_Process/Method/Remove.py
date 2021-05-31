@@ -209,7 +209,7 @@ def delSupportMotion(tag=None):
     Parameters
     ----------
     tag : int
-        The identifier of the support motion, i.e., tag > 1
+        The identifier of the restrained node where the support motion was applied, i.e., tag > 1
 
     Returns
     -------
@@ -247,7 +247,7 @@ def delMaterial(tag=None):
         return True
     else:
         info = debugInfo(2) 
-        print('\x1B[33m ALERT \x1B[0m: In file=\'%s\' at line=%d Element[%s] cannot be deleted.' %(info.filename,info.lineno,tag))
+        print('\x1B[33m ALERT \x1B[0m: In file=\'%s\' at line=%d Material[%s] cannot be deleted.' %(info.filename,info.lineno,tag))
         return False
 
 def delSection(tag=None):
@@ -272,7 +272,7 @@ def delSection(tag=None):
         return True
     else:
         info = debugInfo(2) 
-        print('\x1B[33m ALERT \x1B[0m: In file=\'%s\' at line=%d Element[%d] cannot be deleted.' %(info.filename,info.lineno,tag))
+        print('\x1B[33m ALERT \x1B[0m: In file=\'%s\' at line=%d Section[%d] cannot be deleted.' %(info.filename,info.lineno,tag))
         return False
 
 def delElement(tag=None):

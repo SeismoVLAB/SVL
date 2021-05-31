@@ -3,6 +3,7 @@
 
 import numpy as np
 from Core.Definitions import Entities, Options
+from Core.Utilities import *
 
 def SurfaceFace(name, surf, conn):
     """
@@ -88,6 +89,108 @@ def SurfaceFace(name, surf, conn):
         wTag = list(set(surf).intersection(conn[[4,5,6,7]]))
         if len(wTag) == 4:
             return 6
+
+#TODO: FINISH THIS FUNCTION
+def GenerateFiberSection():
+    """
+    This function takes information from patches and layers and transform it
+    into a fiber section using the JSON Run-Analysis format.\n
+    @visit  https://github.com/SeismoVLAB/SVL\n
+    @author Danilo S. Kusanovic 2020
+    """
+    for sTag in Entities['Sections']:
+        section = Entities['Sections'][sTag]
+        if section['model'] == 'FIBER':
+            zi = list()
+            yi = list()
+            Ai = list()
+            Tags = list()
+            if 'patch' in section['attributes']:
+                Patches = section['attributes']['patch']
+                for pTag in Patches:
+                    patch = Patches[pTag]
+                    tag = patch['fiber']
+                    nfibz = patch['nfibz']
+                    nfiby = patch['nfiby']
+                    if patch['name'].upper() == 'RECTANGULAR':
+                        points = np.matrix(patch['coords'])
+                        DX = (points[1,0] - points[0,0])/nfibz
+                        DY = (points[1,1] - points[0,1])/nfiby
+                        for j in range(nfiby):
+                            for i in range(nfibz):
+                                coords = points[0,:] + np.array([DX*(0.5 + i), DY*(0.5 + j)])
+                                zi.append(coords[0,0])
+                                yi.append(coords[0,1])
+                                Ai.append(abs(DX*DY))
+                                Tags.append(tag)
+                    elif patch['name'].upper() == 'CIRCULAR':
+                        pass
+                    '''
+                    elif patch['name'].upper() == 'QUADRILATERAL':
+                        DX = 2.0/nfibz
+                        DZ = 2.0/nfiby
+                        points = np.matrix(patch['coords'])
+                        for j in range(nfiby):
+                            si = 1.0*j + DY/2.0 - 1.0
+                            for k in range(nfibz):
+                                ri = 1.0*k + DX/2.0 - 1.0
+                                H1 = 0.25*(1.0 - ri)*(1.0 - si)
+                                H2 = 0.25*(1.0 + ri)*(1.0 - si)
+                                H3 = 0.25*(1.0 + ri)*(1.0 + si)
+                                H4 = 0.25*(1.0 - ri)*(1.0 + si)
+                                Xi = H1*points[0,0] + H2*points[1,0] + H3*points[2,0] + H4*points[3,0]
+                                Yi = H1*points[0,1] + H2*points[1,1] + H3*points[2,1] + H4*points[3,1]
+                                zi.append(Xi)
+                                yi.append(Yi)
+                                Ai.append(area)####
+                                Tags.append(tag)
+                    '''
+            if 'layer' in section['attributes']:
+                Layers = section['attributes']['layer']
+                for lTag in Layers:
+                    layer = Layers[lTag]
+                    tag = layer['fiber']
+                    nfib = layer['nfib']
+                    area = layer['area']
+                    if layer['name'].upper() == 'LINE':
+                        points = np.matrix(layer['coords'])
+                        if nfib == 1:
+                            xm = 0.5*(points[0,:] + points[1,:])
+                            zi.append(xm[0,0])
+                            yi.append(xm[0,1])
+                            Ai.append(area)
+                            Tags.append(tag)
+                        elif nfib == 2:
+                            for k in range(nfib):
+                                zi.append(points[k,0])
+                                yi.append(points[k,1])
+                                Ai.append(area)
+                                Tags.append(tag)
+                        else:
+                            D = (points[1,:] - points[0,:])/(nfib - 1.0)
+                            for k in range(nfib):
+                                coords = points[0,:] + D*k
+                                zi.append(coords[0,0])
+                                yi.append(coords[0,1])
+                                Ai.append(area)
+                                Tags.append(tag)
+                    elif layer['name'].upper() == 'ARCH':
+                        pass
+            attributes = {'zi': zi, 'yi': yi, 'Ai': Ai, 'fiber': Tags}
+            if 'h' in section['attributes']:
+                attributes['h'] = section['attributes']['h']
+            if 'b' in section['attributes']:
+                attributes['b'] = section['attributes']['b']
+            if 'kappa2' in section['attributes']:
+                attributes['kappa2'] = section['attributes']['kappa2']
+            if 'kappa3' in section['attributes']:
+                attributes['kappa3'] = section['attributes']['kappa3']
+            if 'ip' in section['attributes']:
+                attributes['ip'] = section['attributes']['ip']
+            if 'theta' in section['attributes']:
+                attributes['theta'] = section['attributes']['theta']
+
+            Entities['Sections'][sTag]['attributes'] = attributes
 
 def RigidLinkConstraints():
     """
