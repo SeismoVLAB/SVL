@@ -1,4 +1,3 @@
-#include <iostream>
 #include "Viscous1DLinear.hpp" 
 #include "Definitions.hpp"
 
@@ -126,6 +125,19 @@ Viscous1DLinear::GetInitialTangentStiffness() const{
 //Perform converged material state update.
 void 
 Viscous1DLinear::CommitState(){
+}
+
+//Reverse the material states to previous converged state.
+void 
+Viscous1DLinear::ReverseState(){
+    //TODO: Get back to previous commited state
+}
+
+//Brings the material states to its initial state in the element.
+void 
+Viscous1DLinear::InitialState(){
+    Stress.fill(0.0);
+    StrainRate.fill(0.0);
 }
 
 //Update the material state for this iteration.

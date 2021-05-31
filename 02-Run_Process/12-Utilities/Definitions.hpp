@@ -31,7 +31,6 @@
 #define __DEFINITIONS_HPP__ 
 
 #include <string>
-#include <fstream> 
 
 /// @author    Danilo S. Kusanovic (dkusanov@caltech.edu)
 /// @date      June 9, 2020
@@ -60,6 +59,9 @@ extern std::string fileName;
 ///The folder path where the file is loaded.
 extern std::string filePath;
 
+///The Execution for each simulation.
+extern bool FormOfExecution;
+
 ///The element mass formulation.
 extern bool MassFormulation;
 
@@ -78,7 +80,7 @@ extern unsigned int numberOfTotalDofs;
 ///Total number of constrained-degree-of-freedom.
 extern unsigned int numberOfConstrainedDofs;
 
-//Maximum memory for PML 3D storage sparse matrix.
+///Maximum memory for PML 3D storage sparse matrix.
 extern unsigned int PMLStorage;
 
 #endif

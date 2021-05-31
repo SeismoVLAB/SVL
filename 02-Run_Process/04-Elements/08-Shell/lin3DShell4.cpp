@@ -1,5 +1,4 @@
 #include <cmath>
-#include <iostream>
 #include "Section.hpp"
 #include "lin3DShell4.hpp"
 #include "GaussQuadrature.hpp"
@@ -36,7 +35,7 @@ lin3DShell4::~lin3DShell4(){
     //Does nothing.
 }
 
-//Save the material states in the element.
+//Save the section states in the element.
 void 
 lin3DShell4::CommitState(){
     //TODO: Viscous material in shell element is not allowed.
@@ -47,7 +46,27 @@ lin3DShell4::CommitState(){
         theSection[k]->CommitState();
 }
 
-//Update the material states in the element.
+//Reverse the section states to previous converged state in this element.
+void 
+lin3DShell4::ReverseState(){
+    //Reverse the section components.
+    unsigned int nPoints = QuadraturePoints->GetNumberOfQuadraturePoints();
+
+    for(unsigned int k = 0; k < nPoints; k++)
+        theSection[k]->ReverseState();
+}
+
+//Brings the section state to its initial state in this element.
+void 
+lin3DShell4::InitialState(){
+    //Brings the material components to initial state.
+    unsigned int nPoints = QuadraturePoints->GetNumberOfQuadraturePoints();
+
+    for(unsigned int k = 0; k < nPoints; k++)
+        theSection[k]->InitialState();
+}
+
+//Update the section states in the element.
 void 
 lin3DShell4::UpdateState(){
     //Gets the quadrature information.    
@@ -207,7 +226,7 @@ lin3DShell4::ComputeEnergy(){
 //Compute the mass matrix of the element gauss-integration.
 Eigen::MatrixXd 
 lin3DShell4::ComputeMassMatrix(){
-    //Starts profiling this funtion.
+    //Starts profiling this function.
     PROFILE_FUNCTION();
 
     //Computes the transformation matrix.
@@ -279,7 +298,7 @@ lin3DShell4::ComputeMassMatrix(){
 //Compute the stiffness matrix of the element using gauss-integration.
 Eigen::MatrixXd 
 lin3DShell4::ComputeStiffnessMatrix(){
-    //Starts profiling this funtion.
+    //Starts profiling this function.
     PROFILE_FUNCTION();
 
     //Computes the transformation matrix.
@@ -335,7 +354,7 @@ lin3DShell4::ComputeStiffnessMatrix(){
 //Compute the damping matrix of the element gauss-integration.
 Eigen::MatrixXd 
 lin3DShell4::ComputeDampingMatrix(){
-    //Starts profiling this funtion.
+    //Starts profiling this function.
     PROFILE_FUNCTION();
 
     //Damping matrix definition.
@@ -374,7 +393,7 @@ lin3DShell4::ComputePMLMatrix(){
 //Compute the element the internal forces acting on the element.
 Eigen::VectorXd 
 lin3DShell4::ComputeInternalForces(){
-    //Starts profiling this funtion.
+    //Starts profiling this function.
     PROFILE_FUNCTION();
 
     //TODO: compute internal forces for shell should be done by integration of stresses.
@@ -422,7 +441,7 @@ lin3DShell4::ComputeInternalDynamicForces(){
 //Compute the surface forces acting on the element.
 Eigen::VectorXd 
 lin3DShell4::ComputeSurfaceForces(const std::shared_ptr<Load> &surfaceLoad, unsigned int UNUSED(face)){
-    //Starts profiling this funtion.
+    //Starts profiling this function.
     PROFILE_FUNCTION();
 
     //Gets Node Local coordinates.
@@ -471,7 +490,7 @@ lin3DShell4::ComputeSurfaceForces(const std::shared_ptr<Load> &surfaceLoad, unsi
 //Compute the body forces acting on the element.
 Eigen::VectorXd 
 lin3DShell4::ComputeBodyForces(const std::shared_ptr<Load> &bodyLoad, unsigned int k){
-    //Starts profiling this funtion.
+    //Starts profiling this function.
     PROFILE_FUNCTION();
 
     //Gets Node Local coordinates.
@@ -523,7 +542,7 @@ lin3DShell4::ComputeBodyForces(const std::shared_ptr<Load> &bodyLoad, unsigned i
 //Compute the domain reduction forces acting on the element.
 Eigen::VectorXd 
 lin3DShell4::ComputeDomainReductionForces(const std::shared_ptr<Load>& UNUSED(drm), unsigned int UNUSED(k)){
-    //Starts profiling this funtion.
+    //Starts profiling this function.
     PROFILE_FUNCTION();
 
     //TODO: Domain reduction forces are not implemented for shell.
@@ -562,7 +581,7 @@ lin3DShell4::ComputeRotation() const{
     v3 = v3/v3.norm();
 
     //Local Axis 1.
-    if(abs(v3(2)) > TOL){
+    if(fabs(v3(2)) > TOL){
         v1 << v3(2), 0.0, -v3(0);
         v1 = v1/v1.norm();
     }

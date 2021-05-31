@@ -49,7 +49,7 @@
 class Lin3DThinArea : public Section{
 
     public:
-        ///Creates a Section to be especified at a Gauss-point in an Element.
+        ///Creates a Section to be specified at a Gauss-point in an Element.
         ///@param t The thickness the section.
         ///@param material The Material that this Section is made out of.
         ///@note Details about local axis rotation can be found at @ref linkSectionLocalAxis.
@@ -82,7 +82,7 @@ class Lin3DThinArea : public Section{
 
         ///Returns the section initial stiffness matrix.
         ///@return Matrix with the initial section tangent stiffness matrix.
-        ///@note The initial tangent stiifness matrix is computed when the generalized strain vector is zero.
+        ///@note The initial tangent stiffness matrix is computed when the generalized strain vector is zero.
         Eigen::MatrixXd GetInitialTangentStiffness();
 
         ///Returns the section strain at given position.
@@ -101,9 +101,17 @@ class Lin3DThinArea : public Section{
         ///@note This function sets the trail stress and strain as converged.
         void CommitState();
 
+        ///Reverse the section states to previous converged state.
+        ///@note This function returns the material states to previous converged states.
+        void ReverseState();
+
+        ///Brings the section states to its initial state.
+        ///@note This function returns the material states to the beginning.
+        void InitialState();
+
         ///Update the section state for this iteration.
         ///@param strain Vector with the strain components at this Gauss-point.
-        ///@param cond If the the elatic/platic material components will be updated.
+        ///@param cond If the the elastic/plastic material components will be updated.
         ///@note This function computes the strain and tanget stiffness matrix once the trial strain converged.
         void UpdateState(const Eigen::VectorXd strain, const unsigned int cond);
 

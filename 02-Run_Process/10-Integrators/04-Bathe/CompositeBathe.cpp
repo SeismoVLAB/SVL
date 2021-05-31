@@ -21,7 +21,7 @@ Integrator(mesh), dt(TimeStep){
     theAssembler->SetForceTolerance(ftol);
     theAssembler->SetStiffnessTolerance(ktol);
 
-    Initialize(mesh);
+    //Initialize(mesh);
 }
 
 //Default destructor.
@@ -34,6 +34,26 @@ void
 CompositeBathe::Initialize(std::shared_ptr<Mesh> &mesh){
     //Starts profiling this function.
     PROFILE_FUNCTION();
+
+    //Sets up Initial Condition from previous simulation
+    std::map<unsigned int, std::shared_ptr<Node> > Nodes = mesh->GetNodes();  
+    for(auto it : Nodes){
+        auto &Tag = it.first;
+
+        //Gets the associated nodal degree-of-freedom.
+        std::vector<int> TotalDofs = Nodes[Tag]->GetTotalDegreeOfFreedom();
+
+        //Creates the nodal/incremental vector state.
+        Eigen::VectorXd Uij = Nodes[Tag]->GetDisplacements();
+        Eigen::VectorXd Vij = Nodes[Tag]->GetVelocities();
+        Eigen::VectorXd Aij = Nodes[Tag]->GetAccelerations();
+        
+        for(unsigned int j = 0; j < TotalDofs.size(); j++){
+            U(TotalDofs[j]) = Uij(j);
+            V(TotalDofs[j]) = Vij(j);
+            A(TotalDofs[j]) = Aij(j);
+        }
+    }
 
     //Computes the mass matrix of the model.
     M = theAssembler->ComputeMassMatrix(mesh);
@@ -75,7 +95,7 @@ CompositeBathe::GetAccelerations(){
 //Gets the perfectly-matched layer history vector.
 Eigen::VectorXd& 
 CompositeBathe::GetPMLHistoryVector(){
-    //Starts profiling this funtion.
+    //Starts profiling this function.
     PROFILE_FUNCTION();
 
     //Empty PML history vector (not used).

@@ -1,4 +1,3 @@
-#include <iostream>
 #include "ZeroLength1D.hpp"
 #include "Definitions.hpp"
 #include "Profiler.hpp"
@@ -33,6 +32,18 @@ ZeroLength1D::CommitState(){
     }
 
     theMaterial->CommitState();
+}
+
+//Reverse the material states to previous converged state in this element.
+void 
+ZeroLength1D::ReverseState(){
+    theMaterial->ReverseState();
+}
+
+//Brings the material state to its initial state in this element.
+void 
+ZeroLength1D::InitialState(){
+    theMaterial->InitialState();
 }
 
 //Update the material states in the element.
@@ -164,7 +175,7 @@ ZeroLength1D::ComputeEnergy(){
 //Compute the mass matrix of the element.
 Eigen::MatrixXd 
 ZeroLength1D::ComputeMassMatrix(){
-    //Starts profiling this funtion.
+    //Starts profiling this function.
     PROFILE_FUNCTION();
 
     //The matrix dimension.
@@ -180,7 +191,7 @@ ZeroLength1D::ComputeMassMatrix(){
 //Compute the stiffness matrix of the element.
 Eigen::MatrixXd 
 ZeroLength1D::ComputeStiffnessMatrix(){
-    //Starts profiling this funtion.
+    //Starts profiling this function.
     PROFILE_FUNCTION();
 
     //Gets material tangent matrix.
@@ -201,7 +212,7 @@ ZeroLength1D::ComputeStiffnessMatrix(){
 //Compute damping matrix of the element.
 Eigen::MatrixXd 
 ZeroLength1D::ComputeDampingMatrix(){
-    //Starts profiling this funtion.
+    //Starts profiling this function.
     PROFILE_FUNCTION();
 
     //Gets material damping matrix.
@@ -229,7 +240,7 @@ ZeroLength1D::ComputePMLMatrix(){
 //Compute the element internal forces acting on the element.
 Eigen::VectorXd 
 ZeroLength1D::ComputeInternalForces(){
-    //Starts profiling this funtion.
+    //Starts profiling this function.
     PROFILE_FUNCTION();
 
     //The global axes transformation.
@@ -244,7 +255,7 @@ ZeroLength1D::ComputeInternalForces(){
     return InternalForces;
 }
 
-//Compute the elastic, inertial, and vicous forces acting on the element.
+//Compute the elastic, inertial, and viscous forces acting on the element.
 Eigen::VectorXd 
 ZeroLength1D::ComputeInternalDynamicForces(){
     //The Internal dynamic force vector
@@ -271,7 +282,7 @@ ZeroLength1D::ComputeInternalDynamicForces(){
 //Compute the surface forces acting on the element.
 Eigen::VectorXd 
 ZeroLength1D::ComputeSurfaceForces(const std::shared_ptr<Load>& UNUSED(surface), unsigned int UNUSED(face)){
-    //Starts profiling this funtion.
+    //Starts profiling this function.
     PROFILE_FUNCTION();
 
     //Local surface load vector.
@@ -284,7 +295,7 @@ ZeroLength1D::ComputeSurfaceForces(const std::shared_ptr<Load>& UNUSED(surface),
 //Compute the body forces acting on the element.
 Eigen::VectorXd 
 ZeroLength1D::ComputeBodyForces(const std::shared_ptr<Load>& UNUSED(body), unsigned int UNUSED(k)){
-    //Starts profiling this funtion.
+    //Starts profiling this function.
     PROFILE_FUNCTION();
 
     //Local body load vector.
@@ -297,7 +308,7 @@ ZeroLength1D::ComputeBodyForces(const std::shared_ptr<Load>& UNUSED(body), unsig
 //Compute the domain reduction forces acting on the element.
 Eigen::VectorXd 
 ZeroLength1D::ComputeDomainReductionForces(const std::shared_ptr<Load>& UNUSED(drm), unsigned int UNUSED(k)){
-    //Starts profiling this funtion.
+    //Starts profiling this function.
     PROFILE_FUNCTION();
 
     //Domain reduction force vector.

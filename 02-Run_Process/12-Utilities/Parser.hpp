@@ -16,6 +16,12 @@
 #include "Plastic3DJ2.hpp"
 #include "Plastic3DBA.hpp"
 
+#include "Elastic1DGap.hpp"
+#include "Plastic1DGap.hpp"
+#include "Elastic1DFiber.hpp"
+#include "Steel1DFiber.hpp"
+#include "Concrete1DFiber.hpp"
+
 #include "Lin2DRectangular.hpp"
 #include "Lin3DRectangular.hpp"
 #include "Lin2DAngle.hpp"
@@ -34,6 +40,8 @@
 #include "Lin3DCircularTube.hpp"
 #include "Lin3DThinArea.hpp"
 
+#include "Fib3DLineSection.hpp"
+
 #include "ZeroLength1D.hpp"
 #include "lin2DTruss2.hpp"
 #include "kin2DTruss2.hpp"
@@ -44,12 +52,16 @@
 #include "lin2DFrame2.hpp"
 #include "kin2DFrame2.hpp"
 #include "lin3DFrame2.hpp"
+#include "lin2DTria3.hpp"
+#include "lin2DTria6.hpp"
 #include "lin2DQuad4.hpp"
 #include "lin2DQuad8.hpp"
 #include "PML2DQuad4.hpp"
 #include "kin2DQuad4.hpp"
 #include "PML2DQuad8.hpp"
 #include "lin3DShell4.hpp"
+#include "lin3DTetra4.hpp"
+#include "lin3DTetra10.hpp"
 #include "lin3DHexa8.hpp"
 #include "kin3DHexa8.hpp"
 #include "PML3DHexa8.hpp"
@@ -157,13 +169,22 @@ ParseMesh(std::shared_ptr<Mesh> &theMesh, std::vector<std::shared_ptr<Recorder> 
             nDimensions = jsonFile["Global"]["ndim"].as<int>();
             numberOfTotalDofs = jsonFile["Global"]["ntotal"].as<int>();
             numberOfFreeDofs = jsonFile["Global"]["nfree"].as<int>();
-            std::string MassForm = jsonFile["Global"]["mass"].as<std::string>();
+            std::string MassForm = jsonFile["Global"]["massform"].as<std::string>("CONSISTENT");
+            std::string Execution = jsonFile["Global"]["solution"].as<std::string>("INDEPENDENT");
+
+            //Execution mode for solution in each simulation
+            if(strcasecmp(Execution.c_str(),"INDEPENDENT") == 0){
+                FormOfExecution = true;
+            }
+            else if(strcasecmp(Execution.c_str(),"SEQUENTIAL") == 0){
+                FormOfExecution = false;
+            }
 
             //Mass formulation for elements mass matrix
             if(strcasecmp(MassForm.c_str(),"LUMPED") == 0){
                 MassFormulation = true;
             }
-            if(strcasecmp(MassForm.c_str(),"CONSISTENT") == 0){
+            else if(strcasecmp(MassForm.c_str(),"CONSISTENT") == 0){
                 MassFormulation = false;
             }
         }
@@ -399,6 +420,63 @@ ParseMesh(std::shared_ptr<Mesh> &theMesh, std::vector<std::shared_ptr<Recorder> 
                 //Instantiate the material object.
                 theMaterial = std::make_unique<Plastic3DBA>(K, G, rho, h0, h, m, Su, beta);
             }
+            else if(strcasecmp(Name.c_str(),"Elastic1DFiber") == 0){
+                double E = it->second["attributes"]["E"].as<double>(0.0);
+                double nu = it->second["attributes"]["nu"].as<double>(0.0);
+                double rho = it->second["attributes"]["rho"].as<double>(0.0);
+
+                //Instantiate the material (fiber) object.
+                theMaterial = std::make_unique<Elastic1DFiber>(E, nu, rho);
+            }
+            else if(strcasecmp(Name.c_str(),"Elastic1DGap") == 0){
+                double E = it->second["attributes"]["E"].as<double>(0.0);
+                double gap = it->second["attributes"]["gap"].as<double>(0.0);
+                double behavior = it->second["attributes"]["behavior"].as<bool>(false);
+
+                //Instantiate the material (fiber) object.
+                theMaterial = std::make_unique<Elastic1DGap>(E, gap, behavior);
+            }
+            else if(strcasecmp(Name.c_str(),"Plastic1DGap") == 0){
+                double E = it->second["attributes"]["E"].as<double>(0.0);
+                double fy = it->second["attributes"]["fy"].as<double>(0.0);
+                double eta = it->second["attributes"]["ratio"].as<double>(0.0);
+                double gap = it->second["attributes"]["gap"].as<double>(0.0);
+                double behavior = it->second["attributes"]["behavior"].as<bool>(false);
+
+                //Instantiate the material (fiber) object.
+                theMaterial = std::make_unique<Plastic1DGap>(E, fy, gap, eta, behavior);
+            }
+            else if(strcasecmp(Name.c_str(),"Steel1DFiber") == 0){
+                double E = it->second["attributes"]["E"].as<double>(0.0);
+                double fy = it->second["attributes"]["fy"].as<double>(0.0);
+                double b = it->second["attributes"]["b"].as<double>(0.0);
+                double R0 = it->second["attributes"]["R0"].as<double>(15.00);
+                double cR1 = it->second["attributes"]["cR1"].as<double>(0.925);
+                double cR2 = it->second["attributes"]["cR2"].as<double>(0.150);
+                double a1 = it->second["attributes"]["a1"].as<double>(0.0);
+                double a2 = it->second["attributes"]["a2"].as<double>(1.0);
+                double a3 = it->second["attributes"]["a3"].as<double>(0.0);
+                double a4 = it->second["attributes"]["a4"].as<double>(1.0);
+                double nu = it->second["attributes"]["nu"].as<double>(0.33);
+                double rho = it->second["attributes"]["rho"].as<double>(0.0);
+
+                //Instantiate the material (fiber) object.
+                theMaterial = std::make_unique<Steel1DFiber>(fy, E, b, R0, cR1, cR2, a1, a2, a3, a4, nu, rho);
+            }
+            else if(strcasecmp(Name.c_str(),"Concrete1DFiber") == 0){
+                double fc = it->second["attributes"]["fc"].as<double>();
+                double ecc = it->second["attributes"]["ecc"].as<double>(-0.002);
+                double fcu = it->second["attributes"]["fcu"].as<double>();
+                double ecu = it->second["attributes"]["ecu"].as<double>(-0.012);
+                double ratio = it->second["attributes"]["ratio"].as<double>(0.1);
+                double ft = it->second["attributes"]["ft"].as<double>(0.0);
+                double Et = it->second["attributes"]["Et"].as<double>(0.0);
+                double nu = it->second["attributes"]["nu"].as<double>(0.25);
+                double rho = it->second["attributes"]["rho"].as<double>(0.0);
+
+                //Instantiate the material (fiber) object.
+                theMaterial = std::make_unique<Concrete1DFiber>(fc, ecc, fcu, ecu, ratio, ft, Et, nu, rho);
+            }
 
             //TODO: Add more material models here.
 
@@ -467,15 +545,15 @@ ParseMesh(std::shared_ptr<Mesh> &theMesh, std::vector<std::shared_ptr<Recorder> 
                     theSection = std::make_unique<Lin3DCircular>(r, theMesh->GetMaterial(matTag), theta, ip);
                 }
                 else if(strcasecmp(Name.c_str(),"Lin2DCircularTube") == 0){
-                    double re = it->second["attributes"]["h"].as<double>();
-                    double ri = it->second["attributes"]["b"].as<double>();
+                    double re = it->second["attributes"]["re"].as<double>();
+                    double ri = it->second["attributes"]["ri"].as<double>();
 
                     //Instantiate the section object.
                     theSection = std::make_unique<Lin2DCircularTube>(re, ri, theMesh->GetMaterial(matTag), theta, ip);
                 }
                 else if(strcasecmp(Name.c_str(),"Lin3DCircularTube") == 0){
-                    double re = it->second["attributes"]["h"].as<double>();
-                    double ri = it->second["attributes"]["b"].as<double>();
+                    double re = it->second["attributes"]["re"].as<double>();
+                    double ri = it->second["attributes"]["ri"].as<double>();
 
                     //Instantiate the section object.
                     theSection = std::make_unique<Lin3DCircularTube>(re, ri, theMesh->GetMaterial(matTag), theta, ip);
@@ -560,7 +638,42 @@ ParseMesh(std::shared_ptr<Mesh> &theMesh, std::vector<std::shared_ptr<Recorder> 
                 }
             }
             else if(strcasecmp(Model.c_str(),"Fiber") == 0){
-                //TODO: Parse fiber sections components.
+                if(strcasecmp(Name.c_str(),"Fib3DLineSection") == 0){
+                    //Initialize the vector with fiber coordinates, and area
+                    unsigned int numOfFibers = it->second["attributes"]["fiber"].size();
+                    std::vector<double> zi(numOfFibers);
+                    std::vector<double> yi(numOfFibers);
+                    std::vector<double> Ai(numOfFibers);
+                    std::vector<std::unique_ptr<Material> > fibers(numOfFibers);
+
+                    //Generates the Fiber section object
+                    for(unsigned int k =0; k < numOfFibers; k++){
+                        unsigned int fibTag = it->second["attributes"]["fiber"][k].as<int>();
+                        zi[k] = it->second["attributes"]["zi"][k].as<double>();
+                        yi[k] = it->second["attributes"]["yi"][k].as<double>();
+                        Ai[k] = it->second["attributes"]["Ai"][k].as<double>();
+
+                        theMesh->AddFiber(fibTag, fibers[k]);
+                    }
+                    //Cross section Shear factor (Ash/A): example 5/6 rectangle, 0.9 circular 
+                    double kappa2 = it->second["attributes"]["kappa2"].as<double>(1.00);
+                    double kappa3 = it->second["attributes"]["kappa3"].as<double>(1.00);
+
+                    //Section Insertion Point bounding Box
+                    double h = it->second["attributes"]["h"].as<double>();
+                    double b = it->second["attributes"]["b"].as<double>();
+                    unsigned int ip = it->second["attributes"]["ip"].as<int>(10);
+
+                    //Section angle of rotation
+                    double theta = it->second["attributes"]["theta"].as<double>(0.0);
+                    
+                    //Instantiate the section object.
+                    theSection = std::make_unique<Fib3DLineSection>(h, b, fibers, zi, yi, Ai, kappa2, kappa3, theta, ip);
+                }
+                else if(strcasecmp(Name.c_str(),"Fib3DAreaSection") == 0){
+                    //Instantiate the section object.
+                    //theSection = std::make_unique<Fib3DAreaSection>(...);
+                }
             }
             else if(strcasecmp(Model.c_str(),"General") == 0){
                 //TODO: Parse general sections components.
@@ -728,6 +841,24 @@ ParseMesh(std::shared_ptr<Mesh> &theMesh, std::vector<std::shared_ptr<Recorder> 
                 //Instantiate the lin3DFrame2 element.
                 theElement = std::make_shared<lin3DFrame2>(nodes, theMesh->GetSection(secID), Condition, Quadrature, nGauss);
             }
+            else if(strcasecmp(Name.c_str(),"lin2DTria3") == 0){
+                double thickness = it->second["attributes"]["th"].as<double>();
+                unsigned int nGauss = it->second["attributes"]["np"].as<int>(4);
+                unsigned int matID = it->second["attributes"]["material"].as<int>();
+                std::string Quadrature = it->second["attributes"]["rule"].as<std::string>("GAUSS");
+
+                //Instantiate the lin2DTria3 element.
+                theElement = std::make_shared<lin2DTria3>(nodes, theMesh->GetMaterial(matID), thickness, Quadrature, nGauss);
+            }
+            else if(strcasecmp(Name.c_str(),"lin2DTria6") == 0){
+                double thickness = it->second["attributes"]["th"].as<double>();
+                unsigned int nGauss = it->second["attributes"]["np"].as<int>(9);
+                unsigned int matID = it->second["attributes"]["material"].as<int>();
+                std::string Quadrature = it->second["attributes"]["rule"].as<std::string>("GAUSS");
+
+                //Instantiate the lin2DTria6 element.
+                theElement = std::make_shared<lin2DTria6>(nodes, theMesh->GetMaterial(matID), thickness, Quadrature, nGauss);
+            }
             else if(strcasecmp(Name.c_str(),"lin2DQuad4") == 0){
                 double thickness = it->second["attributes"]["th"].as<double>();
                 unsigned int nGauss = it->second["attributes"]["np"].as<int>(4);
@@ -798,6 +929,22 @@ ParseMesh(std::shared_ptr<Mesh> &theMesh, std::vector<std::shared_ptr<Recorder> 
                     
                 //Instantiate the lin3DShell4 element.
                 theElement = std::make_shared<lin3DShell4>(nodes, theMesh->GetSection(secID), Quadrature, nGauss);
+            }
+            else if(strcasecmp(Name.c_str(),"lin3DTetra4") == 0){
+                unsigned int nGauss = it->second["attributes"]["np"].as<int>(4);
+                unsigned int matID = it->second["attributes"]["material"].as<int>();
+                std::string Quadrature = it->second["attributes"]["rule"].as<std::string>("GAUSS");
+
+                //Instantiate the lin3DTetra4 element.
+                theElement = std::make_shared<lin3DTetra4>(nodes, theMesh->GetMaterial(matID), Quadrature, nGauss);
+            }
+            else if(strcasecmp(Name.c_str(),"lin3DTetra10") == 0){
+                unsigned int nGauss = it->second["attributes"]["np"].as<int>(11);
+                unsigned int matID = it->second["attributes"]["material"].as<int>();
+                std::string Quadrature = it->second["attributes"]["rule"].as<std::string>("GAUSS");
+
+                //Instantiate the lin3DTetra10 element.
+                theElement = std::make_shared<lin3DTetra10>(nodes, theMesh->GetMaterial(matID), Quadrature, nGauss);
             }
             else if(strcasecmp(Name.c_str(),"lin3DHexa8") == 0){
                 unsigned int nGauss = it->second["attributes"]["np"].as<int>(8);
@@ -1355,13 +1502,13 @@ ParseAnalysis(std::shared_ptr<Mesh> &theMesh, std::unique_ptr<Analysis> &theAnal
 
 //Perform modification on the Mesh object as specified in json file
 void 
-PerformChanges(std::shared_ptr<Mesh>& UNUSED(theMesh), std::string UNUSED(InputFile)){
+UpateDomain(std::shared_ptr<Mesh>& UNUSED(theMesh), std::string UNUSED(InputFile)){
     //TODO: Parse instruction in JSON to modify mesh
 }
 
 //Runs the User's JSON Input file.
 void 
-RunFromJSON(){
+RunFromJSON(bool parsefile){
     //Starts profiling this function.
     PROFILE_FUNCTION();
 
@@ -1376,25 +1523,31 @@ RunFromJSON(){
 
     //Creates the Mesh subdomain Pointer.
     std::shared_ptr<Mesh> theMesh = std::make_shared<Mesh>();
-    ParseMesh(theMesh, Recorders, LoadCombos, Simulations, fileName);
 
-    //Performs the simulations sequentially.
-    for(unsigned int sim = 0; sim < Simulations.size(); sim++){
-        //Sets up memory allocation
-        theMesh->Initialize();
+    if(parsefile){
+        ParseMesh(theMesh, Recorders, LoadCombos, Simulations, fileName);
 
-        //Creates Analysis Pointer.
-        std::unique_ptr<Analysis> theAnalysis;
-        ParseAnalysis(theMesh, theAnalysis, Recorders, LoadCombos, Simulations[sim], fileName);
+        //Performs the simulations sequentially.
+        for(unsigned int sim = 0; sim < Simulations.size(); sim++){
+            //Sets up memory allocation
+            theMesh->Initialize();
 
-        //Runs the current Analysis.
-        bool Stop = theAnalysis->Analyze();
-        if(Stop){
-            if(rank == 0)
-                std::cout << " **A PROBLEM WAS ENCOUNTERED. THE ANALYSIS WILL BE TERMINATED** \n";
+            //Creates Analysis Pointer.
+            std::unique_ptr<Analysis> theAnalysis;
+            ParseAnalysis(theMesh, theAnalysis, Recorders, LoadCombos, Simulations[sim], fileName);
+
+            //Runs the current Analysis.
+            bool Stop = theAnalysis->Analyze();
+            if(Stop){
+                if(rank == 0)
+                    std::cout << " **A PROBLEM WAS ENCOUNTERED. THE ANALYSIS WILL BE TERMINATED**\n\n";
+            }
+
+            //Enforce Sequential/Independent simulation
+            theMesh->NextSimulation();
+
+            //Change the Mesh subdomain for next analysis
+            UpateDomain(theMesh, fileName);
         }
-
-        //Change the Mesh subdomain for next analysis
-        PerformChanges(theMesh, fileName);
     }
 }

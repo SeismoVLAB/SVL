@@ -48,6 +48,25 @@ Mesh::Initialize(){
     }
 }
 
+//Update internal variables according to simulation.
+void 
+Mesh::NextSimulation(){
+    //The simulation requires independent execution
+    if(FormOfExecution){
+        //Nodes internal variables are set to initial state
+        for(auto it : Nodes){
+            auto &Tag = it.first;
+            Nodes[Tag]->InitialState();
+        }
+
+        //Elements internal variables are set to initial state
+        for(auto it : Elements){
+            auto &Tag = it.first;
+            Elements[Tag]->InitialState();
+        }
+    }
+}
+
 //Add node to the mesh.
 void 
 Mesh::AddNode(unsigned int tag, std::shared_ptr<Node> &node){
@@ -58,6 +77,12 @@ Mesh::AddNode(unsigned int tag, std::shared_ptr<Node> &node){
 void 
 Mesh::AddConstraint(unsigned int tag, std::unique_ptr<Constraint> &constraint){
     Constraints[tag] = std::move(constraint);
+}
+
+//Add a fiber to the fiber list.
+void 
+Mesh::AddFiber(unsigned int tag, std::unique_ptr<Material> &fiber){
+    fiber = Materials[tag]->CopyMaterial();
 }
 
 //Add a material to the mesh.
@@ -177,10 +202,10 @@ Mesh::GetTotalToFreeMatrix(){
     for(auto it : Nodes){
         auto &Tag = it.first;
 
-        //Free degree-of fredom index list for this node.
+        //Free degree-of freedom index list for this node.
         std::vector<int> free = Nodes[Tag]->GetFreeDegreeOfFreedom();
 
-        //Total degree-of fredom index list for this node.
+        //Total degree-of freedom index list for this node.
         std::vector<int> total = Nodes[Tag]->GetTotalDegreeOfFreedom();
 
         //Construct the total-to-free degree-of-freedom list matrix.

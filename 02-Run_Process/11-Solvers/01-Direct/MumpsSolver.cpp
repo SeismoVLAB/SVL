@@ -153,13 +153,13 @@ MumpsSolver::SolveSystem(Eigen::SparseMatrix<double> &A, Eigen::VectorXd &b){
         if (rank == 0){    
             std::cout << "\n \x1B[31mError: \x1B[0mMumpsSolver::SolveSystem() : ";
             switch(info) {
-                case  -5: std::cout << "OUT OF MEMORY allocation error.\n" ; break;
-                case  -6: std::cout << "MATRIX IS SINGULAR in Structure.\n"; break;
-                case  -7: std::cout << "OUT OF MEMORY allocation error.\n" ; break;
-                case  -8: std::cout << "SMALL WORK ARRAY use -ICNTL14 option, the default is -ICNTL 20 make 20 larger.\n"; break;
-                case  -9: std::cout << "SMALL WORK ARRAY use -ICNTL14 option, the default is -ICNTL 20 make 20 larger.\n"; break;
-                case -10: std::cout << "MATRIX IS SINGULAR Numerically.\n"; break;
-                default : std::cout << "Solution for the linear system failed.\n"; break;
+                case  -5: std::cout << "OUT OF MEMORY allocation error." ; break;
+                case  -6: std::cout << "MATRIX IS SINGULAR in Structure."; break;
+                case  -7: std::cout << "OUT OF MEMORY allocation error." ; break;
+                case  -8: std::cout << "SMALL WORK ARRAY use -ICNTL14 option, the default is -ICNTL 20 make 20 larger."; break;
+                case  -9: std::cout << "SMALL WORK ARRAY use -ICNTL14 option, the default is -ICNTL 20 make 20 larger."; break;
+                case -10: std::cout << "MATRIX IS SINGULAR Numerically."; break;
+                default : std::cout << "Solution for the linear system failed."; break;
             }
         }
         return true;

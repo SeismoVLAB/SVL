@@ -46,7 +46,7 @@ class Algorithm;
 /// @file      Integrator.hpp
 /// @class     Integrator
 /// @see       QuasiStatic.hpp CentralDifference.hpp NewmarkBeta.hpp
-/// @brief     Class for defining how the static/dynamic snalysis between two steps is going to be performed
+/// @brief     Class for defining how the static/dynamic analysis between two steps is going to be performed
 class Integrator{
 
     public:
@@ -105,11 +105,10 @@ class Integrator{
         ///@param Feff The effective force vector to incorporate support motion forces.
         ///@param factor The incremental load factor.
         ///@param k The time step number to be solved.
-        ///@return Vector with the incremental support motion displacement.
         ///@see Node::GetSupportMotion(), Assembler::ComputeSupportMotionIncrement().
         virtual void ComputeSupportMotionVector(std::shared_ptr<Mesh> &mesh, Eigen::VectorXd &Feff, double factor=1.00, unsigned int k=0) = 0;
 
-        ///Gets the effective force assiciated to the integrator.
+        ///Gets the effective force associated to the integrator.
         ///@param mesh Pointer to the Mesh object where Node and Element are stored.
         ///@param Feff Vector that stores the effective force.
         ///@param factor The incremental load factor.
@@ -117,7 +116,7 @@ class Integrator{
         ///@see Assembler::ComputeInternalForceVector(), Assembler::ComputeExternalForceVector().
         virtual void ComputeEffectiveForce(std::shared_ptr<Mesh> &mesh, Eigen::VectorXd &Feff, double factor=1.00, unsigned int k=0) = 0;
 
-        ///Gets the effective stiffness assiciated to the integrator.
+        ///Gets the effective stiffness associated to the integrator.
         ///@param mesh Pointer to the Mesh object where Node and Element are stored.
         ///@param Keff Matrix that stores the effective stiffness.
         ///@see Assembler::ComputeMassMatrix(), Assembler::ComputeStiffnessMatrix(), Assembler::ComputeDampingMatrix().

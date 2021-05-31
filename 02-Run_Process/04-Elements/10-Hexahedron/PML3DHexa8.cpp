@@ -1,5 +1,4 @@
 #include <cmath>
-#include <iostream>
 #include <Eigen/LU> 
 
 #include "Material.hpp"
@@ -45,6 +44,26 @@ PML3DHexa8::CommitState(){
 
 	for(unsigned int k = 0; k < nPoints; k++)
 		theMaterial[k]->CommitState();
+}
+
+//Reverse the material states to previous converged state in this element.
+void 
+PML3DHexa8::ReverseState(){
+    //Reverse the material components.
+    unsigned int nPoints = QuadraturePoints->GetNumberOfQuadraturePoints();
+
+    for(unsigned int k = 0; k < nPoints; k++)
+        theMaterial[k]->ReverseState();
+}
+
+//Brings the material state to its initial state in this element.
+void 
+PML3DHexa8::InitialState(){
+    //Brings the material components to initial state.
+    unsigned int nPoints = QuadraturePoints->GetNumberOfQuadraturePoints();
+
+    for(unsigned int k = 0; k < nPoints; k++)
+        theMaterial[k]->InitialState();
 }
 
 //Update the material states in the element.
@@ -196,7 +215,7 @@ PML3DHexa8::ComputeEnergy(){
 //Compute the Mass matrix of the element using gauss-integration.
 Eigen::MatrixXd 
 PML3DHexa8::ComputeMassMatrix(){
-    //Starts profiling this funtion.
+    //Starts profiling this function.
     PROFILE_FUNCTION();
 
 	//ux, uy, uz, sxx, syy, szz, sxy, syz, sxz
@@ -270,7 +289,7 @@ PML3DHexa8::ComputeMassMatrix(){
 //Compute the stiffness matrix of the element using gauss-integration.
 Eigen::MatrixXd 
 PML3DHexa8::ComputeStiffnessMatrix(){
-    //Starts profiling this funtion.
+    //Starts profiling this function.
     PROFILE_FUNCTION();
 
 	//Stiffness matrix definition:
@@ -412,7 +431,7 @@ PML3DHexa8::ComputeStiffnessMatrix(){
 //Compute the Damping matrix of the element using gauss-integration.
 Eigen::MatrixXd 
 PML3DHexa8::ComputeDampingMatrix(){
-    //Starts profiling this funtion.
+    //Starts profiling this function.
     PROFILE_FUNCTION();
 
 	//Stiffness matrix definition:
@@ -554,7 +573,7 @@ PML3DHexa8::ComputeDampingMatrix(){
 //Compute the PML history matrix for Perfectly-Matched Layer (PML).
 Eigen::MatrixXd 
 PML3DHexa8::ComputePMLMatrix(){
-    //Starts profiling this funtion.
+    //Starts profiling this function.
     PROFILE_FUNCTION();
 
 	//Impedance buffer matrix definition:
@@ -698,7 +717,7 @@ PML3DHexa8::ComputePMLMatrix(){
 //Compute the internal forces acting on the element.
 Eigen::VectorXd 
 PML3DHexa8::ComputeInternalForces(){
-    //Starts profiling this funtion.
+    //Starts profiling this function.
     PROFILE_FUNCTION();
 
 	//Stiffness matrix definition:
@@ -725,7 +744,7 @@ PML3DHexa8::ComputeInternalForces(){
 	return InternalForces;
 }
 
-//Compute the elastic, inertial, and vicous forces acting on the element.
+//Compute the elastic, inertial, and viscous forces acting on the element.
 Eigen::VectorXd 
 PML3DHexa8::ComputeInternalDynamicForces(){
     //The Internal dynamic force vector
@@ -753,7 +772,7 @@ PML3DHexa8::ComputeInternalDynamicForces(){
 //Compute the body forces acting on the element.
 Eigen::VectorXd 
 PML3DHexa8::ComputeBodyForces(const std::shared_ptr<Load>& UNUSED(bodyLoad), unsigned int UNUSED(k)){
-    //Starts profiling this funtion.
+    //Starts profiling this function.
     PROFILE_FUNCTION();
 
 	//Local body load vector:
@@ -766,7 +785,7 @@ PML3DHexa8::ComputeBodyForces(const std::shared_ptr<Load>& UNUSED(bodyLoad), uns
 //Compute the surface forces acting on the element.
 Eigen::VectorXd 
 PML3DHexa8::ComputeSurfaceForces(const std::shared_ptr<Load>& UNUSED(surface), unsigned int UNUSED(face)){
-    //Starts profiling this funtion.
+    //Starts profiling this function.
     PROFILE_FUNCTION();
 
     //PML surface forces are not supported, i.e., makes no sense.
@@ -779,7 +798,7 @@ PML3DHexa8::ComputeSurfaceForces(const std::shared_ptr<Load>& UNUSED(surface), u
 //Compute the domain reduction forces acting on the element.
 Eigen::VectorXd 
 PML3DHexa8::ComputeDomainReductionForces(const std::shared_ptr<Load>& UNUSED(drm), unsigned int UNUSED(k)){
-    //Starts profiling this funtion.
+    //Starts profiling this function.
     PROFILE_FUNCTION();
 
     //PML is not supposed to generate DRM forces.

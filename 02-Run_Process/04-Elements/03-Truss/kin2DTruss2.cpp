@@ -1,5 +1,4 @@
 #include <cmath>
-#include <iostream>
 #include "kin2DTruss2.hpp"
 #include "Definitions.hpp"
 #include "Profiler.hpp"
@@ -37,6 +36,18 @@ kin2DTruss2::CommitState(){
     }
 
     theMaterial->CommitState();
+}
+
+//Reverse the material states to previous converged state in this element.
+void 
+kin2DTruss2::ReverseState(){
+    theMaterial->ReverseState();
+}
+
+//Brings the material state to its initial state in this element.
+void 
+kin2DTruss2::InitialState(){
+    theMaterial->InitialState();
 }
 
 //Update the material states in the element.
@@ -297,7 +308,7 @@ kin2DTruss2::ComputeInternalForces(){
     return InternalForces;
 }
 
-//Compute the elastic, inertial, and vicous forces acting on the element.
+//Compute the elastic, inertial, and viscous forces acting on the element.
 Eigen::VectorXd 
 kin2DTruss2::ComputeInternalDynamicForces(){
     //The Internal dynamic force vector

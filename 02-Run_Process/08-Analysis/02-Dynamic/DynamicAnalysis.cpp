@@ -23,13 +23,16 @@ DynamicAnalysis::~DynamicAnalysis(){
 //Perform the analysis in incremental steps.
 bool 
 DynamicAnalysis::Analyze(){
-    //Starts profiling this funtion.
+    //Starts profiling this function.
     PROFILE_FUNCTION();
+
+    //Initialize the Integrator
+    theIntegrator->Initialize(theMesh); 
 
     //Initialize all recorders of this analysis.
     StartRecorders(theMesh, NumberOfTimeSteps);
 
-    //Perform the incremental anlaysis in nStep increments.
+    //Perform the incremental analysis in nStep increments.
     for(unsigned int k = 1; k < NumberOfTimeSteps; k++){
         //Solves until converge at i-th steps.
         bool stop = theIntegrator->ComputeNewStep(theMesh, k); 
@@ -44,13 +47,13 @@ DynamicAnalysis::Analyze(){
         UpdateDomain(k);
 
         //Store information in recorders.
-        WriteRecorders(theMesh, k);
+        WriteRecorders(theMesh, k-1);
 
         //Prints the analysis progress.
-        PrintProgressBar((k+1)*100/NumberOfTimeSteps);
+        PrintProgress((k+1)*100/NumberOfTimeSteps);
     }
 
-    //Finilize all recorders of this analysis.
+    //Finalize all recorders of this analysis.
     EndRecorders();
 
     //Return the analysis status.
@@ -70,7 +73,7 @@ DynamicAnalysis::UpdateDomain(unsigned int k){
     Eigen::VectorXd Ub = theIntegrator->GetPMLHistoryVector();
 
     //Gets all nodes from the mesh.
-    std::map<unsigned int, std::shared_ptr<Node> >  Nodes = theMesh->GetNodes();
+    std::map<unsigned int, std::shared_ptr<Node> > Nodes = theMesh->GetNodes();
 
     for(auto it : Nodes){
         auto &Tag = it.first;

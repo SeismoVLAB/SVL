@@ -1,6 +1,5 @@
 #include <cmath>
 #include <cfloat>
-#include <iostream>
 #include "HDRBYamamoto2DLink.hpp"
 #include "Definitions.hpp"
 #include "Profiler.hpp"
@@ -46,6 +45,24 @@ void
 HDRBYamamoto2DLink::CommitState(){
     Qn = Qaux;
     Pn = Paux;
+}
+
+//Reverse the internal states to previous converged state in this element.
+void 
+HDRBYamamoto2DLink::ReverseState(){
+    Qaux = Qn;
+    Paux = Pn;
+}
+
+//Brings the internal state to its initial state in this element.
+void 
+HDRBYamamoto2DLink::InitialState(){
+    Pn.fill(0.0);
+    Qn.fill(0.0);
+    Fn.fill(0.0);
+
+    Paux.fill(0.0);
+    Qaux.fill(0.0);
 }
 
 //Update the material states in the element.
@@ -204,7 +221,7 @@ HDRBYamamoto2DLink::ComputeEnergy(){
 //Compute the mass matrix of the element.
 Eigen::MatrixXd 
 HDRBYamamoto2DLink::ComputeMassMatrix(){
-    //Starts profiling this funtion.
+    //Starts profiling this function.
     PROFILE_FUNCTION();
 
     //The matrix dimension.
@@ -220,7 +237,7 @@ HDRBYamamoto2DLink::ComputeMassMatrix(){
 //Compute the stiffness matrix of the element.
 Eigen::MatrixXd 
 HDRBYamamoto2DLink::ComputeStiffnessMatrix(){
-    //Starts profiling this funtion.
+    //Starts profiling this function.
     PROFILE_FUNCTION();
 
     //The vector dimension.
@@ -245,7 +262,7 @@ HDRBYamamoto2DLink::ComputeStiffnessMatrix(){
 //Compute damping matrix of the element.
 Eigen::MatrixXd 
 HDRBYamamoto2DLink::ComputeDampingMatrix(){
-    //Starts profiling this funtion.
+    //Starts profiling this function.
     PROFILE_FUNCTION();
 
     //The matrix dimension.
@@ -268,7 +285,7 @@ HDRBYamamoto2DLink::ComputePMLMatrix(){
 //Compute the element internal forces acting on the element.
 Eigen::VectorXd 
 HDRBYamamoto2DLink::ComputeInternalForces(){
-    //Starts profiling this funtion.
+    //Starts profiling this function.
     PROFILE_FUNCTION();
 
     //The vector dimension.
@@ -290,7 +307,7 @@ HDRBYamamoto2DLink::ComputeInternalForces(){
     return InternalForces;
 }
 
-//Compute the elastic, inertial, and vicous forces acting on the element.
+//Compute the elastic, inertial, and viscous forces acting on the element.
 Eigen::VectorXd 
 HDRBYamamoto2DLink::ComputeInternalDynamicForces(){
     //The Internal dynamic force vector
@@ -317,7 +334,7 @@ HDRBYamamoto2DLink::ComputeInternalDynamicForces(){
 //Compute the surface forces acting on the element.
 Eigen::VectorXd 
 HDRBYamamoto2DLink::ComputeSurfaceForces(const std::shared_ptr<Load>& UNUSED(surface), unsigned int UNUSED(face)){
-    //Starts profiling this funtion.
+    //Starts profiling this function.
     PROFILE_FUNCTION();
 
     //Local surface load vector.
@@ -330,7 +347,7 @@ HDRBYamamoto2DLink::ComputeSurfaceForces(const std::shared_ptr<Load>& UNUSED(sur
 //Compute the body forces acting on the element.
 Eigen::VectorXd 
 HDRBYamamoto2DLink::ComputeBodyForces(const std::shared_ptr<Load>& UNUSED(body), unsigned int UNUSED(k)){
-    //Starts profiling this funtion.
+    //Starts profiling this function.
     PROFILE_FUNCTION();
 
     //Local body load vector.
@@ -343,7 +360,7 @@ HDRBYamamoto2DLink::ComputeBodyForces(const std::shared_ptr<Load>& UNUSED(body),
 //Compute the domain reduction forces acting on the element.
 Eigen::VectorXd 
 HDRBYamamoto2DLink::ComputeDomainReductionForces(const std::shared_ptr<Load>& UNUSED(drm), unsigned int UNUSED(k)){
-    //Starts profiling this funtion.
+    //Starts profiling this function.
     PROFILE_FUNCTION();
 
     //Domain reduction force vector.

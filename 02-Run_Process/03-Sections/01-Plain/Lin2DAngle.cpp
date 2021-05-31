@@ -15,7 +15,7 @@ Section("Lin2DAngle"), h(h), b(b), tw(tw), tf(tf), Theta(theta), InsertPoint(ip)
     //The section material:
     theMaterial = material->CopyMaterial();
 
-    //Transform the rotation Anlgle into radians.
+    //Transform the rotation Angle into radians.
     Theta = PI*theta/180.0;
 }
 
@@ -30,13 +30,13 @@ Lin2DAngle::CopySection(){
     return std::make_unique<Lin2DAngle>(h, b, tw, tf, theMaterial, 180.0*Theta/PI, InsertPoint);
 }
 
-//Returns the section generalized strain.
+//Returns the section generalized strain in element coordinates.
 Eigen::VectorXd
 Lin2DAngle::GetStrain(){
     return Strain;
 }
 
-//Returns the section generalized stress.
+//Returns the section generalized stress in element coordinates.
 Eigen::VectorXd
 Lin2DAngle::GetStress(){
     Eigen::VectorXd Stress = GetTangentStiffness()*Strain;
@@ -63,6 +63,11 @@ Lin2DAngle::GetDensity(){
 //Returns the section axial stiffness.
 Eigen::MatrixXd
 Lin2DAngle::GetTangentStiffness(){
+    //Gets the section centroid.
+    double x2, x3, zcm, ycm;
+    ComputeSectionCenter(zcm, ycm);
+    InsertionPointCoordinates(x3, x2, h, b, zcm, ycm, InsertPoint);
+
     //Area Properties.
     double A   = GetArea();
     double As2 = GetShearArea2();
@@ -71,38 +76,22 @@ Lin2DAngle::GetTangentStiffness(){
     double I33 = GetInertiaAxis3();
     double I23 = GetInertiaAxis23();
 
-    //Gets the section centroid.
-    double zc, yc;
-    ComputeSectionCenter(zc, yc);
-
-    //Material properties.
+    //Section shear Stiffness at center of mass.
     double G = theMaterial->GetShearModulus();
-    Eigen::MatrixXd E = theMaterial->GetInitialTangentStiffness();
 
-    //Section Shear areas at centroid.
-    //TODO: Check this transformation is not right.
-    double As = As2 + 2.0/PI*(As3 - As2)*Theta; 
-
-    //Section Stiffness at centroid.
-    Eigen::MatrixXd Cs(3,3);
-    Cs << E(0,0)*A, 0.0       , 0.0       ,
-          0.0     , E(0,0)*I22, E(0,0)*I23,
-          0.0     , E(0,0)*I23, E(0,0)*I33;
-
-    //Compute the rotation matrix.
-    Eigen::MatrixXd T = GetLineRotationMatrix(Theta);
-
-    //Compute the translation matrix.
-    Eigen::MatrixXd L = GetLineTranslationMatrix(h, b, zc, yc, InsertPoint);
+    //Section flexural Stiffness at center of mass.
+    Eigen::MatrixXd E = theMaterial->GetInitialTangentStiffness(); 
 
     //Computes the global section stiffness matrix.
-    Cs = (T.transpose()*L.transpose())*Cs*(L*T);
+    double EA = E(0,0)*A;
+    double GAs2 = G*As2*cos(Theta)*cos(Theta) + G*As3*sin(Theta)*sin(Theta);
+    double EI33 = E(0,0)*I33*cos(Theta)*cos(Theta) + E(0,0)*I22*sin(Theta)*sin(Theta) + E(0,0)*I23*sin(2.0*Theta) + E(0,0)*A*(x2*x2*cos(Theta)*cos(Theta) + x2*x3*sin(2.0*Theta) + x3*x3*sin(Theta)*sin(Theta));
 
     //Returns the section stiffness for 2-dimensions.
     Eigen::MatrixXd SectionStiffness(3,3);
-    SectionStiffness << Cs(0,0),   0.0  , 0.0 ,
-                          0.0  , Cs(2,2), 0.0 ,
-                          0.0  ,   0.0  , G*As;
+    SectionStiffness <<  EA,  0.0,  0.0,
+                        0.0, EI33,  0.0,
+                        0.0,  0.0, GAs2;
 
     return SectionStiffness;
 }
@@ -116,18 +105,25 @@ Lin2DAngle::GetInitialTangentStiffness(){
 //Returns the section strain at given position.
 Eigen::VectorXd 
 Lin2DAngle::GetStrainAt(double x3, double x2){
-    //Checks the coordinate is inside the section
+    //The strain vector in local coordinates
+    Eigen::VectorXd theStrain(3);
+    theStrain.fill(0.0);
+
+    //Gets the section centroid.
     double zcm, ycm;
     ComputeSectionCenter(zcm, ycm);
-    if (!((x2 >= h - ycm - tf) & (x2 <= h - ycm) & (x3 >= zcm - b + tw) & (x3 <= zcm)) | !((x2 >= -ycm) & (x2 <= h - ycm) & (x3 >= zcm - b) & (x3 <= zcm - b + tw))) {
-        x3 = zcm - b; x2 = h - ycm;
-    }
 
-    // Epsilon = [exx, 0.0, exy]
-    Eigen::VectorXd theStrain(3);
-    theStrain << Strain(0) - x2*Strain(1), 
-                 0.0, 
-                 Strain(2);
+    //Transform coordinates into section local axis.
+    x3 = zcm - x3;
+    x2 = x2 - ycm;
+
+    //Checks the coordinate is inside the section
+    if (((x2 >= h - ycm - tf) & (x2 <= h - ycm) & (x3 >= zcm - b + tw) & (x3 <= zcm)) | ((x2 >= -ycm) & (x2 <= h - ycm) & (x3 >= zcm - b) & (x3 <= zcm - b + tw))) {
+        // Epsilon = [exx, 0.0, exy]
+        theStrain << Strain(0) - Strain(1)*cos(Theta)*x2 + Strain(1)*sin(Theta)*x3, 
+                     0.0, 
+                     Strain(2);
+    }
 
     return theStrain;
 }
@@ -135,32 +131,47 @@ Lin2DAngle::GetStrainAt(double x3, double x2){
 //Returns the section stress at given position.
 Eigen::VectorXd 
 Lin2DAngle::GetStressAt(double x3, double x2){
-    double A   = GetArea();
-    double I33 = GetInertiaAxis3();
+    //The stress vector in local coordinates
+    Eigen::VectorXd theStress(3);
+    theStress.fill(0.0);
 
-    //Computes statical moment of area for Zhuravskii shear stress formula.
+    //Gets the section centroid.
     double zcm, ycm;
     ComputeSectionCenter(zcm, ycm);
 
-    double Qs2, tb;
+    //Transform coordinates into section local axis.
+    x3 = zcm - x3;
+    x2 = x2 - ycm;
+
+    //Checks the coordinate is inside the section
+    bool isInside = false;
+    double Qs2, Qs3, th, tb;
     if((x2 >= h - ycm - tf) & (x2 <= h - ycm) & (x3 >= zcm + tw - b) & (x3 <= zcm)){
+        isInside = true;
         Qs2 =  b/2.0*((h - ycm)*(h - ycm) - x2*x2); tb = b;
+        Qs3 = tf/2.0*(zcm*zcm - x3*x3); th = tf; 
     }
     else if((x2 >= -ycm) & (x2 <= h - ycm) & (x3 >= zcm - b) & (x3 <= zcm - b + tw)){
+        isInside = true;
         Qs2 = tf*(b - tw)*(h - ycm - tf/2.0) + tw/2.0*((h - ycm)*(h - ycm) - x2*x2); tb = tw;
-    }
-    else{
-        x2 = h - ycm; Qs2 = 0.0; tb = b;
+        Qs3 = h/2.0*((b - zcm)*(b - zcm) - x3*x3); th = h; 
     }
 
-    //Get the generalised stresses or section forces.
-    Eigen::VectorXd Forces = GetStress();
+    //Computes the generalized section force
+    if(isInside){
+        //Section geometry properties.
+        double A   = GetArea();
+        double I22 = GetInertiaAxis2();
+        double I33 = GetInertiaAxis3();
 
-    // Sigma = [Sxx, 0.0, 0.0, txy, 0.0, txz]
-    Eigen::VectorXd theStress(6);
-    theStress << Forces(0)/A - Forces(2)*x2/I33, 
-                 0.0, 
-                 Forces(5)*Qs2/I33/tb;
+        //Get the generalised stresses or section forces.
+        Eigen::VectorXd Forces = GetStress();
+
+        // Sigma = [Sxx, 0.0, txy]
+        theStress << Forces(0)/A + Forces(1)*x3*sin(Theta)/I22 - Forces(1)*x2*cos(Theta)/I33, 
+                     0.0, 
+                     Forces(2)*cos(Theta)*Qs2/I33/tb + Forces(2)*sin(Theta)*Qs3/I22/th;
+    }
 
     return theStress;
 }
@@ -169,6 +180,19 @@ Lin2DAngle::GetStressAt(double x3, double x2){
 void 
 Lin2DAngle::CommitState(){
     theMaterial->CommitState();
+}
+
+//Reverse the section states to previous converged state.
+void 
+Lin2DAngle::ReverseState(){
+    theMaterial->ReverseState();
+}
+
+//Brings the section states to its initial state.
+void 
+Lin2DAngle::InitialState(){
+    Strain.fill(0.0);
+    theMaterial->InitialState();
 }
 
 //Update the section state for this iteration.

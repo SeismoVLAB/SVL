@@ -56,7 +56,7 @@
 /// @file      PetscSolver.hpp 
 /// @class     PetscSolver 
 /// @see       LinearSystem.hpp Algorithm.hpp 
-/// @brief     Class for solving a linear system using an iterative solver assuming the matrix can be symmetric positive-definite, general symmetric or unsymmetric 
+/// @brief     Class for solving a linear system using an iterative solver assuming the matrix can be symmetric positive-definite, general symmetric or asymmetric 
 class PetscSolver : public LinearSystem {
 
     public:

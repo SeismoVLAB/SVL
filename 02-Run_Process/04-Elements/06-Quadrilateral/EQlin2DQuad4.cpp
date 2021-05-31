@@ -1,5 +1,4 @@
 #include <cmath>
-#include <iostream>
 #include <Eigen/LU> 
 #include "Material.hpp"
 #include "EQlin2DQuad4.hpp"
@@ -7,6 +6,9 @@
 #include "LobattoQuadrature.hpp"
 #include "Definitions.hpp"
 #include "Profiler.hpp"
+
+//Define constant value:
+const double PI = 3.1415926535897932;
 
 //Define VTK cell value for Paraview:
 const unsigned int VTKCELL = 9;
@@ -37,11 +39,31 @@ EQlin2DQuad4::~EQlin2DQuad4(){
 //Save the material states in the element.
 void 
 EQlin2DQuad4::CommitState(){
-    //Updates the viscous material components.
+    //Updates the material components.
     unsigned int nPoints = QuadraturePoints->GetNumberOfQuadraturePoints();
 
     for(unsigned int k = 0; k < nPoints; k++)
         theMaterial[k]->CommitState();
+}
+
+//Reverse the material states to previous converged state in this element.
+void 
+EQlin2DQuad4::ReverseState(){
+    //Reverse the material components.
+    unsigned int nPoints = QuadraturePoints->GetNumberOfQuadraturePoints();
+
+    for(unsigned int k = 0; k < nPoints; k++)
+        theMaterial[k]->ReverseState();
+}
+
+//Brings the material state to its initial state in this element.
+void 
+EQlin2DQuad4::InitialState(){
+    //Brings the material components to initial state.
+    unsigned int nPoints = QuadraturePoints->GetNumberOfQuadraturePoints();
+
+    for(unsigned int k = 0; k < nPoints; k++)
+        theMaterial[k]->InitialState();
 }
 
 //Update the material states in the element.
@@ -269,7 +291,7 @@ EQlin2DQuad4::ComputeEnergy(){
 //Compute the mass matrix of the element using gauss-integration.
 Eigen::MatrixXd 
 EQlin2DQuad4::ComputeMassMatrix(){
-    //Starts profiling this funtion.
+    //Starts profiling this function.
     PROFILE_FUNCTION();
 
     //Use consistent mass definition:
@@ -315,7 +337,7 @@ EQlin2DQuad4::ComputeMassMatrix(){
 //Compute the stiffness matrix of the element using gauss-integration.
 Eigen::MatrixXd 
 EQlin2DQuad4::ComputeStiffnessMatrix(){
-    //Starts profiling this funtion.
+    //Starts profiling this function.
     PROFILE_FUNCTION();
 
     //Stiffness matrix definition:
@@ -377,7 +399,7 @@ EQlin2DQuad4::ComputeStiffnessMatrix(){
 //Compute the damping matrix of the element using gauss-integration.
 Eigen::MatrixXd 
 EQlin2DQuad4::ComputeDampingMatrix(){
-    //Starts profiling this funtion.
+    //Starts profiling this function.
     PROFILE_FUNCTION();
 
     //Damping matrix definition.
@@ -429,8 +451,8 @@ EQlin2DQuad4::ComputeDampingMatrix(){
         double xi = EqLinParam(1);
 
         double d  = cf2/4/cf1-cf1/4/cf2;
-        double aM = (M_PI*cf2*xi-M_PI*cf1*xi)/d;
-        double aK = (-xi/4/M_PI/cf2+xi/4/M_PI/cf1)/d;
+        double aM = (PI*cf2*xi-PI*cf1*xi)/d;
+        double aK = (-xi/4/PI/cf2+xi/4/PI/cf1)/d;
 
         //Numerical integration.
         DampingMatrix += aM*wi(i)*rho*t*fabs(Jij.determinant())*Hij.transpose()*Hij + aK*wi(i)*t*fabs(Jij.determinant())*Bij.transpose()*Cij*Bij;
@@ -449,7 +471,7 @@ EQlin2DQuad4::ComputePMLMatrix(){
 //Compute the internal forces acting on the element.
 Eigen::VectorXd 
 EQlin2DQuad4::ComputeInternalForces(){
-    //Starts profiling this funtion.
+    //Starts profiling this function.
     PROFILE_FUNCTION();
 
     //Stiffness matrix definition:
@@ -510,7 +532,7 @@ EQlin2DQuad4::ComputeInternalForces(){
     return InternalForces;
 }
 
-//Compute the elastic, inertial, and vicous forces acting on the element.
+//Compute the elastic, inertial, and viscous forces acting on the element.
 Eigen::VectorXd 
 EQlin2DQuad4::ComputeInternalDynamicForces(){
     //The Internal dynamic force vector
@@ -535,7 +557,7 @@ EQlin2DQuad4::ComputeInternalDynamicForces(){
 //Compute the surface forces acting on the element.
 Eigen::VectorXd 
 EQlin2DQuad4::ComputeSurfaceForces(const std::shared_ptr<Load> &surfaceLoad, unsigned int face){
-    //Starts profiling this funtion.
+    //Starts profiling this function.
     PROFILE_FUNCTION();
 
     //Local surface load vector:
@@ -625,7 +647,7 @@ EQlin2DQuad4::ComputeSurfaceForces(const std::shared_ptr<Load> &surfaceLoad, uns
 //Compute the body forces acting on the element.
 Eigen::VectorXd 
 EQlin2DQuad4::ComputeBodyForces(const std::shared_ptr<Load> &bodyLoad, unsigned int k){
-    //Starts profiling this funtion.
+    //Starts profiling this function.
     PROFILE_FUNCTION();
 
     //Local body load vector:
@@ -662,7 +684,7 @@ EQlin2DQuad4::ComputeBodyForces(const std::shared_ptr<Load> &bodyLoad, unsigned 
 //Compute the domain reduction forces acting on the element.
 Eigen::VectorXd 
 EQlin2DQuad4::ComputeDomainReductionForces(const std::shared_ptr<Load> &drm, unsigned int k){
-    //Starts profiling this funtion.
+    //Starts profiling this function.
     PROFILE_FUNCTION();
 
     Eigen::VectorXd DRMForces;
@@ -828,7 +850,7 @@ EQlin2DQuad4::ComputeGGmaxDamping(const double vs, const double z, const double 
 
     double GGmax, xi, Dmin;
     double g  = 9.81; //gravity acceleration [m/s^2]
-    double K0 = 0.50; //coefficeint of lateral earth pressure
+    double K0 = 0.50; //coefficient of lateral earth pressure
     double PIndex;//plasticity index
     double H = zref-z; //soil column height
 
@@ -840,7 +862,7 @@ EQlin2DQuad4::ComputeGGmaxDamping(const double vs, const double z, const double 
     double ppre = 0.106*pow(vs,1.47)*1000; // [Pa]
     double OCR = ppre/sigmav;//overconsolidation ratio
 
-    //emprical coefficients -- based on Table 8.7 of [1]
+    //empirical coefficients -- based on Table 8.7 of [1]
     Eigen::VectorXd phi;
     phi.resize(7);
     phi << 3.52E-2 , 7.07E-4, 3.69E-1 , 2.97E-1 , 9.5E-1 , 6.00E-1 , 0.0;
@@ -861,7 +883,7 @@ EQlin2DQuad4::ComputeGGmaxDamping(const double vs, const double z, const double 
     double c2 =  0.0805*phi(4)*phi(4)-0.0710*phi(4)-0.0095;
     double c3 = -0.0005*phi(4)*phi(4)+0.0002*phi(4)+0.0003;
 
-    double Dmasinga1 = 100.0/M_PI*(4.0*(gamma-gammar*log((gamma+gammar)/gammar))/(gamma*gamma/(gamma+gammar))-2.0);
+    double Dmasinga1 = 100.0/PI*(4.0*(gamma-gammar*log((gamma+gammar)/gammar))/(gamma*gamma/(gamma+gammar))-2.0);
     double Dmasing  = c1*Dmasinga1+c2*pow(Dmasinga1,2)+c3*pow(Dmasinga1,3);
     double b = phi(4)+phi(5)*log(1.0);
     double F = b*pow(GGmax,0.1);
@@ -876,7 +898,7 @@ EQlin2DQuad4::ComputeGGmaxDamping(const double vs, const double z, const double 
             xi    = Dmin;
         }
     }
-    else if (Type == "SmallStrain") {
+    else if (Type == "SMALLSTRAIN") {
         GGmax = 1.0;
         xi    = Dmin;
     }
@@ -886,4 +908,3 @@ EQlin2DQuad4::ComputeGGmaxDamping(const double vs, const double z, const double 
 
     return result;
 }
-

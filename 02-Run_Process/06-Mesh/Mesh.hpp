@@ -65,6 +65,10 @@ class Mesh{
         ///Initialize the Mesh and compute memory storage.
         void Initialize();
 
+        ///Update internal variables according to form of simulation.
+        ///@see Mesh::Nodes Mesh::Elements.
+        void NextSimulation();
+
         ///Add a Node object to the Mesh.
         ///@param tag the Node identifier.
         ///@param node the Node object to be added.
@@ -76,6 +80,12 @@ class Mesh{
         ///@param constraint the Constraint object to be added.
         ///@see Constraint.
         void AddConstraint(unsigned int tag, std::unique_ptr<Constraint> &constraint);
+
+        ///Add a Material to the Mesh.
+        ///@param tag the Material identifier.
+        ///@param fiber the Material object to be added in fiber.
+        ///@see Material.
+        void AddFiber(unsigned int tag, std::unique_ptr<Material> &fiber);
 
         ///Add a Material to the Mesh.
         ///@param tag the Material identifier.

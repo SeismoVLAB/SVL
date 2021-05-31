@@ -47,7 +47,7 @@
 class Viscous1DLinear : public Material{
 
     public:
-        ///Creates a Viscous1DLinear material to be especified at a Gauss-point in an Element.
+        ///Creates a Viscous1DLinear material to be specified at a Gauss-point in an Element.
         ///@param eta The material viscous coefficient.
         ///@see Viscous1DLinear::eta.
         Viscous1DLinear(const double eta);
@@ -117,16 +117,24 @@ class Viscous1DLinear : public Material{
 
         ///Returns the initial material stiffness.
         ///@return Matrix with the initial material tangent stiffness matrix.
-        ///@note The initial tangent stiifness matrix is computed when the strain vector is zero.
+        ///@note The initial tangent stiffness matrix is computed when the strain vector is zero.
         Eigen::MatrixXd GetInitialTangentStiffness() const;
 
         ///Perform converged material state update.
         ///@note This function sets the trail stress and strain as converged.
         void CommitState();
 
+        ///Reverse the material states to previous converged state.
+        ///@note This funtion returns the material states to previous converged states.
+        void ReverseState();
+
+        ///Brings the material states to its initial state in the element.
+        ///@note This funtion returns the material states to the beginning.
+        void InitialState();
+
         ///Update the material state for this iteration.
         ///@param strain Vector with the strain components at this Gauss-point.
-        ///@param cond If the the elatic/platic material components will be updated.
+        ///@param cond If the the elastic/plastic material components will be updated.
         ///@note This function computes the strain and tanget stiffness matrix once the trial strain converged.
         void UpdateState(const Eigen::VectorXd strain, const unsigned int cond);
 

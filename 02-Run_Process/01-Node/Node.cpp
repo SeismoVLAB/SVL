@@ -1,4 +1,3 @@
-#include <iostream>
 #include "Node.hpp"
 
 //Overload constructor.
@@ -33,6 +32,16 @@ Node::~Node(){
 bool 
 Node::IsFixed() const{
     return Fixed;
+}
+
+//Set all node variables to be zero
+void 
+Node::InitialState(){
+    Displacements.fill(0.0);
+    Velocities.fill(0.0);
+    Accelerations.fill(0.0);
+    IncrementalDisplacements.fill(0.0);
+    PMLIntegratedVector.fill(0.0);
 }
 
 //Set the node's mass.
@@ -79,7 +88,7 @@ Node::SetVelocities(Eigen::VectorXd &Vo){
     Velocities = Vo;
 }
 
-//Sets the current cceleration state of this node.
+//Sets the current acceleration state of this node.
 void 
 Node::SetAccelerations(Eigen::VectorXd &Ao){
     Accelerations = Ao;
@@ -145,7 +154,7 @@ Node::GetVelocities() const{
     return Velocities;
 }
 
-//Returns the current cceleration state of this node.
+//Returns the current acceleration state of this node.
 Eigen::VectorXd 
 Node::GetAccelerations() const{
     return Accelerations;
@@ -191,11 +200,19 @@ Eigen::VectorXd
 Node::GetSupportMotion(unsigned int k){
     //Construct the support motion vector.
     Eigen::VectorXd Lg(NumberOfDegreeOfFreedom);
-    Lg.fill(0.0);
+    Lg.fill(0.0); 
 
     for(auto it : SupportMotion){
         auto &dof = it.first;
-        Lg(dof)   = SupportMotion[dof][k];
+
+        if(k < SupportMotion[dof].size()){
+            //The time step is within (assumes dynamic load)
+            Lg(dof) = SupportMotion[dof][k];
+        }
+        else{
+            //The time step is out-of-bound (assumes static load)
+            Lg(dof) = SupportMotion[dof][0];
+        }
     }
 
     return Lg;

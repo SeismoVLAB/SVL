@@ -90,17 +90,22 @@ Lin3DThinArea::GetInitialTangentStiffness(){
 //Returns the section strain at given position.
 Eigen::VectorXd 
 Lin3DThinArea::GetStrainAt(double x3, double UNUSED(x2)){
-    //Checks if coordinate is inside the section.
-    if(abs(x3) > t/2.0){ x3 = t/2.0; }
-
-    //Compute the strain at point, needs shear value. 
+    //The stress vector in local coordinates
     Eigen::VectorXd theStrain(6);
-    theStrain << Strain(0) + x3*Strain(3), 
-                 Strain(1) + x3*Strain(4), 
-                 0.0, 
-                 Strain(2) + 2.0*x3*Strain(5), 
-                 0.0, 
-                 0.0; 
+    theStrain.fill(0.0);
+
+    //Checks if coordinate is inside the section.
+    if(fabs(x3) <= t/2.0){ 
+        x3 = x3 - t/2.0;
+
+        // Epsilon = [exx, eyy, 0.0, exy, 0.0, 0.0
+        theStrain << Strain(0) + x3*Strain(3), 
+                     Strain(1) + x3*Strain(4), 
+                     0.0, 
+                     Strain(2) + 2.0*x3*Strain(5), 
+                     0.0, 
+                     0.0; 
+    }
 
     return theStrain;
 }
@@ -108,22 +113,29 @@ Lin3DThinArea::GetStrainAt(double x3, double UNUSED(x2)){
 //Returns the section stress at given position.
 Eigen::VectorXd 
 Lin3DThinArea::GetStressAt(double x3, double UNUSED(x2)){
-    //Checks if coordinate is inside the section.
-    if(abs(x3) > t/2.0){ x3 = t/2.0; }
-
-    //Gets material properties.s
-    double E  = theMaterial->GetElasticityModulus();
-    double nu = theMaterial->GetPoissonRatio();
-
-    //TODO: Compute the strain at point, needs shear value. 
-    // Sigma = [Sxx, Syy, 0.0, txy, 0.0, 0.0]
+    //The stress vector in local coordinates
     Eigen::VectorXd theStress(6);
-    theStress << E/(1.0 -nu*nu)*(Strain(0) + nu*Strain(1) + x3*(Strain(3) + nu*Strain(4))),
-                 E/(1.0 -nu*nu)*(Strain(1) + nu*Strain(0) + x3*(Strain(4) + nu*Strain(3))),
-                 0.0,
-                 E/(2.0*(1.0 + nu))*(Strain(2) + 2.0*x3*Strain(5)),
-                 0.0,
-                 0.0;
+    theStress.fill(0.0);
+
+    //Checks if coordinate is inside the section.
+    if(fabs(x3) > t/2.0){
+        //Transform coordinates into section local axis.
+        x3 = x3 - t/2.0;
+
+        //Gets material properties.s
+        double E  = theMaterial->GetElasticityModulus();
+        double nu = theMaterial->GetPoissonRatio();
+
+        //TODO: Compute the strain at point, needs shear value. 
+        // Sigma = [Sxx, Syy, 0.0, txy, 0.0, 0.0]
+        Eigen::VectorXd theStress(6);
+        theStress << E/(1.0 -nu*nu)*(Strain(0) + nu*Strain(1) + x3*(Strain(3) + nu*Strain(4))),
+                     E/(1.0 -nu*nu)*(Strain(1) + nu*Strain(0) + x3*(Strain(4) + nu*Strain(3))),
+                     0.0,
+                     E/(2.0*(1.0 + nu))*(Strain(2) + 2.0*x3*Strain(5)),
+                     0.0,
+                     0.0;
+    }
 
     return theStress;
 }
@@ -132,6 +144,19 @@ Lin3DThinArea::GetStressAt(double x3, double UNUSED(x2)){
 void 
 Lin3DThinArea::CommitState(){
     theMaterial->CommitState();
+}
+
+//Reverse the section states to previous converged state.
+void 
+Lin3DThinArea::ReverseState(){
+    theMaterial->ReverseState();
+}
+
+//Brings the section states to its initial state.
+void 
+Lin3DThinArea::InitialState(){
+    Strain.fill(0.0);
+    theMaterial->InitialState();
 }
 
 //Update the section state for this iteration.

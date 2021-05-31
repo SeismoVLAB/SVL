@@ -147,10 +147,30 @@ void
 Plastic3DJ2::CommitState(){
 }
 
+//Reverse the material states to previous converged state.
+void 
+Plastic3DJ2::ReverseState(){
+    //TODO: Get back to previous commited state
+}
+
+//Brings the material states to its initial state in the element.
+void 
+Plastic3DJ2::InitialState(){
+    alpha = 0.0;
+    Strain.fill(0.0);
+    Stress.fill(0.0);
+    PlasticStrain.fill(0.0);
+    BackStress.fill(0.0);
+
+    Eigen::MatrixXd D = ComputeIdentityTensor();
+    Eigen::MatrixXd I = ComputeIdentityOperator();
+    TangentStiffness = K*D + 2.0*G*(I - 1.0/3.0*D);
+}
+
 //Update the material state for this iteration.
 void
 Plastic3DJ2::UpdateState(const Eigen::VectorXd strain, const unsigned int cond){
-    //Updates the elatic/plastic material components.    
+    //Updates the elastic/plastic material components.    
     if(cond == 1){
         //Auxiliar tensors.
         Eigen::MatrixXd D   = ComputeIdentityTensor();

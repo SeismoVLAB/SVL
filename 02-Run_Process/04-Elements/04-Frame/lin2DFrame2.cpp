@@ -1,5 +1,4 @@
 #include <cmath>
-#include <iostream>
 #include "lin2DFrame2.hpp"
 #include "GaussQuadrature.hpp"
 #include "LobattoQuadrature.hpp"
@@ -41,7 +40,7 @@ lin2DFrame2::~lin2DFrame2(){
     //Does nothing.
 }
 
-//Save the material states in the element.
+//Save the section states in the element.
 void 
 lin2DFrame2::CommitState(){
     //It considers only linear elastic material, thus viscous material is not allowed.
@@ -52,7 +51,27 @@ lin2DFrame2::CommitState(){
     }
 }
 
-//Update the material states in the element.
+//Reverse the section states to previous converged state in this element.
+void 
+lin2DFrame2::ReverseState(){
+    //Reverse the material components.
+    unsigned int nPoints = QuadraturePoints->GetNumberOfQuadraturePoints();
+
+    for(unsigned int k = 0; k < nPoints; k++)
+        theSection[k]->ReverseState();
+}
+
+//Brings the section state to its initial state in this element.
+void 
+lin2DFrame2::InitialState(){
+    //Brings the material components to initial state.
+    unsigned int nPoints = QuadraturePoints->GetNumberOfQuadraturePoints();
+
+    for(unsigned int k = 0; k < nPoints; k++)
+        theSection[k]->InitialState();
+}
+
+//Update the section states in the element.
 void 
 lin2DFrame2::UpdateState(){
     //Gets the quadrature information.    
@@ -223,7 +242,7 @@ lin2DFrame2::ComputeEnergy(){
 //Compute the mass matrix of the element.
 Eigen::MatrixXd 
 lin2DFrame2::ComputeMassMatrix(){
-    //Starts profiling this funtion.
+    //Starts profiling this function.
     PROFILE_FUNCTION();
 
     //Gets the quadrature information.    
@@ -274,7 +293,7 @@ lin2DFrame2::ComputeMassMatrix(){
 //Compute the stiffness matrix of the element.
 Eigen::MatrixXd 
 lin2DFrame2::ComputeStiffnessMatrix(){
-    //Starts profiling this funtion.
+    //Starts profiling this function.
     PROFILE_FUNCTION();
 
     //Gets the quadrature information.    
@@ -310,7 +329,7 @@ lin2DFrame2::ComputeStiffnessMatrix(){
 //Compute the damping matrix of the element.
 Eigen::MatrixXd 
 lin2DFrame2::ComputeDampingMatrix(){
-    //Starts profiling this funtion.
+    //Starts profiling this function.
     PROFILE_FUNCTION();
 
     //Damping matrix definition.
@@ -350,7 +369,7 @@ lin2DFrame2::ComputePMLMatrix(){
 //Compute the element the internal forces acting on the element.
 Eigen::VectorXd 
 lin2DFrame2::ComputeInternalForces(){
-    //Starts profiling this funtion.
+    //Starts profiling this function.
     PROFILE_FUNCTION();
 
     //Gets the quadrature information.    
@@ -383,7 +402,7 @@ lin2DFrame2::ComputeInternalForces(){
     return InternalForces;
 }
 
-//Compute the elastic, inertial, and vicous forces acting on the element.
+//Compute the elastic, inertial, and viscous forces acting on the element.
 Eigen::VectorXd 
 lin2DFrame2::ComputeInternalDynamicForces(){
     //The Internal dynamic force vector
@@ -408,7 +427,7 @@ lin2DFrame2::ComputeInternalDynamicForces(){
 //Compute the surface forces acting on the element.
 Eigen::VectorXd 
 lin2DFrame2::ComputeSurfaceForces(const std::shared_ptr<Load> &surfaceLoad, unsigned int UNUSED(face)){
-    //Starts profiling this funtion.
+    //Starts profiling this function.
     PROFILE_FUNCTION();
 
     //Local surface load vector:
@@ -440,7 +459,7 @@ lin2DFrame2::ComputeSurfaceForces(const std::shared_ptr<Load> &surfaceLoad, unsi
 //Compute the body forces acting on the element.
 Eigen::VectorXd 
 lin2DFrame2::ComputeBodyForces(const std::shared_ptr<Load> &bodyLoad, unsigned int k){
-    //Starts profiling this funtion.
+    //Starts profiling this function.
     PROFILE_FUNCTION();
 
     //Local body load vector:
@@ -475,7 +494,7 @@ lin2DFrame2::ComputeBodyForces(const std::shared_ptr<Load> &bodyLoad, unsigned i
 //Compute the domain reduction forces acting on the element.
 Eigen::VectorXd 
 lin2DFrame2::ComputeDomainReductionForces(const std::shared_ptr<Load>& UNUSED(drm), unsigned int UNUSED(k)){
-    //Starts profiling this funtion.
+    //Starts profiling this function.
     PROFILE_FUNCTION();
 
     //TODO: Domain reduction forces not implemented for frame.

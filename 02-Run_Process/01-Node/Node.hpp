@@ -48,7 +48,7 @@ class Node{
     public:
         ///Creates a Node in a finite element Mesh.
         ///@param numberDofs Number of degree-of-freedom for this node.
-        ///@param coordinates Matrix that specifies the coordinat of this node.
+        ///@param coordinates Matrix that specifies the coordinates of this node.
         ///@param isFixed Whether the node is fixed or free.
         ///@param isAbsorbent Whether the node is belongs is absorbent (PML 3D).
         ///@note More details can be found at @ref linkNode.
@@ -56,24 +56,24 @@ class Node{
         Node(unsigned int numberDofs, Eigen::VectorXd coordinates, bool isFixed);
 
         ///Destroys this Node object.
-        ///@see Node::Coordinates
         ~Node();
 
         ///Whether the node is fixed or free.
         ///@see Node::Fixed.
         bool IsFixed() const;
 
-        ///Whether the node is absorbent.
-        ///@see Node::Absorbent.
-        bool IsAbsorbent() const;
+        ///Set all node variables to be zero
+        void InitialState();
 
         ///Set the node's mass at each degree of freedom.
         ///@param mass Vector of masses.
+        ///@return Nothing.
         ///@see Node::Mass.
         void SetMass(Eigen::VectorXd &mass);
 
         ///Sets the current reaction force of this node.
         ///@param mass Vector of masses.
+        ///@return Nothing.
         ///@see Node::Reaction.
         void SetReaction(Eigen::VectorXd &reaction);
 
@@ -105,7 +105,7 @@ class Node{
         ///@see Node::Velocities.
         void SetVelocities(Eigen::VectorXd &Vo);
 
-        ///Sets the current cceleration state associated with this Node.
+        ///Sets the current acceleration state associated with this Node.
         ///@param Ao Vector of accelertions.
         ///@see Node::Accelerations.
         void SetAccelerations(Eigen::VectorXd &Ao);
@@ -121,7 +121,7 @@ class Node{
         ///@see Node::DomainReductionMotion.
         void SetDomainReductionMotion(Eigen::MatrixXd &Uo);
 
-        ///Sets the nodel absorbent integrated history values.
+        ///Sets the vector of absorbent integrated history values.
         ///@param Ub Vector of integrated (states) history values.
         ///@see Node::PMLIntegratedVector Node::GetPMLVector.
         void SetPMLVector(Eigen::VectorXd &Ub);
@@ -159,7 +159,7 @@ class Node{
         ///@see Node::Velocities.
         Eigen::VectorXd GetVelocities() const;
 
-        ///Gets the current cceleration state of this node.
+        ///Gets the current acceleration state of this node.
         ///@return Vector with the accelerations for each degree-of-freedom.
         ///@see Node::Accelerations.
         Eigen::VectorXd GetAccelerations() const;
@@ -179,7 +179,7 @@ class Node{
         ///@see Node::IncrementalDisplacements.
         Eigen::VectorXd GetIncrementalDisplacements() const;
 
-        ///Gets the current domin reduction displacements, velocities and accelerations.
+        ///Gets the current domain reduction displacements, velocities and accelerations.
         ///@param k Time step at which the domain reduction information is retrieved.
         ///@return Vector with the domain reduction information for computing forces.
         ///@note More details can be found at @ref linkNode, and @ref linkLoad.
@@ -240,7 +240,7 @@ class Node{
         ///The reaction forces of this node.
         Eigen::VectorXd Reaction;
 
-        ///The 3D perfectly-meatched history verctor.
+        ///The 3D perfectly-matched history verctor.
         Eigen::VectorXd PMLIntegratedVector;
 
         ///The free-degree-of-freedom list.

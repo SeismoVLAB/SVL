@@ -106,10 +106,6 @@ class Recorder{
         ///Sets the combination's name.
         ///@param name The LoadCombo name.  
         void SetComboName(std::string name);
-
-        ///Creates the directory to store results.
-        ///@param dirname The folder name to be created.  
-        void MakeFolder(std::string dirname);
         
     private:
         ///The name of the file to record.    
@@ -139,10 +135,10 @@ class Recorder{
         ///Section position at strain/stress is computed.
         std::vector<double> Position; 
 
-        ///Nodal/Element indeces to be recorded.
+        ///Nodal/Element indexes to be recorded.
         std::vector<unsigned int> IDs;
 
-        ///Nodal Local indeces for this partition.
+        ///Nodal Local indexes for this partition.
         std::map<unsigned int, unsigned int> Tag;
 
         ///Name of the recorder handler.

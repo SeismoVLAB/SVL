@@ -1,5 +1,4 @@
 #include <cmath>
-#include <iostream>
 #include "UnxBoucWen2DLink.hpp"
 #include "Definitions.hpp"
 #include "Profiler.hpp"
@@ -9,7 +8,7 @@ const unsigned int VTKCELL = 3;
 
 //Overload constructor.
 UnxBoucWen2DLink::UnxBoucWen2DLink(const std::vector<unsigned int> nodes, std::vector<double> params, std::vector<double> vars, const unsigned int dim, const unsigned int dir, double tol, unsigned int nmax) :
-Element("UnxBoucWen2DLink", nodes, 2*dim, VTKCELL), Dimension(dim), Direction(dir), Tol(tol), nMax(nmax){
+Element("UnxBoucWen2DLink", nodes, 2*dim, VTKCELL), Tol(tol), nMax(nmax), Dimension(dim), Direction(dir){
     //The element nodes.
     theNodes.resize(2);
 
@@ -46,6 +45,26 @@ UnxBoucWen2DLink::CommitState(){
     Un = U;
 }
 
+//Reverse the internal variables to previous converged state.
+void 
+UnxBoucWen2DLink::ReverseState(){
+    //Nothing to do here
+}
+
+//Brings the internal variables to its initial state in this element.
+void 
+UnxBoucWen2DLink::InitialState(){
+    //Bouc-Wen backbone curve parameters
+    z    = 0.0;
+    zn   = 0.0;
+    U    = 0.0;
+    Un   = 0.0;
+
+    //Initialize stiffness and internal force.
+    qbw = 0.0;
+    kbw = Ko;
+}
+
 //Update the material states in the element.
 void 
 UnxBoucWen2DLink::UpdateState(){
@@ -68,8 +87,8 @@ UnxBoucWen2DLink::UpdateState(){
     unsigned int k = 0;
 
     do{
-        f  = z - zn - dUn/uY*(1.0 - pow(abs(z), eta)*(gamma + beta*sign(z*dUn)));
-        df = 1.0 + dUn/uY*eta*pow(abs(z), eta - 1.0)*sign(z)*(gamma + beta*sign(z*dUn));
+        f  = z - zn - dUn/uY*(1.0 - pow(fabs(z), eta)*(gamma + beta*sign(z*dUn)));
+        df = 1.0 + dUn/uY*eta*pow(fabs(z), eta - 1.0)*sign(z)*(gamma + beta*sign(z*dUn));
         dz = f/df;
         z  = z - dz;
         k++;
@@ -192,7 +211,7 @@ UnxBoucWen2DLink::ComputeEnergy(){
 //Compute the mass matrix of the element.
 Eigen::MatrixXd 
 UnxBoucWen2DLink::ComputeMassMatrix(){
-    //Starts profiling this funtion.
+    //Starts profiling this function.
     PROFILE_FUNCTION();
 
     //The matrix dimension.
@@ -208,7 +227,7 @@ UnxBoucWen2DLink::ComputeMassMatrix(){
 //Compute the stiffness matrix of the element.
 Eigen::MatrixXd 
 UnxBoucWen2DLink::ComputeStiffnessMatrix(){
-    //Starts profiling this funtion.
+    //Starts profiling this function.
     PROFILE_FUNCTION();
 
     //The vector dimension.
@@ -233,7 +252,7 @@ UnxBoucWen2DLink::ComputeStiffnessMatrix(){
 //Compute damping matrix of the element.
 Eigen::MatrixXd 
 UnxBoucWen2DLink::ComputeDampingMatrix(){
-    //Starts profiling this funtion.
+    //Starts profiling this function.
     PROFILE_FUNCTION();
 
     //The matrix dimension.
@@ -256,7 +275,7 @@ UnxBoucWen2DLink::ComputePMLMatrix(){
 //Compute the element internal forces acting on the element.
 Eigen::VectorXd 
 UnxBoucWen2DLink::ComputeInternalForces(){
-    //Starts profiling this funtion.
+    //Starts profiling this function.
     PROFILE_FUNCTION();
 
     //The vector dimension.
@@ -278,7 +297,7 @@ UnxBoucWen2DLink::ComputeInternalForces(){
     return InternalForces;
 }
 
-//Compute the elastic, inertial, and vicous forces acting on the element.
+//Compute the elastic, inertial, and viscous forces acting on the element.
 Eigen::VectorXd 
 UnxBoucWen2DLink::ComputeInternalDynamicForces(){
     //The Internal dynamic force vector
@@ -305,7 +324,7 @@ UnxBoucWen2DLink::ComputeInternalDynamicForces(){
 //Compute the surface forces acting on the element.
 Eigen::VectorXd 
 UnxBoucWen2DLink::ComputeSurfaceForces(const std::shared_ptr<Load>& UNUSED(surface), unsigned int UNUSED(face)){
-    //Starts profiling this funtion.
+    //Starts profiling this function.
     PROFILE_FUNCTION();
 
     //Local surface load vector.
@@ -318,7 +337,7 @@ UnxBoucWen2DLink::ComputeSurfaceForces(const std::shared_ptr<Load>& UNUSED(surfa
 //Compute the body forces acting on the element.
 Eigen::VectorXd 
 UnxBoucWen2DLink::ComputeBodyForces(const std::shared_ptr<Load>& UNUSED(body), unsigned int UNUSED(k)){
-    //Starts profiling this funtion.
+    //Starts profiling this function.
     PROFILE_FUNCTION();
 
     //Local body load vector.
@@ -331,7 +350,7 @@ UnxBoucWen2DLink::ComputeBodyForces(const std::shared_ptr<Load>& UNUSED(body), u
 //Compute the domain reduction forces acting on the element.
 Eigen::VectorXd 
 UnxBoucWen2DLink::ComputeDomainReductionForces(const std::shared_ptr<Load>& UNUSED(drm), unsigned int UNUSED(k)){
-    //Starts profiling this funtion.
+    //Starts profiling this function.
     PROFILE_FUNCTION();
 
     //Domain reduction force vector.

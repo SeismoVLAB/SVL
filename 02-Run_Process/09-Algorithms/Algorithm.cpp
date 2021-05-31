@@ -84,7 +84,7 @@ Algorithm::ReducedParallelResidual(const Eigen::VectorXd &Feff, double &Residual
     MPI_Bcast(&Residual, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
     MPI_Barrier(MPI_COMM_WORLD);
 
-    //Erase auxiiliar variables. 
+    //Erase auxiliary variables. 
     delete[] red;
     delete[] vec;
 }
@@ -92,7 +92,7 @@ Algorithm::ReducedParallelResidual(const Eigen::VectorXd &Feff, double &Residual
 //Computes convergence tests for this algorithm.
 double 
 Algorithm::ComputeConvergence(const Eigen::VectorXd &Force, double Delta, bool isFirstIteration){
-    //Starts profiling this funtion.
+    //Starts profiling this function.
     PROFILE_FUNCTION();
 
     double Residual = 0.0;

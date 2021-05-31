@@ -73,7 +73,7 @@ NewtonRaphson::ComputeNewIncrement(std::shared_ptr<Mesh> &mesh, unsigned int i){
 
     //Alert that maximun number of iterations was reached.
     if((k == nMaxIterations) & (rank == 0))
-        std::cout << "Newton Raphson algorithm reached maximun number of iterations. The resiual is : " << Residual << "\n";
+        std::cout << "\n Newton Raphson algorithm reached maximun number of iterations. The residual is : " << Residual << "\n";
 
     return false;
 }
@@ -81,7 +81,7 @@ NewtonRaphson::ComputeNewIncrement(std::shared_ptr<Mesh> &mesh, unsigned int i){
 //Gets the displacement increment.
 Eigen::VectorXd 
 NewtonRaphson::GetDisplacementIncrement(){
-    //Starts profiling this funtion.
+    //Starts profiling this function.
     PROFILE_FUNCTION();
 
     return dU;

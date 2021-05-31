@@ -1,5 +1,4 @@
 #include <cmath>
-#include <iostream>
 #include "kin2DFrame2.hpp"
 #include "Definitions.hpp"
 #include "Profiler.hpp"
@@ -25,13 +24,25 @@ kin2DFrame2::~kin2DFrame2(){
     //Does nothing.
 }
 
-//Save the material states in the element.
+//Save the section states in the element.
 void 
 kin2DFrame2::CommitState(){
     theSection->CommitState();
 }
 
-//Update the material states in the element.
+//Reverse the section states to previous converged state in this element.
+void 
+kin2DFrame2::ReverseState(){
+    theSection->ReverseState();
+}
+
+//Brings the section state to its initial state in this element.
+void 
+kin2DFrame2::InitialState(){
+    theSection->InitialState();
+}
+
+//Update the section states in the element.
 void 
 kin2DFrame2::UpdateState(){
     //Computes strain vector.
@@ -319,7 +330,7 @@ kin2DFrame2::ComputeInternalForces(){
     return InternalForces;
 }
 
-//Compute the elastic, inertial, and vicous forces acting on the element.
+//Compute the elastic, inertial, and viscous forces acting on the element.
 Eigen::VectorXd 
 kin2DFrame2::ComputeInternalDynamicForces(){
     //The Internal dynamic force vector

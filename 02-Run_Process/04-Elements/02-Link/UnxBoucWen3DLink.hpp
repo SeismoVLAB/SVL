@@ -21,7 +21,10 @@
 //   Domniki M. Asimaki  (domniki@caltech.edu)
 //
 // References   : 
-//  [1] 
+//  [1] Bouc, R. (1971). "Mathematical model for hysteresis." Report to the Centre 
+//      de Recherches Physiques, pp16-25, Marseille, France.
+//  [2] Wen, Y.-K. (1976). \Method for random vibration of hysteretic systems." 
+//      Journal of Engineering Mechanics Division, 102(EM2), 249-263. 
 //
 // Description:
 ///This file contains the "UnxBoucWen3DLink" two-node link declarations, which 
@@ -55,7 +58,7 @@ class UnxBoucWen3DLink : public Element{
         ///Creates a UnxBoucWen3DLink in a finite element Mesh.
         ///@param nodes The Node connectivity array of this Element.
         ///@param parameters Vector that contains the Bouc-Wen model parameters.
-        ///@param variables Vector that contains auxiliar model parameters.
+        ///@param variables Vector that contains auxiliary model parameters.
         ///@param dim The model dimension.
         ///@param dir The local direction where this Element is acting.
         ///@param tol Tolerance to stop Newton-Raphson iterations.
@@ -68,16 +71,24 @@ class UnxBoucWen3DLink : public Element{
         ~UnxBoucWen3DLink();
 
         ///Save the material states in the element.
-        ///@note This funtion sets the trial states as converged ones in Material.
+        ///@note This function sets the trial states as converged ones in Material.
         void CommitState();
 
+        ///Reverse the material/section states to previous converged state in this element.
+        ///@note This function returns the trial states to previous converged states at the Material level.
+        void ReverseState();
+
+        ///Brings the material/section state to its initial state in this element.
+        ///@note This function returns the meterial states to the beginning.
+        void InitialState();
+
         ///Update the material states in the element.
-        ///@note This funtion update the trial states at the Material level.
+        ///@note This function update the trial states at the Material level.
         void UpdateState();
 
         ///Sets the finite element dependance among objects.
         ///@param nodes The Node list of the Mesh object.
-        ///@note This funtion sets the relation between Node and Element objects.
+        ///@note This function sets the relation between Node and Element objects.
         ///@see lin2DQuad4::theNodes.
         void SetDomain(std::map<unsigned int, std::shared_ptr<Node> > &nodes);
 
@@ -159,7 +170,7 @@ class UnxBoucWen3DLink : public Element{
         ///@see Assembler::ComputeInternalForceVector(), Integrator::ComputeEffectiveForce().
         Eigen::VectorXd ComputeInternalForces();
 
-        ///Compute the elastic, inertial, and vicous forces acting on the element.
+        ///Compute the elastic, inertial, and viscous forces acting on the element.
         ///@return Vector with the Element dynamic internal force.
         ///@note The internal force vector can be revisited in @ref linkElement.
         ///@see Assembler::ComputeDynamicInternalForceVector().

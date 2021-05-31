@@ -49,17 +49,14 @@ Recorder::CopyRecorder(){
 //Initialize the recorder.
 void 
 Recorder::Initialize(std::shared_ptr<Mesh> &mesh, unsigned int nsteps){
-    //Starts profiling this funtion.
+    //Starts profiling this function.
     PROFILE_FUNCTION();
 
     if(strcasecmp(Name.c_str(),"paraview") == 0){
-        //Creates the folder where solutions are stored.
-        MakeFolder("/../Paraview/");
-
         //Gets node and element information from the mesh.
         std::map<unsigned int, std::shared_ptr<Node> > Nodes = mesh->GetNodes();
 
-        //Local node indeces mapping.
+        //Local node indexes mapping.
         unsigned int k = 0;
         for(auto it : Nodes){
             auto &nTag = it.first;
@@ -67,10 +64,7 @@ Recorder::Initialize(std::shared_ptr<Mesh> &mesh, unsigned int nsteps){
             k++;
         }
     }
-    else if(strcasecmp(Name.c_str(),"node") == 0){
-        //Creates the folder where solutions are stored.
-        MakeFolder("/../Solution/");
-        
+    else if(strcasecmp(Name.c_str(),"node") == 0){       
         //Update the file path if is element recorder
         std::string secondPath = GetSpacedName(filePath, " ");
         std::string theFile = secondPath + "/../Solution/" + Combo + "/" + File;
@@ -105,9 +99,6 @@ Recorder::Initialize(std::shared_ptr<Mesh> &mesh, unsigned int nsteps){
 
     }
     else if(strcasecmp(Name.c_str(),"element") == 0){
-        //Creates the folder where solutions are stored.
-        MakeFolder("/../Solution/");
-
         //Update the file path if is element recorder
         std::string secondPath = GetSpacedName(filePath, " ");
         std::string theFile = secondPath + "/../Solution/" + Combo + "/" + File;
@@ -168,9 +159,6 @@ Recorder::Initialize(std::shared_ptr<Mesh> &mesh, unsigned int nsteps){
         }
     }
     else if(strcasecmp(Name.c_str(),"section") == 0){
-        //Creates the folder where solutions are stored.
-        MakeFolder("/../Solution/");
-
         //Update the file path if is element recorder
         std::string secondPath = GetSpacedName(filePath, " ");
         std::string theFile = secondPath + "/../Solution/" + Combo + "/" + File;
@@ -184,7 +172,10 @@ Recorder::Initialize(std::shared_ptr<Mesh> &mesh, unsigned int nsteps){
         std::map<unsigned int, std::shared_ptr<Element> > Elements = mesh->GetElements();
 
         //Number of section in this partition.
-        OutputFile << IDs.size() << " " << nsteps << " " << Position[0] << " " << Position[1] << "\n";
+        OutputFile << IDs.size() << " " << nsteps;
+        for(unsigned int k = 0; k < Position.size(); k++)
+            OutputFile << " " << Position[k];
+        OutputFile << "\n";
 
         //TODO: Section recorder.
         if(strcasecmp(Response.c_str(),"strain") == 0){
@@ -205,7 +196,7 @@ Recorder::Initialize(std::shared_ptr<Mesh> &mesh, unsigned int nsteps){
 //Writes state variable data to the file.
 void 
 Recorder::WriteResponse(std::shared_ptr<Mesh> &mesh, unsigned int step){
-    //Starts profiling this funtion.
+    //Starts profiling this fuction.
     PROFILE_FUNCTION();
 
     //Selects the object to be written.
@@ -364,7 +355,7 @@ Recorder::WriteSectionResponse(std::shared_ptr<Mesh> &mesh){
 //Writes output data in VTK format to the file.
 void 
 Recorder::WriteVTKFiles(std::shared_ptr<Mesh> &mesh, unsigned int step){
-    if((step-1) % nSample == 0){
+    if(step % nSample == 0){
         //Creates the paraview output file.
         std::stringstream iter;
         iter << Counter;
@@ -518,7 +509,7 @@ Recorder::WriteVTKFiles(std::shared_ptr<Mesh> &mesh, unsigned int step){
 //Fix blank spaces provided by user in path.
 std::string 
 Recorder::GetSpacedName(std::string theFile, std::string toReplace){
-    //Auxiliar variables.
+    //Auxiliary variables.
     std::string auxName = theFile;
     std::string correctedFile;
 
@@ -534,13 +525,4 @@ Recorder::GetSpacedName(std::string theFile, std::string toReplace){
     correctedFile = auxName;
 
     return correctedFile;
-}
-
-//Creates the directory to store results.
-void 
-Recorder::MakeFolder(std::string dirname){
-    //Creates the folder where solutions are stored.
-    std::string firstPath = GetSpacedName(filePath, "\\ ");
-    std::string theFolder = firstPath + dirname + Combo;
-    mkdir(theFolder.c_str(), S_IRWXU | S_IRWXG | S_IRWXO);
 }

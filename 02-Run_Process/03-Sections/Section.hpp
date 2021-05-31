@@ -45,7 +45,7 @@
 class Section {
 
     public:
-        ///Creates a Section to be especified at a Gauss-point in an Element.
+        ///Creates a Section to be specified at a Gauss-point in an Element.
         ///@param name Name of the derived class.
         ///@see Section::Name.
         Section(std::string name);
@@ -76,7 +76,7 @@ class Section {
 
         ///Returns the section initial stiffness matrix.
         ///@return Matrix with the initial section tangent stiffness matrix.
-        ///@note The initial tangent stiifness matrix is computed when the generalized strain vector is zero.
+        ///@note The initial tangent stiffness matrix is computed when the generalized strain vector is zero.
         virtual Eigen::MatrixXd GetInitialTangentStiffness() = 0;
 
         ///Returns the section strain at given position.
@@ -95,11 +95,19 @@ class Section {
         ///@note This function sets the trail stress and strain as converged.
         virtual void CommitState() = 0;
 
+        ///Reverse the section states to previous converged state.
+        ///@note This function returns the material states to previous converged states.
+        virtual void ReverseState() = 0;
+
+        ///Brings the section states to its initial state.
+        ///@note This function returns the material states to the beginning.
+        virtual void InitialState() = 0;
+
         ///Update the section state for this iteration.
         ///@param strain Vector with the strain components at this Gauss-point.
-        ///@param cond If the the elatic/platic material components will be updated.
+        ///@param cond If the the elastic/plastic material components will be updated.
         ///@note This function computes the strain and tanget stiffness matrix once the trial strain converged.
-        virtual void UpdateState(Eigen::VectorXd strain, unsigned int cond) = 0;
+        virtual void UpdateState(Eigen::VectorXd strain, unsigned int cond=0) = 0;
 
         ///Gets Section name.
         ///@see Section::Name.
@@ -127,6 +135,28 @@ class Section {
         ///@return The section translation matrix according to ip.
         ///@note More details can be found at @ref linkSectionInsertionPoint.
         Eigen::MatrixXd GetLineTranslationMatrix(double h, double b, double zc, double yc, unsigned int ip);
+
+        ///Gets the coordinate according to insertion point.
+        ///@param x3 The coordinate along the 3-axis.
+        ///@param x2 The coordinate along the 2-axis. 
+        ///@param h The total height of the section.
+        ///@param b The total width of the section.
+        ///@param zc Position of the section axis along x3-axis.
+        ///@param yc Position of the section axis along x2-axis.
+        ///@param ip The insertion point where the section axes are located.
+        ///@return The section translation matrix according to ip.
+        ///@note More details can be found at @ref linkSectionInsertionPoint.
+        void InsertionPointCoordinates(double &x3, double &x2, double h, double b, double zc, double yc, unsigned int ip);
+
+        ///Transforms generalised strain/stresses from Element to Section local coordinate
+        ///@param h The total height of the section.
+        ///@param b The total width of the section.
+        ///@param zcm Position of the section axis along x3-axis.
+        ///@param ycm Position of the section axis along x2-axis.
+        ///@param ip The insertion point where the section axes are located.
+        ///@return The section translation matrix according to ip.
+        ///@note More details can be found at @ref linkSectionInsertionPoint.
+        Eigen::MatrixXd ComputeLineLocalAxes(double h, double b, double zcm, double ycm, double angle, unsigned int ip);
 
     private:
         ///Section Name.

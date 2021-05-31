@@ -36,7 +36,7 @@ Element::GetNumberOfDegreeOfFreedom() const{
     return NumberOfDegreeOfFreedom;
 }
 
-//Returns the Node Connectivity Indeces.
+//Returns the Node Connectivity Indexes.
 std::vector<unsigned int> 
 Element::GetNodes() const{
     return Nodes;

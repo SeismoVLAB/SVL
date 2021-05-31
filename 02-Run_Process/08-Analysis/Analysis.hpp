@@ -66,6 +66,10 @@ class Analysis{
         ///@see Analysis::theRecorders.
         void SetRecorder(std::shared_ptr<Recorder> &recorder);
 
+        ///Returns the combination name
+        ///@return The analysis combination name.
+        std::string GetCombinationName();
+
         ///Construct the reaction vector force from each processor.
         ///@param Reaction The reaction vector in this partition.
         ///@param numberOfTotalDofs The number of total degree-of-freedom.
@@ -78,7 +82,7 @@ class Analysis{
         ///@param nsteps The number of time steps to be recorded.
         void StartRecorders(std::shared_ptr<Mesh> &mesh, unsigned int nsteps);
 
-        ///Writes information on trecorders.
+        ///Writes information on the recorders.
         ///@param mesh Pointer to the Mesh object.
         ///@param step The time step to be recorded.
         void WriteRecorders(std::shared_ptr<Mesh> &mesh, unsigned int step);
@@ -88,7 +92,7 @@ class Analysis{
 
         ///Prints out solving bar for the analysis.
         ///@param percent The progress bar percentage in analysis.
-        void PrintProgressBar(unsigned int percent);
+        void PrintProgress(unsigned int percent);
 
     private:
         ///The load combination to be used.

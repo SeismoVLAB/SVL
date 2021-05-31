@@ -60,8 +60,8 @@ class QuadratureRule {
 
         ///Gets Gauss Integration Points.
         ///@param name Generic name of the Element for this quadrature rule.
-        ///@param Weights The Gauss quadratue weights.
-        ///@param Points The Gauss quadratue coordinates.
+        ///@param Weights The Gauss quadrature weights.
+        ///@param Points The Gauss quadrature coordinates.
         virtual void GetQuadraturePoints(std::string name, Eigen::VectorXd &Weights, Eigen::MatrixXd &Points) = 0;
 
         ///Gets the Element's Quadrature Name. 

@@ -44,14 +44,15 @@
 
 ///Prints out Command Line help
 void 
-printHelp(){
+printHelp(bool &help){
     //Command Help. 
     if(rank == 0){
+        help = true;
         std::cout << " COMMAND LINE FLAGS TO PROVIDE:                                  \n";
         std::cout << "     -dir  : Location of the working directory.                  \n";
         std::cout << "     -file : Name of the SeismoVLAB file to be loaded.           \n";
         std::cout << "                                                                 \n";
-        std::cout << " \x1B[33mUse Example \x1B[0m: ./SeismoVLAB.exe -dir /path/to/files -file model.$.svl\n";
+        std::cout << " \x1B[33mRun \x1B[0m: mpirun -np n ./SeismoVLAB.exe -dir '/path/to/files' -file 'model.$.json'\n";
     }
 }
 
@@ -88,19 +89,20 @@ printLogo(){
 
 ///Parse Command Line Inputs. 
 void
-CommandLine(int argc, char **argv){
+CommandLine(int argc, char **argv, bool &parsefile){
     //Auxiliary Variable.
     int iter  = 0; 
     int count = 0;
+    bool help = false;
 
     //Find help flag is active.
     while(iter < argc){
         //Help Command Line Output is Active.
         if(strcasecmp(argv[iter],"--help") == 0){
-            printHelp();
+            printHelp(help);
         }
         else if(strcasecmp(argv[iter],"--h") == 0){
-            printHelp();
+            printHelp(help);
         }
         iter++;
     }
@@ -122,10 +124,14 @@ CommandLine(int argc, char **argv){
     }
 
     //No Enough Number of Input Arguments.
-    if(count != 2){
-        if(rank == 0)
-            std::cout << "\x1B[31m ERROR: \x1B[0mNOT ENOUGH Command line input arguments. \n";
-        printHelp();
+    if(count == 2){
+        parsefile = true;
+    }
+    else{
+        if(!help){
+            if(rank == 0)
+                std::cout << "\x1B[31m ERROR: \x1B[0mNOT ENOUGH Command line input arguments. \n";
+        }
     }
 }
 

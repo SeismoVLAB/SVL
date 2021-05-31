@@ -126,10 +126,23 @@ void
 Elastic2DPlaneStress::CommitState(){
 }
 
+//Reverse the material states to previous converged state.
+void 
+Elastic2DPlaneStress::ReverseState(){
+    //TODO: Get back to previous commited state
+}
+
+//Brings the material states to its initial state in the element.
+void 
+Elastic2DPlaneStress::InitialState(){
+    Strain.fill(0.0);
+    Stress.fill(0.0);
+}
+
 //Update the material state for this iteration.
 void
 Elastic2DPlaneStress::UpdateState(const Eigen::VectorXd strain, const unsigned int cond){
-    //Updates the elatic/platic material components.    
+    //Updates the elastic/plastic material components.    
     if(cond == 1){
         //Update the strain.
         Strain = strain;

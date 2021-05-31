@@ -1,5 +1,4 @@
 #include <cmath>
-#include <iostream>
 #include "lin3DFrame2.hpp"
 #include "GaussQuadrature.hpp"
 #include "LobattoQuadrature.hpp"
@@ -52,7 +51,27 @@ lin3DFrame2::CommitState(){
         theSection[k]->CommitState();
 }
 
-//Update the material states in the element.
+//Reverse the section states to previous converged state in this element.
+void 
+lin3DFrame2::ReverseState(){
+    //Reverse the section components.
+    unsigned int nPoints = QuadraturePoints->GetNumberOfQuadraturePoints();
+
+    for(unsigned int k = 0; k < nPoints; k++)
+        theSection[k]->ReverseState();
+}
+
+//Brings the section state to its initial state in this element.
+void 
+lin3DFrame2::InitialState(){
+    //Brings the section components to initial state.
+    unsigned int nPoints = QuadraturePoints->GetNumberOfQuadraturePoints();
+
+    for(unsigned int k = 0; k < nPoints; k++)
+        theSection[k]->InitialState();
+}
+
+//Update the section states in the element.
 void 
 lin3DFrame2::UpdateState(){
     //Gets the quadrature information.    
@@ -225,7 +244,7 @@ lin3DFrame2::ComputeEnergy(){
 //Compute the mass matrix of the element.
 Eigen::MatrixXd 
 lin3DFrame2::ComputeMassMatrix(){
-    //Starts profiling this funtion.
+    //Starts profiling this function.
     PROFILE_FUNCTION();
 
     //Gets the quadrature information.    
@@ -285,7 +304,7 @@ lin3DFrame2::ComputeMassMatrix(){
 //Compute the stiffness matrix of the element using gauss-integration.
 Eigen::MatrixXd 
 lin3DFrame2::ComputeStiffnessMatrix(){
-    //Starts profiling this funtion.
+    //Starts profiling this function.
     PROFILE_FUNCTION();
 
     //Gets the quadrature information.    
@@ -321,7 +340,7 @@ lin3DFrame2::ComputeStiffnessMatrix(){
 //Compute the damping matrix of the element.
 Eigen::MatrixXd 
 lin3DFrame2::ComputeDampingMatrix(){
-    //Starts profiling this funtion.
+    //Starts profiling this function.
     PROFILE_FUNCTION();
 
     //Damping matrix definition.
@@ -360,7 +379,7 @@ lin3DFrame2::ComputePMLMatrix(){
 //Compute the element the internal forces acting on the element.
 Eigen::VectorXd 
 lin3DFrame2::ComputeInternalForces(){
-    //Starts profiling this funtion.
+    //Starts profiling this function.
     PROFILE_FUNCTION();
 
     //Gets the quadrature information.    
@@ -418,7 +437,7 @@ lin3DFrame2::ComputeInternalDynamicForces(){
 //Compute the surface forces acting on the element.
 Eigen::VectorXd 
 lin3DFrame2::ComputeSurfaceForces(const std::shared_ptr<Load> &surfaceLoad, unsigned int UNUSED(face)){
-    //Starts profiling this funtion.
+    //Starts profiling this function.
     PROFILE_FUNCTION();
 
     //Local surface load vector:
@@ -456,7 +475,7 @@ lin3DFrame2::ComputeSurfaceForces(const std::shared_ptr<Load> &surfaceLoad, unsi
 //Compute the body forces acting on the element.
 Eigen::VectorXd 
 lin3DFrame2::ComputeBodyForces(const std::shared_ptr<Load> &bodyLoad, unsigned int k){
-    //Starts profiling this funtion.
+    //Starts profiling this function.
     PROFILE_FUNCTION();
 
     //Local body load vector:
@@ -497,7 +516,7 @@ lin3DFrame2::ComputeBodyForces(const std::shared_ptr<Load> &bodyLoad, unsigned i
 //Compute the domain reduction forces acting on the element.
 Eigen::VectorXd 
 lin3DFrame2::ComputeDomainReductionForces(const std::shared_ptr<Load>& UNUSED(drm), unsigned int UNUSED(k)){
-    //Starts profiling this funtion.
+    //Starts profiling this function.
     PROFILE_FUNCTION();
 
     //TODO: Domain reduction forces not implemented for frame.
@@ -546,7 +565,7 @@ lin3DFrame2::ComputeLocalAxes() const{
     v1 = v1/v1.norm();
 
     //Local Axis 3.
-    if(abs(v1(2)) > TOL){
+    if(fabs(v1(2)) > TOL){
         v3 << 0.0, v1(2), -v1(1);
         v3 = v3/v3.norm();
     }

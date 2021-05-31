@@ -25,7 +25,7 @@
 //
 // Description:
 ///This file contains the "Algorithm object" declarations, and defines how the 
-///soluction between two steps is going to be carried out.
+///solution between two steps is going to be carried out.
 //------------------------------------------------------------------------------
 
 #ifndef _ALGORITHM_HPP_

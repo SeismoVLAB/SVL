@@ -1,6 +1,5 @@
 #include <cmath>
 #include <cfloat>
-#include <iostream>
 #include "HDRBYamamoto3DLink.hpp"
 #include "Definitions.hpp"
 #include "Profiler.hpp"
@@ -49,6 +48,24 @@ void
 HDRBYamamoto3DLink::CommitState(){
     Qn = Qaux;
     Pn = Paux;
+}
+
+//Reverse the internal states to previous converged state in this element.
+void 
+HDRBYamamoto3DLink::ReverseState(){
+    Qaux = Qn;
+    Paux = Pn;
+}
+
+//Brings the internal state to its initial state in this element.
+void 
+HDRBYamamoto3DLink::InitialState(){
+    Pn.fill(0.0);
+    Qn.fill(0.0);
+    Fn.fill(0.0);
+
+    Paux.fill(0.0);
+    Qaux.fill(0.0);
 }
 
 //Update the material states in the element.
@@ -293,7 +310,7 @@ HDRBYamamoto3DLink::ComputeInternalForces(){
     return InternalForces;
 }
 
-//Compute the elastic, inertial, and vicous forces acting on the element.
+//Compute the elastic, inertial, and viscous forces acting on the element.
 Eigen::VectorXd 
 HDRBYamamoto3DLink::ComputeInternalDynamicForces(){
     //The Internal dynamic force vector
@@ -371,7 +388,7 @@ HDRBYamamoto3DLink::ComputeLocalAxes() const{
     v1 = v1/v1.norm();
 
     //Local Axis 3.
-    if(abs(v1(2)) > TOL){
+    if(fabs(v1(2)) > TOL){
         v3 << 0.0, v1(2), -v1(1);
         v3 = v3/v3.norm();
     }
@@ -439,7 +456,7 @@ HDRBYamamoto3DLink::ComputeRotationMatrix() const{
     v1 = v1/v1.norm();
 
     //Local Axis 3.
-    if(abs(v1(2)) > TOL){
+    if(fabs(v1(2)) > TOL){
         v3 << 0.0, v1(2), -v1(1);
         v3 = v3/v3.norm();
     }

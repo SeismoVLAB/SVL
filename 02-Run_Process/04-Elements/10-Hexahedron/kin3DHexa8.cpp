@@ -1,5 +1,4 @@
 #include <cmath>
-#include <iostream>
 #include <Eigen/LU> 
 #include "Material.hpp"
 #include "kin3DHexa8.hpp"
@@ -64,6 +63,26 @@ kin3DHexa8::CommitState(){
 
     for(unsigned int k = 0; k < nPoints; k++)
         theMaterial[k]->CommitState();
+}
+
+//Reverse the material states to previous converged state in this element.
+void 
+kin3DHexa8::ReverseState(){
+    //Reverse the material components.
+    unsigned int nPoints = QuadraturePoints->GetNumberOfQuadraturePoints();
+
+    for(unsigned int k = 0; k < nPoints; k++)
+        theMaterial[k]->ReverseState();
+}
+
+//Brings the material state to its initial state in this element.
+void 
+kin3DHexa8::InitialState(){
+    //Brings the material components to initial state.
+    unsigned int nPoints = QuadraturePoints->GetNumberOfQuadraturePoints();
+
+    for(unsigned int k = 0; k < nPoints; k++)
+        theMaterial[k]->InitialState();
 }
 
 //Update the material states in the element.
@@ -417,7 +436,7 @@ kin3DHexa8::ComputeInternalForces(){
     return InternalForces;
 }
 
-//Compute the elastic, inertial, and vicous forces acting on the element.
+//Compute the elastic, inertial, and viscous forces acting on the element.
 Eigen::VectorXd 
 kin3DHexa8::ComputeInternalDynamicForces(){
     //The Internal dynamic force vector

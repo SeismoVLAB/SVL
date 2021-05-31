@@ -15,7 +15,7 @@ Section("Lin3DCircularTube"), re(re), ri(ri), Theta(theta), InsertPoint(ip){
     //The section material:
     theMaterial = material->CopyMaterial();
 
-    //Transform the rotation Anlgle into radians.
+    //Transform the rotation Angle into radians.
     Theta = PI*theta/180.0;
 }
 
@@ -66,6 +66,10 @@ Lin3DCircularTube::GetDensity(){
 //Returns the section axial stiffness.
 Eigen::MatrixXd
 Lin3DCircularTube::GetTangentStiffness(){
+    //Gets the section centroid.
+    double zcm, ycm;
+    ComputeSectionCenter(zcm, ycm);
+
     //Area Properties.
     double A   = GetArea();
     double J   = GetInertiaAxis1();
@@ -74,22 +78,19 @@ Lin3DCircularTube::GetTangentStiffness(){
     double I22 = GetInertiaAxis2();
     double I33 = GetInertiaAxis3();
 
-    //Gets the section centroid.
-    double zc, yc;
-    ComputeSectionCenter(zc, yc);
-
-    //Material properties.
+    //Section shear Stiffness at center of mass.
     double G = theMaterial->GetShearModulus();
+
+    Eigen::MatrixXd Cs(3,3);
+    Cs << G*J,  0.0 ,  0.0 ,
+          0.0, G*As2,  0.0 ,
+          0.0,  0.0 , G*As3;
+
+    //Section flexural Stiffness at center of mass.
     Eigen::MatrixXd E = theMaterial->GetInitialTangentStiffness(); 
 
-    //Section Shear areas at centroid.
-    //TODO: Check this transformation is not right.
-    double Asy = As2 + 2.0/PI*(As3 - As2)*Theta; 
-    double Asz = As3 + 2.0/PI*(As2 - As3)*Theta; 
-
-    //Section Stiffness at center of mass.
-    Eigen::MatrixXd Cs(3,3);
-    Cs << E(0,0)*A, 0.0       , 0.0       ,
+    Eigen::MatrixXd Cm(3,3);
+    Cm << E(0,0)*A, 0.0       , 0.0       ,
           0.0     , E(0,0)*I22, 0.0       ,
           0.0     , 0.0       , E(0,0)*I33;
 
@@ -97,19 +98,20 @@ Lin3DCircularTube::GetTangentStiffness(){
     Eigen::MatrixXd T = GetLineRotationMatrix(Theta);
 
     //Compute the translation matrix.
-    Eigen::MatrixXd L = GetLineTranslationMatrix(re, ri, zc, yc, InsertPoint);
+    Eigen::MatrixXd L = GetLineTranslationMatrix(re, ri, zcm, ycm, InsertPoint);
 
     //Computes the global section stiffness matrix.
-    Cs = T.transpose()*L.transpose()*Cs*L*T;
+    Cs = T.transpose()*Cs*T;
+    Cm = T.transpose()*L.transpose()*Cm*L*T;
 
     //Returns the section stiffness for 3-dimensions.
     Eigen::MatrixXd SectionStiffness(6,6);
-    SectionStiffness << Cs(0,0), 0.0, Cs(0,1), Cs(0,2),  0.0 ,  0.0 ,
-                          0.0  , G*J,   0.0  ,   0.0  ,  0.0 ,  0.0 ,
-                        Cs(0,1), 0.0, Cs(1,1), Cs(2,1),  0.0 ,  0.0 ,
-                        Cs(0,2), 0.0, Cs(2,1), Cs(2,2),  0.0 ,  0.0 ,
-                          0.0  , 0.0,   0.0  ,   0.0  , G*Asy,  0.0 ,
-                          0.0  , 0.0,   0.0  ,   0.0  ,  0.0 , G*Asz;
+    SectionStiffness << Cm(0,0),   0.0  , Cm(0,1), Cm(0,2),   0.0  ,   0.0  ,
+                          0.0  , Cs(0,0),   0.0  ,   0.0  , Cs(0,1), Cs(0,2),
+                        Cm(0,1),   0.0  , Cm(1,1), Cm(2,1),   0.0  ,   0.0  ,
+                        Cm(0,2),   0.0  , Cm(2,1), Cm(2,2),   0.0  ,   0.0  ,
+                          0.0  , Cs(0,1),   0.0  ,   0.0  , Cs(1,1), Cs(2,1),
+                          0.0  , Cs(0,2),   0.0  ,   0.0  , Cs(2,1), Cs(2,2);
 
     return SectionStiffness;
 }
@@ -122,21 +124,79 @@ Lin3DCircularTube::GetInitialTangentStiffness(){
 
 //Returns the section strain at given position.
 Eigen::VectorXd 
-Lin3DCircularTube::GetStrainAt(double UNUSED(x3), double UNUSED(x2)){
-    //TODO: Compute the strain at point, needs shear value. 
+Lin3DCircularTube::GetStrainAt(double x3, double x2){
+    //The strain vector in local coordinates
     Eigen::VectorXd theStrain(6);
     theStrain.fill(0.0);
+
+    //Gets the section centroid.
+    double zcm, ycm;
+    ComputeSectionCenter(zcm, ycm);
+
+    //Transform coordinates into section local axis.
+    x3 = zcm - x3;
+    x2 = x2 - ycm;
+
+    //Checks the coordinate is inside the section
+    if ((ri <= sqrt(x2*x2 + x3*x3)) & (sqrt(x2*x2 + x3*x3) <= re)) {
+        //Transforms generalised strains from Element to Section local coordinate
+        Eigen::VectorXd strain = ComputeLineLocalAxes(re, ri, zcm, ycm, Theta, InsertPoint)*Strain;
+
+        // Epsilon = [exx, 0.0, 0.0, exy, 0.0, exz]
+        theStrain << strain(0) + x3*strain(2) - x2*strain(3), 
+                     0.0, 
+                     0.0, 
+                     strain(4),
+                     0.0, 
+                     strain(5);
+    }
 
     return theStrain;
 }
 
 //Returns the section stress at given position.
 Eigen::VectorXd 
-Lin3DCircularTube::GetStressAt(double UNUSED(x3), double UNUSED(x2)){
-    //TODO: Compute the strain at point, needs shear value. 
-    // Sigma = [Sxx, 0.0, 0.0, txy, 0.0, txz]
+Lin3DCircularTube::GetStressAt(double x3, double x2){
+    //The stress vector in local coordinates
     Eigen::VectorXd theStress(6);
     theStress.fill(0.0);
+
+    //Gets the section centroid.
+    double zcm, ycm;
+    ComputeSectionCenter(zcm, ycm);
+
+    //Transform coordinates into section local axis.
+    x3 = zcm - x3;
+    x2 = x2 - ycm;
+
+    //Checks the coordinate is inside the section
+    if ((ri <= sqrt(x2*x2 + x3*x3)) & (sqrt(x2*x2 + x3*x3) <= re)) {
+        //Gets the section centroid.
+        double A   = GetArea();
+        double I22 = GetInertiaAxis2();
+        double I33 = GetInertiaAxis3();
+
+        //First moment area
+        double rex2 = fabs(re*re - x2*x2);
+        double rex3 = fabs(re*re - x3*x3);
+        double rix2 = fabs(ri*ri - x2*x2);
+        double rix3 = fabs(ri*ri - x3*x3);
+        double Qs2 = ri < fabs(x2) ? 2.0/3.0*pow(rex2, 1.5) : 2.0/3.0*(pow(rex2, 1.5) - pow(rix2, 1.5)); 
+        double Qs3 = ri < fabs(x3) ? 2.0/3.0*pow(rex3, 1.5) : 2.0/3.0*(pow(rex3, 1.5) - pow(rix3, 1.5)); 
+        double tb = ri <= fabs(x2) ? 2.0*sqrt(rex2) : 2.0*(sqrt(rex2) - sqrt(rix2));
+        double th = ri <= fabs(x3) ? 2.0*sqrt(rex3) : 2.0*(sqrt(rex3) - sqrt(rix3));
+
+        //Transforms generalised stresses from Element to Section local coordinate
+        Eigen::VectorXd Forces = ComputeLineLocalAxes(re, ri, zcm, ycm, Theta, InsertPoint)*GetStress();
+
+        //Sigma = [Sxx, 0.0, 0.0, txy, 0.0, txz]
+        theStress << Forces(0)/A + Forces(2)*x3/I22 - Forces(3)*x2/I33, 
+                     0.0, 
+                     0.0, 
+                     Forces(4)*Qs2/I33/tb, 
+                     0.0,
+                     Forces(5)*Qs3/I22/th;
+    }
 
     return theStress;
 }
@@ -145,6 +205,19 @@ Lin3DCircularTube::GetStressAt(double UNUSED(x3), double UNUSED(x2)){
 void 
 Lin3DCircularTube::CommitState(){
     theMaterial->CommitState();
+}
+
+//Reverse the section states to previous converged state.
+void 
+Lin3DCircularTube::ReverseState(){
+    theMaterial->ReverseState();
+}
+
+//Brings the section states to its initial state.
+void 
+Lin3DCircularTube::InitialState(){
+    Strain.fill(0.0);
+    theMaterial->InitialState();
 }
 
 //Update the section state for this iteration.

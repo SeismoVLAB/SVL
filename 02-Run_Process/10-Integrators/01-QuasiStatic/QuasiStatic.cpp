@@ -6,8 +6,7 @@
 QuasiStatic::QuasiStatic(std::shared_ptr<Mesh> &mesh, double mtol, double ktol, double ftol) : 
 Integrator(mesh), TimeStep(0.0){
     //Allocate memory for total state vector. 
-    U.resize(numberOfTotalDofs); 
-    U.fill(0.0);
+    U.resize(numberOfTotalDofs); U.fill(0.0);
 
     //Allocate memory for total model matrices. 
     K.resize(numberOfTotalDofs, numberOfTotalDofs);
@@ -30,6 +29,21 @@ QuasiStatic::Initialize(std::shared_ptr<Mesh> &mesh){
     //Starts profiling this function.
     PROFILE_FUNCTION();
 
+    //Sets up Initial Condition from previous simulation
+    std::map<unsigned int, std::shared_ptr<Node> > Nodes = mesh->GetNodes();  
+    for(auto it : Nodes){
+        auto &Tag = it.first;
+
+        //Gets the associated nodal degree-of-freedom.
+        std::vector<int> TotalDofs = Nodes[Tag]->GetTotalDegreeOfFreedom();
+
+        //Creates the nodal/incremental vector state.
+        Eigen::VectorXd Uij = Nodes[Tag]->GetDisplacements();
+
+        for(unsigned int j = 0; j < TotalDofs.size(); j++)
+            U(TotalDofs[j]) = Uij(j);
+    } 
+
     //Assemble the effective stiffness matrix.
     K = theAssembler->ComputeStiffnessMatrix(mesh);
 }
@@ -49,7 +63,7 @@ QuasiStatic::SetAlgorithm(std::shared_ptr<Algorithm> &algorithm){
 //Gets the displacement vector.
 Eigen::VectorXd& 
 QuasiStatic::GetDisplacements(){
-    //Starts profiling this funtion.
+    //Starts profiling this function.
     PROFILE_FUNCTION();
 
     return U; 
@@ -58,7 +72,7 @@ QuasiStatic::GetDisplacements(){
 //Gets the velocity vector.
 Eigen::VectorXd&
 QuasiStatic::GetVelocities(){
-    //Starts profiling this funtion.
+    //Starts profiling this function.
     PROFILE_FUNCTION();
 
     //Velocity vector is no used.
@@ -68,17 +82,17 @@ QuasiStatic::GetVelocities(){
 //Gets the acceleration vector.
 Eigen::VectorXd& 
 QuasiStatic::GetAccelerations(){
-    //Starts profiling this funtion.
+    //Starts profiling this function.
     PROFILE_FUNCTION();
 
-    //Acceleartion vector is no used.
+    //Acceleration vector is no used.
     return U;
 }
 
 //Gets the perfectly-matched layer history vector.
 Eigen::VectorXd& 
 QuasiStatic::GetPMLHistoryVector(){
-    //Starts profiling this funtion.
+    //Starts profiling this function.
     PROFILE_FUNCTION();
 
     //Empty PML history vector (not used).
@@ -88,7 +102,7 @@ QuasiStatic::GetPMLHistoryVector(){
 //Computes a new time step.
 bool 
 QuasiStatic::ComputeNewStep(std::shared_ptr<Mesh> &mesh, unsigned int k){
-    //Starts profiling this funtion.
+    //Starts profiling this function.
     PROFILE_FUNCTION();
 
     //Gets the shared_ptr information from the weak_ptr object.
@@ -101,10 +115,10 @@ QuasiStatic::ComputeNewStep(std::shared_ptr<Mesh> &mesh, unsigned int k){
     if(stop) return stop;
 
     //Obtains the displacement increment from algorithm.
-    Eigen::VectorXd dU = Total2FreeMatrix*(p->GetDisplacementIncrement()) + SupportMotion;
+    Eigen::VectorXd dU = Total2FreeMatrix*(p->GetDisplacementIncrement());
 
     //Update displacement states.
-    U += dU;
+    U += (dU + SupportMotion);
 
     //Return the integrator status.
     return false;
@@ -133,7 +147,7 @@ QuasiStatic::ComputeSupportMotionVector(std::shared_ptr<Mesh> &mesh, Eigen::Vect
     PROFILE_FUNCTION();
 
     //Assembles the incremental support motion displacements.
-    SupportMotion  = factor*(theAssembler->ComputeSupportMotionIncrement(mesh, 0));
+    SupportMotion = factor*(theAssembler->ComputeSupportMotionIncrement(mesh, 0));
 
     //Computes the required forces to impose these displacements.
     Eigen::VectorXd Lg = Total2FreeMatrix.transpose()*(K*SupportMotion);
@@ -161,7 +175,7 @@ QuasiStatic::ComputeEffectiveForce(std::shared_ptr<Mesh> &mesh, Eigen::VectorXd 
     Feff = Total2FreeMatrix.transpose()*Fext;
 }
 
-//Gets the effective stiffness assiciated to this integrator.
+//Gets the effective stiffness associated to this integrator.
 void
 QuasiStatic::ComputeEffectiveStiffness(std::shared_ptr<Mesh> &mesh, Eigen::SparseMatrix<double> &Keff){
     //Starts profiling this function.

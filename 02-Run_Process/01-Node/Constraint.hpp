@@ -21,7 +21,8 @@
 //   Domniki M. Asimaki  (domniki@caltech.edu)
 //
 // References : 
-//   [1]
+//   [1] Carlos Felippa. "Introduction to Finite Element Methods (ASEN 5007)": 
+//       Multifreedom Constraints I, Fall 2005.
 //
 // Description:
 ///This file contains the "Constraint object" declarations, which impose 
@@ -48,7 +49,7 @@ class Constraint{
 
         ///Creates a Constraint to be applied to a degree-of-freedom.
         ///@param slave 'Total' degree-of-freedom number to which the constraint will be applied.
-        ///@param master List of 'free' degree-of-freedom a.k.a master (or combinantional) numbering.
+        ///@param master List of 'free' degree-of-freedom a.k.a master (or combinational) numbering.
         ///@param factors List of combinational values.
         ///@note More details can be found at @ref linkConstraint.
         ///@see Constraint::Slave, Constraint::Master, Constraint::Coefficients.
@@ -64,7 +65,7 @@ class Constraint{
         void SetSlaveInformation(unsigned int slave);
 
         ///Sets the master's free degree-of-freedom list numbering.
-        ///@param master List of 'free' degree-of-freedom a.k.a master (or combinantional) numbering.
+        ///@param master List of 'free' degree-of-freedom a.k.a master (or combinational) numbering.
         ///@note More details can be found at @ref linkConstraint.
         ///@see Constraint::Master.
         void SetMasterInformation(std::vector<unsigned int> master);
@@ -85,7 +86,7 @@ class Constraint{
         unsigned int GetSlaveInformation() const;
 
         ///Gets the master list of total degree-of-freedom to be combined.
-        ///@return List of 'free' degree-of-freedom a.k.a master (or combinantional) numbering.
+        ///@return List of 'free' degree-of-freedom a.k.a master (or combinational) numbering.
         ///@note More details can be found at @ref linkConstraint.
         ///@see Constraint::Master.
         const std::vector<unsigned int> GetMasterInformation() const;

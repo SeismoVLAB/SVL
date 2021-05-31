@@ -67,16 +67,24 @@ class lin3DHexa20 : public Element{
         ~lin3DHexa20();
 
         ///Save the material states in the element.
-        ///@note This funtion sets the trial states as converged ones in Material.
+        ///@note This function sets the trial states as converged ones in Material.
         void CommitState();
 
+        ///Reverse the material/section states to previous converged state in this element.
+        ///@note This function returns the trial states to previous converged states at the Material level.
+        void ReverseState();
+
+        ///Brings the material/section state to its initial state in this element.
+        ///@note This function returns the meterial states to the beginning.
+        void InitialState();
+
         ///Update the material states in the element.
-        ///@note This funtion update the trial states at the Material level.
+        ///@note This function update the trial states at the Material level.
         void UpdateState();
 
         ///Sets the finite element dependance among objects.
         ///@param nodes The Node list of the Mesh object.
-        ///@note This funtion sets the relation between Node and Element objects.
+        ///@note This function sets the relation between Node and Element objects.
         ///@see lin2DQuad4::theNodes.
         void SetDomain(std::map<unsigned int, std::shared_ptr<Node> > &nodes);
 
@@ -158,7 +166,7 @@ class lin3DHexa20 : public Element{
         ///@see Assembler::ComputeInternalForceVector(), Integrator::ComputeEffectiveForce().
         Eigen::VectorXd ComputeInternalForces();
 
-        ///Compute the elastic, inertial, and vicous forces acting on the element.
+        ///Compute the elastic, inertial, and viscous forces acting on the element.
         ///@return Vector with the Element dynamic internal force.
         ///@note The internal force vector can be revisited in @ref linkElement.
         ///@see Assembler::ComputeDynamicInternalForceVector().
@@ -230,7 +238,7 @@ class lin3DHexa20 : public Element{
         ///@param si The i-th Gauss coordinate in the s-axis.
         ///@param ti The i-th Gauss coordinate in the t-axis.
         ///@param Jij The Jacobian matrix evaluated at (ri,si,ti).
-        ///@return Matrix with the stran-displacement operator.
+        ///@return Matrix with the strain-displacement operator.
         Eigen::MatrixXd ComputeStrainDisplacementMatrix(const double ri, const double si, const double ti, const Eigen::MatrixXd &Jij) const;
 
         ///Compute the stiffness matrix of the element using gauss-integration.

@@ -1,8 +1,4 @@
-#include <ctime>
 #include <string>
-#include <fstream> 
-#include <sstream>  
-#include <iostream>
 
 //The processor number.
 int rank;
@@ -13,13 +9,16 @@ int size;
 //The problem dimension (1D, 2D, 3D). 
 unsigned int nDimensions;
 
-///The input file name (.$.) to be loaded.
+//The input file name (.$.) to be loaded.
 std::string fileName;
 
-///The folder where the input file is loaded.
+//The folder where the input file is loaded.
 std::string filePath;
 
-///The element mass formulation.
+//The Execution for each simulation.
+bool FormOfExecution;
+
+//The element mass formulation.
 bool MassFormulation;
 
 //Maximum memory for lumped storage sparse matrix.

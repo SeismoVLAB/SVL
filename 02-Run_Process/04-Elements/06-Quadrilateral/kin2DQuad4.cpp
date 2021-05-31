@@ -1,5 +1,4 @@
 #include <cmath>
-#include <iostream>
 #include <Eigen/LU> 
 #include "Material.hpp"
 #include "kin2DQuad4.hpp"
@@ -64,6 +63,26 @@ kin2DQuad4::CommitState(){
 
     for(unsigned int k = 0; k < nPoints; k++)
         theMaterial[k]->CommitState();
+}
+
+//Reverse the material states to previous converged state in this element.
+void 
+kin2DQuad4::ReverseState(){
+    //Reverse the material components.
+    unsigned int nPoints = QuadraturePoints->GetNumberOfQuadraturePoints();
+
+    for(unsigned int k = 0; k < nPoints; k++)
+        theMaterial[k]->ReverseState();
+}
+
+//Brings the material state to its initial state in this element.
+void 
+kin2DQuad4::InitialState(){
+    //Brings the material components to initial state.
+    unsigned int nPoints = QuadraturePoints->GetNumberOfQuadraturePoints();
+
+    for(unsigned int k = 0; k < nPoints; k++)
+        theMaterial[k]->InitialState();
 }
 
 //Update the material states in the element.
@@ -417,7 +436,7 @@ kin2DQuad4::ComputeInternalForces(){
     return InternalForces;
 }
 
-//Compute the elastic, inertial, and vicous forces acting on the element.
+//Compute the elastic, inertial, and viscous forces acting on the element.
 Eigen::VectorXd 
 kin2DQuad4::ComputeInternalDynamicForces(){
     //The Internal dynamic force vector
@@ -619,7 +638,7 @@ kin2DQuad4::ComputeDomainReductionForces(const std::shared_ptr<Load> &drm, unsig
 //Transform tensor components into vector.
 Eigen::VectorXd 
 kin2DQuad4::TransformTensorToVector(const Eigen::MatrixXd &Tensor) const{
-    //Vector definiition.
+    //Vector definition.
     Eigen::VectorXd Vector(3);
     Vector << Tensor(0,0), Tensor(1,1), Tensor(0,1);
 
@@ -629,7 +648,7 @@ kin2DQuad4::TransformTensorToVector(const Eigen::MatrixXd &Tensor) const{
 //Transform vector components into tensor.
 Eigen::MatrixXd 
 kin2DQuad4::TransformVectorToTensor(const Eigen::VectorXd &Vector) const{
-    //Tensor definiition.
+    //Tensor definition.
     Eigen::MatrixXd Tensor(2,2);
     Tensor << Vector(0), Vector(2),
               Vector(2), Vector(1);

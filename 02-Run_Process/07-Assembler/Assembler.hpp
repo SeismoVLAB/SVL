@@ -107,7 +107,7 @@ class Assembler{
         ///@see Element::ComputeInternalForces(), Integrator::ComputeEffectiveForce().   
         Eigen::VectorXd ComputeInternalForceVector(std::shared_ptr<Mesh> &mesh);
 
-        ///Assemble the internal elastic, inertial, and vicous force vector.
+        ///Assemble the internal elastic, inertial, and viscous force vector.
         ///@param mesh The finite element Mesh object.
         ///return A vector with the model total (inertial, viscous, elastic) internal force.
         ///@see Element::ComputeInternalDynamicForces().   
@@ -141,7 +141,7 @@ class Assembler{
         ///@see Node, Node::GetInertialForces(). 
         void AddNodeInertiaForces(std::shared_ptr<Mesh> &mesh, Eigen::VectorXd &DynamicForces);
 
-        ///Adds the elastic, inertial, and vicous forces associated to the elements.
+        ///Adds the elastic, inertial, and viscous forces associated to the elements.
         ///@param mesh The finite element Mesh object.
         ///@param DynamicForces The vector with the Element dynamic internal forces.
         ///@see Element, Element::ComputeInternalDynamicForces(). 

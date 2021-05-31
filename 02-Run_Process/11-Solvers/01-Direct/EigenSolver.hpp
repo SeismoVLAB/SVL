@@ -26,7 +26,7 @@
 // Description:
 ///This file contains the "EigenSolver" solver declaration; the object 
 ///performs Cholesky-decomposition on the matrix A, and then solves the 
-///upper triangular system. This function is mean to be amployed to 
+///upper triangular system. This function is mean to be employed to 
 ///symmetric and positive-definite structure of A.
 //------------------------------------------------------------------------------
 

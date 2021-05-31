@@ -22,8 +22,6 @@ Integrator(mesh), dt(TimeStep){
     theAssembler->SetMassTolerance(mtol);
     theAssembler->SetForceTolerance(ftol);
     theAssembler->SetStiffnessTolerance(ktol);
-
-    Initialize(mesh);
 }
 
 //Default destructor.
@@ -36,6 +34,28 @@ void
 ExtendedNewmarkBeta::Initialize(std::shared_ptr<Mesh> &mesh){
     //Starts profiling this function.
     PROFILE_FUNCTION();
+
+    //Sets up Initial Condition from previous simulation
+    std::map<unsigned int, std::shared_ptr<Node> > Nodes = mesh->GetNodes();  
+    for(auto it : Nodes){
+        auto &Tag = it.first;
+
+        //Gets the associated nodal degree-of-freedom.
+        std::vector<int> TotalDofs = Nodes[Tag]->GetTotalDegreeOfFreedom();
+
+        //Creates the nodal/incremental vector state.
+        Eigen::VectorXd Uij = Nodes[Tag]->GetDisplacements();
+        Eigen::VectorXd Vij = Nodes[Tag]->GetVelocities();
+        Eigen::VectorXd Aij = Nodes[Tag]->GetAccelerations();
+        Eigen::VectorXd Ubij = Nodes[Tag]->GetPMLVector();
+
+        for(unsigned int j = 0; j < TotalDofs.size(); j++){
+            U(TotalDofs[j]) = Uij(j);
+            V(TotalDofs[j]) = Vij(j);
+            A(TotalDofs[j]) = Aij(j);
+            Ubar(TotalDofs[j]) = Ubij(j);
+        }
+    }
 
     //Computes the mass matrix of the model.
     M = theAssembler->ComputeMassMatrix(mesh);
@@ -62,7 +82,7 @@ ExtendedNewmarkBeta::SetAlgorithm(std::shared_ptr<Algorithm> &algorithm){
 //Gets the displacement vector.
 Eigen::VectorXd& 
 ExtendedNewmarkBeta::GetDisplacements(){
-    //Starts profiling this funtion.
+    //Starts profiling this function.
     PROFILE_FUNCTION();
 
     return U;
@@ -71,7 +91,7 @@ ExtendedNewmarkBeta::GetDisplacements(){
 //Gets the velocity vector.
 Eigen::VectorXd& 
 ExtendedNewmarkBeta::GetVelocities(){
-    //Starts profiling this funtion.
+    //Starts profiling this function.
     PROFILE_FUNCTION();
 
     return V;
@@ -80,7 +100,7 @@ ExtendedNewmarkBeta::GetVelocities(){
 //Gets the acceleration vector.
 Eigen::VectorXd& 
 ExtendedNewmarkBeta::GetAccelerations(){
-    //Starts profiling this funtion.
+    //Starts profiling this function.
     PROFILE_FUNCTION();
 
     return A;
@@ -89,7 +109,7 @@ ExtendedNewmarkBeta::GetAccelerations(){
 //Gets the PML history vector.
 Eigen::VectorXd& 
 ExtendedNewmarkBeta::GetPMLHistoryVector(){
-    //Starts profiling this funtion.
+    //Starts profiling this function.
     PROFILE_FUNCTION();
 
     return Ubar;
@@ -190,7 +210,7 @@ ExtendedNewmarkBeta::ComputeEffectiveForce(std::shared_ptr<Mesh> &mesh, Eigen::V
     Feff = Total2FreeMatrix.transpose()*Fext;
 }
 
-//Gets the effective stiffness assiciated to this integrator.
+//Gets the effective stiffness associated to this integrator.
 void
 ExtendedNewmarkBeta::ComputeEffectiveStiffness(std::shared_ptr<Mesh> &mesh, Eigen::SparseMatrix<double> &Keff){
     //Starts profiling this function.

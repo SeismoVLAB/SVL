@@ -1,5 +1,4 @@
 #include <cmath>
-#include <iostream>
 #include <Eigen/LU> 
 #include "Material.hpp"
 #include "lin2DQuad8.hpp"
@@ -64,6 +63,26 @@ lin2DQuad8::CommitState(){
 
     for(unsigned int k = 0; k < nPoints; k++)
         theMaterial[k]->CommitState();
+}
+
+//Reverse the material states to previous converged state in this element.
+void 
+lin2DQuad8::ReverseState(){
+    //Reverse the material components.
+    unsigned int nPoints = QuadraturePoints->GetNumberOfQuadraturePoints();
+
+    for(unsigned int k = 0; k < nPoints; k++)
+        theMaterial[k]->ReverseState();
+}
+
+//Brings the material state to its initial state in this element.
+void 
+lin2DQuad8::InitialState(){
+    //Brings the material components to initial state.
+    unsigned int nPoints = QuadraturePoints->GetNumberOfQuadraturePoints();
+
+    for(unsigned int k = 0; k < nPoints; k++)
+        theMaterial[k]->InitialState();
 }
 
 //Update the material states in the element.
@@ -225,7 +244,7 @@ lin2DQuad8::ComputeEnergy(){
 //Compute the mass matrix of the element using gauss-integration.
 Eigen::MatrixXd 
 lin2DQuad8::ComputeMassMatrix(){
-    //Starts profiling this funtion.
+    //Starts profiling this function.
     PROFILE_FUNCTION();
 
     //Use consistent mass definition:
@@ -273,7 +292,7 @@ lin2DQuad8::ComputeMassMatrix(){
 //Compute the stiffness matrix of the element using gauss-integration.
 Eigen::MatrixXd 
 lin2DQuad8::ComputeStiffnessMatrix(){
-    //Starts profiling this funtion.
+    //Starts profiling this function.
     PROFILE_FUNCTION();
 
     //Stiffness matrix definition:
@@ -306,7 +325,7 @@ lin2DQuad8::ComputeStiffnessMatrix(){
 //Compute the damping matrix of the element using gauss-integration.
 Eigen::MatrixXd 
 lin2DQuad8::ComputeDampingMatrix(){
-    //Starts profiling this funtion.
+    //Starts profiling this function.
     PROFILE_FUNCTION();
 
     //Damping matrix definition.
@@ -368,7 +387,7 @@ lin2DQuad8::ComputePMLMatrix(){
 //Compute the internal forces acting on the element.
 Eigen::VectorXd 
 lin2DQuad8::ComputeInternalForces(){
-    //Starts profiling this funtion.
+    //Starts profiling this function.
     PROFILE_FUNCTION();
 
     //Stiffness matrix definition:
@@ -398,7 +417,7 @@ lin2DQuad8::ComputeInternalForces(){
     return InternalForces;
 }
 
-//Compute the elastic, inertial, and vicous forces acting on the element.
+//Compute the elastic, inertial, and viscous forces acting on the element.
 Eigen::VectorXd 
 lin2DQuad8::ComputeInternalDynamicForces(){
     //The Internal dynamic force vector
@@ -426,7 +445,7 @@ lin2DQuad8::ComputeInternalDynamicForces(){
 //Compute the surface forces acting on the element.
 Eigen::VectorXd 
 lin2DQuad8::ComputeSurfaceForces(const std::shared_ptr<Load> &surfaceLoad, unsigned int face){
-    //Starts profiling this funtion.
+    //Starts profiling this function.
     PROFILE_FUNCTION();
 
     //Local surface load vector:
@@ -540,7 +559,7 @@ lin2DQuad8::ComputeSurfaceForces(const std::shared_ptr<Load> &surfaceLoad, unsig
 //Compute the body forces acting on the element.
 Eigen::VectorXd 
 lin2DQuad8::ComputeBodyForces(const std::shared_ptr<Load> &bodyLoad, unsigned int k){
-    //Starts profiling this funtion.
+    //Starts profiling this function.
     PROFILE_FUNCTION();
 
     //Local body load vector:
@@ -576,7 +595,7 @@ lin2DQuad8::ComputeBodyForces(const std::shared_ptr<Load> &bodyLoad, unsigned in
 //Compute the domain reduction forces acting on the element.
 Eigen::VectorXd 
 lin2DQuad8::ComputeDomainReductionForces(const std::shared_ptr<Load> &drm, unsigned int k){
-    //Starts profiling this funtion.
+    //Starts profiling this function.
     PROFILE_FUNCTION();
 
     //Get the Domain-Reduction field motion.

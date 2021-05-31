@@ -118,7 +118,7 @@ class QuasiStatic : public Integrator{
         ///@see Node::GetSupportMotion(), Assembler::ComputeSupportMotionIncrement().
         void ComputeSupportMotionVector(std::shared_ptr<Mesh> &mesh, Eigen::VectorXd &Feff, double factor=1.00, unsigned int k=0);
 
-        ///Gets the effective force assiciated to the QuasiStatic integrator.
+        ///Gets the effective force associated to the QuasiStatic integrator.
         ///@param mesh Pointer to the Mesh object where Node and Element are stored.
         ///@param Feff Vector that stores the effective force.
         ///@param factor The incremental load factor.
@@ -127,7 +127,7 @@ class QuasiStatic : public Integrator{
         ///@see Assembler::ComputeInternalForceVector(), Assembler::ComputeExternalForceVector().
         void ComputeEffectiveForce(std::shared_ptr<Mesh> &mesh, Eigen::VectorXd &Feff, double factor=1.00, unsigned int k=0);
 
-        ///Gets the effective stiffness assiciated to the QuasiStatic integrator.
+        ///Gets the effective stiffness associated to the QuasiStatic integrator.
         ///@param mesh Pointer to the Mesh object where Node and Element are stored.
         ///@param Keff Matrix that stores the effective stiffness.
         ///@note More details can be found at @ref linkQuasiStatic.

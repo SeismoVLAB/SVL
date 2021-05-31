@@ -1,5 +1,4 @@
 #include <cmath>
-#include <iostream>
 #include <Eigen/LU> 
 #include "Material.hpp"
 #include "PML2DQuad8.hpp"
@@ -64,6 +63,26 @@ PML2DQuad8::CommitState(){
 
     for(unsigned int k = 0; k < nPoints; k++)
         theMaterial[k]->CommitState();
+}
+
+//Reverse the material states to previous converged state in this element.
+void 
+PML2DQuad8::ReverseState(){
+    //Reverse the material components.
+    unsigned int nPoints = QuadraturePoints->GetNumberOfQuadraturePoints();
+
+    for(unsigned int k = 0; k < nPoints; k++)
+        theMaterial[k]->ReverseState();
+}
+
+//Brings the material state to its initial state in this element.
+void 
+PML2DQuad8::InitialState(){
+    //Brings the material components to initial state.
+    unsigned int nPoints = QuadraturePoints->GetNumberOfQuadraturePoints();
+
+    for(unsigned int k = 0; k < nPoints; k++)
+        theMaterial[k]->InitialState();
 }
 
 //Update the material states in the element.
@@ -215,7 +234,7 @@ PML2DQuad8::ComputeEnergy(){
 //Compute the mass matrix of the element using gauss-integration.
 Eigen::MatrixXd 
 PML2DQuad8::ComputeMassMatrix(){
-    //Starts profiling this funtion.
+    //Starts profiling this function.
     PROFILE_FUNCTION();
 
     //Use consistent mass definition:
@@ -285,7 +304,7 @@ PML2DQuad8::ComputeMassMatrix(){
 //Compute the stiffness matrix of the element using gauss-integration.
 Eigen::MatrixXd 
 PML2DQuad8::ComputeStiffnessMatrix(){
-    //Starts profiling this funtion.
+    //Starts profiling this function.
     PROFILE_FUNCTION();
 
     //Stiffness matrix definition:
@@ -403,7 +422,7 @@ PML2DQuad8::ComputeStiffnessMatrix(){
 //Compute the damping matrix of the element using gauss-integration.
 Eigen::MatrixXd 
 PML2DQuad8::ComputeDampingMatrix(){
-    //Starts profiling this funtion.
+    //Starts profiling this function.
     PROFILE_FUNCTION();
 
     //Damping matrix definition:
@@ -531,7 +550,7 @@ PML2DQuad8::ComputePMLMatrix(){
 //Compute the internal forces acting on the element.
 Eigen::VectorXd 
 PML2DQuad8::ComputeInternalForces(){
-    //Starts profiling this funtion.
+    //Starts profiling this function.
     PROFILE_FUNCTION();
 
     //Gets the element coordinates in deformed configuration. 
@@ -550,13 +569,13 @@ PML2DQuad8::ComputeInternalForces(){
     //Computes the Stiffness Matrix.
     Eigen::MatrixXd K = ComputeStiffnessMatrix();
 
-    //Computes the Internal Force Vetor.
+    //Computes the Internal Force Vector.
     Eigen::VectorXd InternalForces = K*nodalDisplacement;
 
     return InternalForces;
 }
 
-//Compute the elastic, inertial, and vicous forces acting on the element.
+//Compute the elastic, inertial, and viscous forces acting on the element.
 Eigen::VectorXd 
 PML2DQuad8::ComputeInternalDynamicForces(){
     //The Internal dynamic force vector
@@ -584,7 +603,7 @@ PML2DQuad8::ComputeInternalDynamicForces(){
 //Compute the surface forces acting on the element.
 Eigen::VectorXd 
 PML2DQuad8::ComputeSurfaceForces(const std::shared_ptr<Load>& UNUSED(surface), unsigned int UNUSED(face)){
-    //Starts profiling this funtion.
+    //Starts profiling this function.
     PROFILE_FUNCTION();
 
     //PML surface forces are not supported, i.e., makes no sense.
@@ -597,7 +616,7 @@ PML2DQuad8::ComputeSurfaceForces(const std::shared_ptr<Load>& UNUSED(surface), u
 //Compute the body forces acting on the element.
 Eigen::VectorXd 
 PML2DQuad8::ComputeBodyForces(const std::shared_ptr<Load>& UNUSED(bodyLoad), unsigned int UNUSED(k)){
-    //Starts profiling this funtion.
+    //Starts profiling this function.
     PROFILE_FUNCTION();
 
     //PML body forces are not supported, i.e., makes no sense.
@@ -610,7 +629,7 @@ PML2DQuad8::ComputeBodyForces(const std::shared_ptr<Load>& UNUSED(bodyLoad), uns
 //Compute the domain reduction forces acting on the element.
 Eigen::VectorXd 
 PML2DQuad8::ComputeDomainReductionForces(const std::shared_ptr<Load>& UNUSED(drm), unsigned int UNUSED(k)){
-    //Starts profiling this funtion.
+    //Starts profiling this function.
     PROFILE_FUNCTION();
 
     //DRM method in PML domain is not supported, i.e., makes no sense.
@@ -690,7 +709,7 @@ PML2DQuad8::ComputeJacobianMatrix(const double ri, const double si) const{
     double J21 = dN12*X1(0) + dN22*X2(0) + dN32*X3(0) + dN42*X4(0) + dN52*X5(0) + dN62*X6(0) + dN72*X7(0) + dN82*X8(0);
     double J22 = dN12*X1(1) + dN22*X2(1) + dN32*X3(1) + dN42*X4(1) + dN52*X5(1) + dN62*X6(1) + dN72*X7(1) + dN82*X8(1);
 
-    //Jacobia Matrix definition:
+    //Jacobian Matrix definition:
     Eigen::MatrixXd Jij(2,2);
     Jij << J11, J12,
            J21, J22;

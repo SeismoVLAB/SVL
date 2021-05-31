@@ -63,13 +63,21 @@ class Element{
         ///Destroys this Element object.
         virtual ~Element() = 0;
 
-        ///Save the material states in the element.
-        ///@note This funtion sets the trial states as converged ones in Material.
+        ///Save the material/section states in the element.
+        ///@note This funtion sets the trial states as converged ones in Material/Section.
         virtual void CommitState() = 0;
 
-        ///Update the material states in the element.
-        ///@note This funtion update the trial states at the Material level.
+        ///Update the material/section states in the element.
+        ///@note This funtion update the trial states at the Material/Section level.
         virtual void UpdateState() = 0;
+
+        ///Reverse the material/section states to previous converged state in this element.
+        ///@note This funtion returns the trial states to previous converged states at the Material/Section level.
+        virtual void ReverseState() = 0;
+
+        ///Brings the material/section state to its initial state in this element.
+        ///@note This funtion returns the meterial states to the beginning.
+        virtual void InitialState() = 0;
 
         ///Sets the finite element dependance among objects.
         ///@param nodes The Node list of the Mesh object.
@@ -125,19 +133,19 @@ class Element{
         ///@return Scalar with the element deformation energy.
         virtual double ComputeEnergy() = 0;
 
-        ///Compute the lumped/consistent mass matrix of the element.
+        ///Compute the lumped/consistent mass matrix of the element or close form solutions.
         ///@return Matrix with the Element mass matrix.
         ///@note The mass matrix can be revisited in @ref linkElement.
         ///@see Assembler::ComputeMassMatrix(), Integrator::ComputeEffectiveStiffness().
         virtual Eigen::MatrixXd ComputeMassMatrix() = 0;
 
-        ///Compute the stiffness matrix of the element using gauss-integration.
+        ///Compute the stiffness matrix of the element using gauss-integration or close form solutions.
         ///@return Matrix with the Element stiffness matrix.
         ///@note The stiffness matrix can be revisited in @ref linkElement.
         ///@see Assembler::ComputeStiffnessMatrix(), Integrator::ComputeEffectiveStiffness().
         virtual Eigen::MatrixXd ComputeStiffnessMatrix() = 0;
 
-        ///Compute the damping matrix of the element using gauss-integration.
+        ///Compute the damping matrix of the element using gauss-integration or close form solutions.
         ///@return Matrix with the Element damping matrix.
         ///@note The damping matrix can be revisited in @ref linkElement.
         ///@see Assembler::ComputeDampingMatrix(), Integrator::ComputeEffectiveStiffness().
@@ -155,7 +163,7 @@ class Element{
         ///@see Assembler::ComputeInternalForceVector(), Integrator::ComputeEffectiveForce().
         virtual Eigen::VectorXd ComputeInternalForces() = 0;
 
-        ///Compute the elastic, inertial, and vicous forces acting on the element.
+        ///Compute the elastic, inertial, and viscous forces acting on the element.
         ///@return Vector with the Element dynamic internal force.
         ///@note The internal force vector can be revisited in @ref linkElement.
         ///@see Assembler::ComputeDynamicInternalForceVector().
@@ -205,7 +213,7 @@ class Element{
         ///@see Element::NumberOfDegreeOfFreedom.
         unsigned int GetNumberOfDegreeOfFreedom() const;
 
-        ///Returns the Node Connectivity Indeces.
+        ///Returns the Node Connectivity Indexes.
         ///@return The Node connectivity array in this Element.
         ///@see Element::Nodes.
         std::vector<unsigned int> GetNodes() const;
@@ -227,7 +235,7 @@ class Element{
         ///The number of nodes in element.
         unsigned int NumberOfDegreeOfFreedom;
 
-        ///The node connectivity indeces.
+        ///The node connectivity indexes.
         std::vector<unsigned int> Nodes;
 };
 

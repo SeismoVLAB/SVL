@@ -135,10 +135,27 @@ void
 Plastic1DJ2::CommitState(){
 }
 
+//Reverse the material states to previous converged state.
+void 
+Plastic1DJ2::ReverseState(){
+    //TODO: Get back to previous commited state
+}
+
+//Brings the material states to its initial state in the element.
+void 
+Plastic1DJ2::InitialState(){
+    alpha = 0.0;
+    Strain.fill(0.0);
+    Stress.fill(0.0);
+    PlasticStrain.fill(0.0);
+    BackStress.fill(0.0);
+    TangentStiffness << E;
+}
+
 //Update the material state for this iteration.
 void
 Plastic1DJ2::UpdateState(const Eigen::VectorXd strain, const unsigned int cond){
-    //Updates the elatic/platic material components.    
+    //Updates the elastic/plastic material components.    
     if(cond == 1){
         //Trial stress tensor.
         Eigen::VectorXd TrialStress = E*(strain - PlasticStrain);

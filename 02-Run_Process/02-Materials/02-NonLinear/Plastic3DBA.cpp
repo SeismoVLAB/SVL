@@ -29,11 +29,12 @@ Material("Plastic3DBA", false), K(K), G(G), Rho(rho), H0(H0), h(h), m(m), Su(Su)
     //Fourth-rank identity tensor.
     Eigen::MatrixXd D = ComputeIdentityTensor();
 
-    //Rank-four deviatoric identitity tensor.
+    //Rank-four deviatoric identity tensor.
     Eigen::MatrixXd Id = ComputeDeviatoricTensor();
 
     //Initialize stiffness matrix.
-    TangentStiffness.resize(6,6); TangentStiffness = K*D + 2.0*G*Id;
+    TangentStiffness.resize(6,6); 
+    TangentStiffness = K*D + 2.0*G*Id;
 
     //Bounding surface radius
     R = sqrt(8.0/3.0)*Su;
@@ -44,7 +45,6 @@ Material("Plastic3DBA", false), K(K), G(G), Rho(rho), H0(H0), h(h), m(m), Su(Su)
     FirstLoadFlag = 0;
 
     rootFlag = 0;
-
 }
 
 //Destructor.
@@ -145,7 +145,7 @@ Plastic3DBA::GetInitialTangentStiffness() const{
     //Fourth-rank identity tensor.
     Eigen::MatrixXd D = ComputeIdentityTensor();
 
-    //Rank-four deviatoric identitity tensor.
+    //Rank-four deviatoric identity tensor.
     Eigen::MatrixXd Id = ComputeDeviatoricTensor();
 
     //Initialize stiffness matrix.
@@ -159,6 +159,32 @@ void
 Plastic3DBA::CommitState(){
     Stress_n = Stress;
     Strain_n = Strain;
+}
+
+//Reverse the material states to previous converged state.
+void 
+Plastic3DBA::ReverseState(){
+    //TODO: Get back to previous commited state
+}
+
+//Brings the material states to its initial state in the element.
+void 
+Plastic3DBA::InitialState(){
+    psi = 2.0*G; 
+    kappa = 1.0E12;
+
+    FirstLoadFlag = 0;
+    rootFlag = 0;
+
+    Strain.fill(0.0);
+    Strain_n.fill(0.0);
+    Stress.fill(0.0);
+    Stress_n.fill(0.0);
+    DeviatoricStress0.fill(0.0);
+
+    Eigen::MatrixXd D = ComputeIdentityTensor();
+    Eigen::MatrixXd Id = ComputeDeviatoricTensor();
+    TangentStiffness = K*D + 2.0*G*Id;
 }
 
 //Update the material state for this iteration.
@@ -176,7 +202,7 @@ Plastic3DBA::UpdateState(const Eigen::VectorXd strain, const unsigned int cond){
         //Fourth-rank identity tensor.
         Eigen::MatrixXd D = ComputeIdentityTensor();
 
-        //Rank-four deviatoric identitity tensor.
+        //Rank-four deviatoric identity tensor.
         Eigen::MatrixXd Id  = ComputeDeviatoricTensor();
 
         //Incremental strain

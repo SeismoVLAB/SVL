@@ -9,10 +9,7 @@ Integrator(mesh), dt(TimeStep){
     U.resize(numberOfTotalDofs); U.fill(0.0);
     V.resize(numberOfTotalDofs); V.fill(0.0);
     A.resize(numberOfTotalDofs); A.fill(0.0);
-
-    //Allocate memory for previous displacement state vector. 
-    Up.resize(numberOfTotalDofs); 
-    Up = U - dt*V + dt*dt/2.0*A; 
+    Up.resize(numberOfTotalDofs); Up.fill(0.0);
 
     //Allocate memory for total model matrices.
     M.resize(numberOfTotalDofs, numberOfTotalDofs);     
@@ -24,8 +21,6 @@ Integrator(mesh), dt(TimeStep){
     theAssembler->SetMassTolerance(mtol);
     theAssembler->SetForceTolerance(ftol);
     theAssembler->SetStiffnessTolerance(ktol);
-
-    Initialize(mesh);
 }
 
 //Default destructor.
@@ -38,6 +33,29 @@ void
 CentralDifference::Initialize(std::shared_ptr<Mesh> &mesh){
     //Starts profiling this function.
     PROFILE_FUNCTION();
+
+    //Sets up Initial Condition from previous simulation
+    std::map<unsigned int, std::shared_ptr<Node> > Nodes = mesh->GetNodes();  
+    for(auto it : Nodes){
+        auto &Tag = it.first;
+
+        //Gets the associated nodal degree-of-freedom.
+        std::vector<int> TotalDofs = Nodes[Tag]->GetTotalDegreeOfFreedom();
+
+        //Creates the nodal/incremental vector state.
+        Eigen::VectorXd Uij = Nodes[Tag]->GetDisplacements();
+        Eigen::VectorXd Vij = Nodes[Tag]->GetVelocities();
+        Eigen::VectorXd Aij = Nodes[Tag]->GetAccelerations();
+
+        for(unsigned int j = 0; j < TotalDofs.size(); j++){
+            U(TotalDofs[j]) = Uij(j);
+            V(TotalDofs[j]) = Vij(j);
+            A(TotalDofs[j]) = Aij(j);
+        }
+    }
+
+    //Initializes Previous displacement vector. 
+    Up = U - dt*V + dt*dt/2.0*A; 
 
     //Computes the mass matrix of the model.
     M = theAssembler->ComputeMassMatrix(mesh);
@@ -64,7 +82,7 @@ CentralDifference::SetAlgorithm(std::shared_ptr<Algorithm> &algorithm){
 //Gets the displacement vector.
 Eigen::VectorXd& 
 CentralDifference::GetDisplacements(){
-    //Starts profiling this funtion.
+    //Starts profiling this function.
     PROFILE_FUNCTION();
 
     return U;
@@ -73,7 +91,7 @@ CentralDifference::GetDisplacements(){
 //Gets the velocity vector.
 Eigen::VectorXd& 
 CentralDifference::GetVelocities(){
-    //Starts profiling this funtion.
+    //Starts profiling this function.
     PROFILE_FUNCTION();
 
     return V;
@@ -82,7 +100,7 @@ CentralDifference::GetVelocities(){
 //Gets the acceleration vector.
 Eigen::VectorXd& 
 CentralDifference::GetAccelerations(){
-    //Starts profiling this funtion.
+    //Starts profiling this function.
     PROFILE_FUNCTION();
 
     return A;
@@ -91,7 +109,7 @@ CentralDifference::GetAccelerations(){
 //Gets the perfectly-matched layer history vector.
 Eigen::VectorXd& 
 CentralDifference::GetPMLHistoryVector(){
-    //Starts profiling this funtion.
+    //Starts profiling this function.
     PROFILE_FUNCTION();
 
     //Empty PML history vector (not used).
@@ -184,7 +202,7 @@ CentralDifference::ComputeEffectiveForce(std::shared_ptr<Mesh> &mesh, Eigen::Vec
     Feff = Total2FreeMatrix.transpose()*Fext;
 }
 
-//Gets the effective stiffness assiciated to this integrator.
+//Gets the effective stiffness associated to this integrator.
 void
 CentralDifference::ComputeEffectiveStiffness(std::shared_ptr<Mesh>& UNUSED(mesh), Eigen::SparseMatrix<double> &Keff){
     //Starts profiling this function.

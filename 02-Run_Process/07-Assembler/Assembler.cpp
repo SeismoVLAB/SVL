@@ -238,7 +238,7 @@ Assembler::ComputeInternalForceVector(std::shared_ptr<Mesh> &mesh){
     return ForceVector;
 }
 
-//Assemble the internal elastic, inertial, and vicous force vector.
+//Assemble the internal elastic, inertial, and viscous force vector.
 Eigen::VectorXd 
 Assembler::ComputeDynamicInternalForceVector(std::shared_ptr<Mesh> &mesh){
     //Starts profiling this function.
@@ -250,7 +250,7 @@ Assembler::ComputeDynamicInternalForceVector(std::shared_ptr<Mesh> &mesh){
     //Adds the inertial forces contribution associated to the nodes.
     AddNodeInertiaForces(mesh, ForceVector);
 
-    //Adds the elastic, inertial, and vicous forces associated to the elements.
+    //Adds the elastic, inertial, and viscous forces associated to the elements.
     AddElementDynamicForces(mesh, ForceVector);
 
     return ForceVector;
@@ -266,7 +266,7 @@ Assembler::ComputeExternalForceVector(std::shared_ptr<Mesh> &mesh, unsigned int 
     Eigen::VectorXd ForceVector(numberOfTotalDofs);
     ForceVector.fill(0.0);
 
-    //Auxiliar force vector.
+    //Auxiliary force vector.
     Eigen::VectorXd Fext(numberOfTotalDofs);
 
     //Gets load and node information from the mesh.
@@ -529,14 +529,14 @@ Assembler::AddNodeInertiaForces(std::shared_ptr<Mesh> &mesh, Eigen::VectorXd &Dy
             //Gets the node degree-of-freedom.
             std::vector<int> dofs = Nodes[Tag]->GetTotalDegreeOfFreedom();
 
-            //Assemble contribufabstion of each Node mass in mesh.
+            //Assemble contribution of each Node mass in mesh.
             for(unsigned int k = 0; k < dofs.size(); k++)
                 DynamicForces[dofs[k]] += Fn(k);
         }
     }
 }
 
-//Adds the elastic, inertial, and vicous forces associated to the elements.
+//Adds the elastic, inertial, and viscous forces associated to the elements.
 void 
 Assembler::AddElementDynamicForces(std::shared_ptr<Mesh> &mesh, Eigen::VectorXd &DynamicForces){
     //Starts profiling this function.
@@ -556,7 +556,7 @@ Assembler::AddElementDynamicForces(std::shared_ptr<Mesh> &mesh, Eigen::VectorXd 
         Eigen::VectorXd Fe = Elements[Tag]->ComputeInternalDynamicForces();
 
         if(Fe.size() != 0){
-            //Assemble contribufabstion of each element in mesh.
+            //Assemble contribution of each element in mesh.
             for(unsigned int k = 0; k < dofs.size(); k++)
                 DynamicForces[dofs[k]] += Fe(k);
         }
@@ -587,7 +587,7 @@ Assembler::AssembleNodalMass(std::shared_ptr<Mesh> &mesh, Eigen::SparseMatrix<do
             //Gets the node degree-of-freedom.
             std::vector<int> dofs = Nodes[Tag]->GetTotalDegreeOfFreedom();
 
-            //Assemble contribufabstion of each Node mass in mesh.
+            //Assemble contribution of each Node mass in mesh.
             for(unsigned int k = 0; k < dofs.size(); k++){
                 if(fabs(Mn(k)) > MassTolerance){
                     tripletList[sum] = T(dofs[k], dofs[k], Mn(k));
@@ -626,7 +626,7 @@ Assembler::AssembleElementMass(std::shared_ptr<Mesh> &mesh, Eigen::SparseMatrix<
         //Gets the Stiffness matrix in global coordinates:
         Eigen::MatrixXd Me = Elements[Tag]->ComputeMassMatrix();
 
-        //Assemble contribufabstion of each element in mesh.
+        //Assemble contribution of each element in mesh.
         for(unsigned int j = 0; j < dofs.size(); j++){
             for(unsigned int i = 0; i < dofs.size(); i++){
                 if(fabs(Me(i,j)) > MassTolerance){

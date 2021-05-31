@@ -45,7 +45,7 @@
 class Material{
 
     public:
-        ///Creates a Material to be especified at a Gauss-point in an Element.
+        ///Creates a Material to be specified at a Gauss-point in an Element.
         ///@param name Name of the derived class.
         ///@param model If the material is viscous.
         ///@see Material::Name Material::isViscous.
@@ -109,18 +109,26 @@ class Material{
 
         ///Computes the initial material stiffness in Voight notation.
         ///@return Matrix with the initial material tangent stiffness matrix.
-        ///@note The initial tangent stiifness matrix is computed when the strain vector is zero.
+        ///@note The initial tangent stiffness matrix is computed when the strain vector is zero.
         virtual Eigen::MatrixXd GetInitialTangentStiffness() const = 0;
 
         ///Perform converged material state update.
         ///@note This function sets the trail stress and strain as converged.
         virtual void CommitState() = 0;
 
+        ///Reverse the material states to previous converged state.
+        ///@note This function returns the material states to previous converged states.
+        virtual void ReverseState() = 0;
+
+        ///Brings the material states to its initial state in the element.
+        ///@note This function returns the material states to the beginning.
+        virtual void InitialState() = 0;
+
         ///Update the material state for this iteration.
         ///@param strain Vector with the strain components at this Gauss-point.
-        ///@param cond If the the elatic/platic material components will be updated.
+        ///@param cond If the the elastic/plastic material components will be updated.
         ///@note This function computes the strain and tanget stiffness matrix once the trial strain converged.
-        virtual void UpdateState(const Eigen::VectorXd strain, const unsigned int cond) = 0;
+        virtual void UpdateState(const Eigen::VectorXd strain, const unsigned int cond=0) = 0;
 
         ///Gets material information.
         ///@return The name of the derived class.

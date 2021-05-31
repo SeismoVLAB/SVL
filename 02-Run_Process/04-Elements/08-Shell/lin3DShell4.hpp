@@ -21,8 +21,13 @@
 //   Domniki M. Asimaki  (domniki@caltech.edu)
 //
 // References : 
-//  [1] Finite Element Procedures, Bathe, K.J., Chapter 5: pages 414-422. 
-//      Prentice-Hall, 1996. 
+//  [1] Adnan Ibrahimbegovic, "Quadrilateral finite elements for analysis of 
+//      thick and thin plates", Computer Methods in Applied Mechanics and 
+//      Engineering 110 (1993) 195-209.
+//  [2] Adnan Ibrahimbegovic, Robert Taylor, and Edward Wilson, "A Robust 
+//      Quadrilateral Membrane Finite Element with Drilling degrees of freedom", 
+//      International Journal for Numerical Methods in Engineering, vol. 30, 
+//      445-457 (1990) 
 //
 // Description:
 ///This file contains the "lin3DShell4" linearized four-node element declarations, 
@@ -57,7 +62,7 @@ class lin3DShell4 : public Element{
         ///Creates a lin3DShell4 in a finite element Mesh.
         ///@param nodes The Node connectivity array of this Element.
         ///@param section Pointer to the Section that this Element is made out of.
-        ///@param nGauss Numner of Gauss-integration points.
+        ///@param nGauss Number of Gauss-integration points.
         ///@param quadrature The integration rule to be employed.
         ///@note More details can be found at @ref linklin3DShell4.
         ///@see lin3DShell4::theNodes, lin3DShell4::theMaterial, lin3DShell4::QuadraturePoints.
@@ -67,16 +72,24 @@ class lin3DShell4 : public Element{
         ~lin3DShell4();
 
         ///Save the material states in the element.
-        ///@note This funtion sets the trial states as converged ones in Material.
+        ///@note This function sets the trial states as converged ones in Material.
         void CommitState();
 
+        ///Reverse the material/section states to previous converged state in this element.
+        ///@note This function returns the trial states to previous converged states at the Material level.
+        void ReverseState();
+
+        ///Brings the material/section state to its initial state in this element.
+        ///@note This function returns the meterial states to the beginning.
+        void InitialState();
+
         ///Update the material states in the element.
-        ///@note This funtion update the trial states at the Material level.
+        ///@note This function update the trial states at the Material level.
         void UpdateState();
 
         ///Sets the finite element dependance among objects.
         ///@param nodes The Node list of the Mesh object.
-        ///@note This funtion sets the relation between Node and Element objects.
+        ///@note This function sets the relation between Node and Element objects.
         ///@see lin2DQuad4::theNodes.
         void SetDomain(std::map<unsigned int, std::shared_ptr<Node> > &nodes);
 
@@ -158,7 +171,7 @@ class lin3DShell4 : public Element{
         ///@see Assembler::ComputeInternalForceVector(), Integrator::ComputeEffectiveForce().
         Eigen::VectorXd ComputeInternalForces();
 
-        ///Compute the elastic, inertial, and vicous forces acting on the element.
+        ///Compute the elastic, inertial, and viscous forces acting on the element.
         ///@return Vector with the Element dynamic internal force.
         ///@note The internal force vector can be revisited in @ref linkElement.
         ///@see Assembler::ComputeDynamicInternalForceVector().

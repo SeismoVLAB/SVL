@@ -1,4 +1,3 @@
-#include <iostream>
 #include "LobattoQuadrature.hpp"
 
 //Overload constructor.

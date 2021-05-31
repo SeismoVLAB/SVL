@@ -29,7 +29,7 @@ Material("PlasticPlaneStrainBA", false), K(K), G(G), Rho(rho), H0(H0), h(h), m(m
     //Fourth-rank identity tensor.
     Eigen::MatrixXd D = ComputeIdentityTensor();
 
-    //Rank-four deviatoric identitity tensor.
+    //Rank-four deviatoric identity tensor.
     Eigen::MatrixXd Id = ComputeDeviatoricTensor();
 
     //Initialize stiffness matrix.
@@ -160,7 +160,7 @@ PlasticPlaneStrainBA::GetInitialTangentStiffness() const{
     //Fourth-rank identity tensor.
     Eigen::MatrixXd D = ComputeIdentityTensor();
 
-    //Rank-four deviatoric identitity tensor.
+    //Rank-four deviatoric identity tensor.
     Eigen::MatrixXd Id = ComputeDeviatoricTensor();
 
     //Initialize stiffness matrix.
@@ -182,6 +182,33 @@ PlasticPlaneStrainBA::CommitState(){
     Strain_n = Strain;
 }
 
+//Reverse the material states to previous converged state.
+void 
+PlasticPlaneStrainBA::ReverseState(){
+    //TODO: Get back to previous commited state
+}
+
+//Brings the material states to its initial state in the element.
+void 
+PlasticPlaneStrainBA::InitialState(){
+    psi   = 2.0*G; 
+    kappa = 1.0E12;
+
+    rootFlag = 0;
+    FirstLoadFlag = 0;
+
+    Strain.fill(0.0);
+    Stress.fill(0.0);
+    Strain_n.fill(0.0);
+    Stress_n.fill(0.0);
+    DeviatoricStress0.fill(0.0);
+
+    Eigen::MatrixXd D = ComputeIdentityTensor();
+    Eigen::MatrixXd Id = ComputeDeviatoricTensor();
+    TangentStiffness = K*D + 2.0*G*Id;
+}
+
+//Update the material state for this iteration.
 void
 PlasticPlaneStrainBA::UpdateState(const Eigen::VectorXd strain, const unsigned int cond) {
 //Updates the elastic/plastic material components.    
@@ -194,7 +221,7 @@ PlasticPlaneStrainBA::UpdateState(const Eigen::VectorXd strain, const unsigned i
         Eigen::VectorXd One = ComputeIdentityVector();
         //Fourth-rank identity tensor.
         Eigen::MatrixXd D   = ComputeIdentityTensor();
-        //Rank-four deviatoric identitity tensor.
+        //Rank-four deviatoric identity tensor.
         Eigen::MatrixXd Id  = ComputeDeviatoricTensor();
 
         //Incremental strain
@@ -207,7 +234,7 @@ PlasticPlaneStrainBA::UpdateState(const Eigen::VectorXd strain, const unsigned i
         
         Eigen::VectorXd DeviatoricStrain = Strain - 1.0/3.0*ComputeTensorTrace(Strain)*One;
 
-        double StrainNorm     = ComputeTensorNorm(DeviatoricIncrStrain);
+        double StrainNorm = ComputeTensorNorm(DeviatoricIncrStrain);
         
         double infty = 1.0E12 ;
         
@@ -444,5 +471,3 @@ PlasticPlaneStrainBA::ComputeHardening(const Eigen::VectorXd &de, const Eigen::V
 
     return Y;
 }
-
-

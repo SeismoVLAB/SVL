@@ -18,6 +18,12 @@ Analysis::SetRecorder(std::shared_ptr<Recorder> &recorder){
     theRecorders.push_back(recorder->CopyRecorder());
 }
 
+//Returns the combination name
+std::string 
+Analysis::GetCombinationName(){
+    return theLoadCombo->GetCombinationName();
+}
+
 //Construct the residual vector force from each processor.
 void
 Analysis::ReducedParallelReaction(Eigen::VectorXd &Reaction){
@@ -41,41 +47,24 @@ Analysis::ReducedParallelReaction(Eigen::VectorXd &Reaction){
     for(unsigned int k = 0; k < numberOfTotalDofs; k++)
         Reaction(k) = reduced[k];
 
-    //Erase auxiiliar variables. 
+    //Erase auxiliary variables. 
     delete[] reduced;
     delete[] vector;
 }
 
 //Prints progress bar in analysis.
 void 
-Analysis::PrintProgressBar(unsigned int percent){
+Analysis::PrintProgress(unsigned int percent){
     if(rank == 0){
-        //Progress bar.
-        std::string bar;
-
-        for(unsigned int i = 0; i < 30; i++){
-            if(i < (3*percent/10)){
-                bar.replace(i,1,"=");
-            }
-            else if(i == (3*percent/10)){
-                bar.replace(i,1,">");
-            }
-            else{
-                bar.replace(i,1," ");
-            }
-          }
-
         //Progress bar frame.
-        std::cout << "\r RUNNING ANALYSIS : [" << bar << "] ";
-        std::cout.width(2);
-        std::cout << percent << "% " << std::flush;
+        std::cout << "\r RUNNING (" << GetCombinationName() << ") : " << percent << "%" << std::flush;
     }
 }
 
 //Initialize all recorders.
 void 
 Analysis::StartRecorders(std::shared_ptr<Mesh> &mesh, unsigned int nsteps){
-    //Starts profiling this funtion.
+    //Starts profiling this function.
     PROFILE_FUNCTION();
 
     //Gets name of combination.
@@ -103,14 +92,14 @@ Analysis::WriteRecorders(std::shared_ptr<Mesh> &mesh, unsigned int step){
 //Finalize all recorders.
 void 
 Analysis::EndRecorders(){
-    //Starts profiling this funtion.
+    //Starts profiling this function.
     PROFILE_FUNCTION();
 
     //Skips one line for next simulation.
     if(rank == 0)
         std::cout << "\n";
 
-    //Finilize the recorders.
+    //Finalize the recorders.
     for(unsigned int k = 0; k < theRecorders.size(); k++){
         theRecorders[k]->Finalize();
     }

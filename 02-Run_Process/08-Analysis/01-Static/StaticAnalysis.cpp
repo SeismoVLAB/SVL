@@ -26,10 +26,13 @@ StaticAnalysis::Analyze(){
     //Starts profiling this function.
     PROFILE_FUNCTION();
 
+    //Initialize the Integrator
+    theIntegrator->Initialize(theMesh); 
+
     //Initialize all recorders of this analysis.
     StartRecorders(theMesh, NumberOfSteps);
 
-    //Perform the incremental anlaysis in nStep increments.
+    //Perform the incremental analysis in nStep increments.
     for(unsigned int k = 0; k < NumberOfSteps; k++){
         //Solves until converge at k-th time steps.
         bool stop = theIntegrator->ComputeNewStep(theMesh, k); 
@@ -47,10 +50,10 @@ StaticAnalysis::Analyze(){
         WriteRecorders(theMesh, k);
 
         //Prints the analysis progress.
-        PrintProgressBar((k+1)*100/NumberOfSteps);
+        PrintProgress((k+1)*100/NumberOfSteps);
     }
 
-    //Finilize all recorders of this analysis.
+    //Finalize all recorders of this analysis.
     EndRecorders();
 
     //Return the analysis status.

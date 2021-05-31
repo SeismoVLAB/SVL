@@ -62,8 +62,8 @@ class GaussQuadrature : public QuadratureRule {
 
         ///Gets Gauss Integration Points.
         ///@param name Generic name of the Element for this quadrature rule.
-        ///@param wi The Gauss quadratue weights.
-        ///@param xi The Gauss quadratue coordinates.
+        ///@param wi The Gauss quadrature weights.
+        ///@param xi The Gauss quadrature coordinates.
         void GetQuadraturePoints(std::string name, Eigen::VectorXd &wi, Eigen::MatrixXd &xi);
 
     private:
@@ -74,32 +74,32 @@ class GaussQuadrature : public QuadratureRule {
         unsigned int nOrderQuadrature;
 
         ///Sets Gauss Quadrature for Line Elements.
-        ///@param wi The Gauss quadratue weights.
-        ///@param xi The Gauss quadratue coordinates.
+        ///@param wi The Gauss quadrature weights.
+        ///@param xi The Gauss quadrature coordinates.
         ///@note This function returns the Hexahedron quadrature information, see linkGaussQuadrature.
         void SetLineQuadraturePoints(Eigen::VectorXd &wi, Eigen::MatrixXd &xi);
 
         ///Sets Gauss Quadrature for Triangular Elements.
-        ///@param wi The Gauss quadratue weights.
-        ///@param xi The Gauss quadratue coordinates.
+        ///@param wi The Gauss quadrature weights.
+        ///@param xi The Gauss quadrature coordinates.
         ///@note This function returns the Hexahedron quadrature information, see linkGaussQuadrature.
         void SetTriaQuadraturePoints(Eigen::VectorXd &wi, Eigen::MatrixXd &xi);
 
         ///Sets Gauss Quadrature for Quadrilateral Elements.
-        ///@param wi The Gauss quadratue weights.
-        ///@param xi The Gauss quadratue coordinates.
+        ///@param wi The Gauss quadrature weights.
+        ///@param xi The Gauss quadrature coordinates.
         ///@note This function returns the Hexahedron quadrature information, see linkGaussQuadrature.
         void SetQuadQuadraturePoints(Eigen::VectorXd &wi, Eigen::MatrixXd &xi);
 
         ///Sets Gauss Quadrature for Tetrahedron Elements.
-        ///@param wi The Gauss quadratue weights.
-        ///@param xi The Gauss quadratue coordinates.
+        ///@param wi The Gauss quadrature weights.
+        ///@param xi The Gauss quadrature coordinates.
         ///@note This function returns the Hexahedron quadrature information, see linkGaussQuadrature.
         void SetTetraQuadraturePoints(Eigen::VectorXd &wi, Eigen::MatrixXd &xi);
 
         ///Sets Gauss Quadrature for Hexahedron Elements.
-        ///@param wi The Gauss quadratue weights.
-        ///@param xi The Gauss quadratue coordinates.
+        ///@param wi The Gauss quadrature weights.
+        ///@param xi The Gauss quadrature coordinates.
         ///@note This function returns the Hexahedron quadrature information, see linkGaussQuadrature.
         void SetHexaQuadraturePoints(Eigen::VectorXd &wi, Eigen::MatrixXd &xi);
 };

@@ -21,8 +21,8 @@
 //   Domniki M. Asimaki  (domniki@caltech.edu)
 //
 // References : 
-//  [1] Finite Element Procedures, Bathe, K.J., Chapter 5: pages 342-348. 
-//      Prentice-Hall, 1996.
+//  [1] Finite Element Procedures, Bathe, K.J., Chapter 6: pages 549-55, 
+//      (Table 6.5), Prentice-Hall, 1996.
 //
 // Description:
 ///This file contains the "kin2DQuad4" kinematic four-node element declarations, 
@@ -68,16 +68,24 @@ class kin2DQuad4 : public Element{
         ~kin2DQuad4();
 
         ///Save the material states in the element.
-        ///@note This funtion sets the trial states as converged ones in Material.
+        ///@note This function sets the trial states as converged ones in Material.
         void CommitState();
 
+        ///Reverse the material/section states to previous converged state in this element.
+        ///@note This function returns the trial states to previous converged states at the Material level.
+        void ReverseState();
+
+        ///Brings the material/section state to its initial state in this element.
+        ///@note This function returns the meterial states to the beginning.
+        void InitialState();
+
         ///Update the material states in the element.
-        ///@note This funtion update the trial states at the Material level.
+        ///@note This function update the trial states at the Material level.
         void UpdateState();
 
         ///Sets the finite element dependance among objects.
         ///@param nodes The Node list of the Mesh object.
-        ///@note This funtion sets the relation between Node and Element objects.
+        ///@note This function sets the relation between Node and Element objects.
         ///@see lin2DQuad4::theNodes.
         void SetDomain(std::map<unsigned int, std::shared_ptr<Node> > &nodes);
 
@@ -159,7 +167,7 @@ class kin2DQuad4 : public Element{
         ///@see Assembler::ComputeInternalForceVector(), Integrator::ComputeEffectiveForce().
         Eigen::VectorXd ComputeInternalForces();
 
-        ///Compute the elastic, inertial, and vicous forces acting on the element.
+        ///Compute the elastic, inertial, and viscous forces acting on the element.
         ///@return Vector with the Element dynamic internal force.
         ///@note The internal force vector can be revisited in @ref linkElement.
         ///@see Assembler::ComputeDynamicInternalForceVector().
@@ -257,21 +265,21 @@ class kin2DQuad4 : public Element{
         ///@param ri The i-th Gauss coordinate in the r-axis.
         ///@param si The i-th Gauss coordinate in the s-axis.
         ///@param Jij The Jacobian matrix evaluated at (ri,si).
-        ///@return Matrix with the linear stran-displacement operator.
+        ///@return Matrix with the linear strain-displacement operator.
         Eigen::MatrixXd ComputeLinearStrainDisplacementMatrix(const double ri, const double si, const Eigen::MatrixXd &Jij) const;
 
         ///Evaluates the strain-displacement matrix at a given Gauss point.
         ///@param ri The i-th Gauss coordinate in the r-axis.
         ///@param si The i-th Gauss coordinate in the s-axis.
         ///@param Jij The Jacobian matrix evaluated at (ri,si).
-        ///@return Matrix with the geometric stran-displacement operator.
+        ///@return Matrix with the geometric strain-displacement operator.
         Eigen::MatrixXd ComputeNonLinearStrainDisplacementMatrix(const double ri, const double si, const Eigen::MatrixXd &Jij) const;
 
         ///Evaluates the linearized (small strain) strain-displacement matrix at a given Gauss point.
         ///@param ri The i-th Gauss coordinate in the r-axis.
         ///@param si The i-th Gauss coordinate in the s-axis.
         ///@param Jij The Jacobian matrix evaluated at (ri,si).
-        ///@return Matrix with the linear stran-displacement operator.
+        ///@return Matrix with the linear strain-displacement operator.
         Eigen::MatrixXd ComputeLinearizedStrainDisplacementMatrix(const double ri, const double si, const Eigen::MatrixXd &Jij) const;
 
         ///Compute the initial stiffness matrix of the element using gauss-integration.
