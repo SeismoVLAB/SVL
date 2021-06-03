@@ -389,8 +389,9 @@ def createPartitions():
     Options['execpath'] = Options['path'] + '/Partition'
 
     #SeismoVLAB execution command line
-    nparts = Options['nparts']
-    Options['run'] = ' mpirun -np ' + str(nparts) + ' ' + Options['runanalysis'] + '/SeismoVLAB.exe -dir \'' + Options['execpath'] + '\' -file \'' + Options['execfile'] + '\'\n'
+    Options['run'] = ' ' + Options['runanalysis'] + '/SeismoVLAB.exe -dir \'' + Options['execpath'] + '\' -file \'' + Options['execfile'] + '\'\n'
+    if Options['nparts'] > 1:
+        Options['run'] = ' mpirun -np ' + str(Options['nparts']) + Options['run']
 
     #Cleans generated auxiliary files
     os.remove(Options['execpath'] + '/Graph.out')
