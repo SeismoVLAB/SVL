@@ -81,6 +81,10 @@ PetscSolver::SolveSystem(Eigen::SparseMatrix<double> &K, Eigen::VectorXd &b){
 	MatSetFromOptions(A);
 	MatMPIAIJSetPreallocation(A, d_nz, PETSC_NULL, o_nz, PETSC_NULL); 	
 
+    //Sequential Matrix for single core execution
+    if(size == 1)
+        MatSeqAIJSetPreallocation(A, d_nz, PETSC_NULL);
+
 	for(unsigned int k = 0; k < K.outerSize(); ++k){
 		for(Eigen::SparseMatrix<double>::InnerIterator it(K,k); it; ++it) {
 			unsigned int ir = it.row();
