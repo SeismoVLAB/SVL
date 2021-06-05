@@ -149,8 +149,8 @@ MumpsSolver::SolveSystem(Eigen::SparseMatrix<double> &A, Eigen::VectorXd &b){
 
     //Check solution status.
     int info = id.infog[0];
-    if (info != 0){
-        if (rank == 0){    
+    if ( (info != 0) & (nz > 0) ){
+        if (rank == 0){
             std::cout << "\n \x1B[31mError: \x1B[0mMumpsSolver::SolveSystem() : ";
             switch(info) {
                 case  -5: std::cout << "OUT OF MEMORY allocation error." ; break;
