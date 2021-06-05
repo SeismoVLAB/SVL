@@ -53,8 +53,10 @@ def PetscAllocation():
         #Sub-Matrix block-diagonal.
         D = S[:,inf:sup]
 
-        n_nz[k] = np.max(D.sum(axis=1))
-        o_nz[k] = np.max(S.sum(axis=1) - D.sum(axis=1))
+        #Check the partition is not empty
+        if D.size != 0:
+            n_nz[k] = np.max(D.sum(axis=1))
+            o_nz[k] = np.max(S.sum(axis=1) - D.sum(axis=1))
 
     #Sets the closest multipple of five.
     n_nz = np.floor( np.divide(n_nz,5) + 1) * 5
