@@ -79,7 +79,7 @@ PetscSolver::SolveSystem(Eigen::SparseMatrix<double> &K, Eigen::VectorXd &b){
 	MatCreate(PETSC_COMM_WORLD, &A); 
 	MatSetSizes(A, PETSC_DECIDE, PETSC_DECIDE, numberOfFreeDofs, numberOfFreeDofs); 	
 	MatSetFromOptions(A);
-	MatMPIAIJSetPreallocation(A, d_nz, PETSC_NULL, o_nz, PETSC_NULL); 	
+	MatMPIAIJSetPreallocation(A, d_nz, PETSC_NULL, o_nz, PETSC_NULL);
 
     //Sequential Matrix for single core execution
     if(size == 1)
