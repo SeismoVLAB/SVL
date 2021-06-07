@@ -2,6 +2,7 @@
 # -*- coding: Utf-8 -*-
 
 import json
+import copy
 from Parser.ETABS import parseETABS
 from Parser.SAP2000 import parseSAP
 from Parser.ANSYS import parseANSYS
@@ -55,11 +56,22 @@ def parseJSON(filepath=None):
 
     Returns
     -------
-    bool
-        Whether the file was successful (True) of failed (False) during parsing
+    dict
+        Dictionary containing the Entities imported from the JSON file
     """
+    #The MESH dictionary containing the data is read
+    mesh = {'Nodes': {}, 'Materials': {}, 'Sections':{}, 'Elements':{}, 'Constraints': {}, 'Loads': {}, 'Dampings': {}}
+
     with open(filepath, 'r') as myfile:
         JSONdata = myfile.read()
-    mesh = json.loads(JSONdata)
+    d = json.loads(JSONdata)
+
+    #Transform JSON string identifiers
+    keys = mesh.keys()
+    for key in keys:
+        if key in d:
+            for k in d[key]:
+                mesh[key][int(k)] = d[key][k]
+            del d[key]
 
     return mesh
