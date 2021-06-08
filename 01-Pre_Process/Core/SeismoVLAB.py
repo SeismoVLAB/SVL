@@ -395,8 +395,8 @@ def createPartitions():
 
     #Cleans generated auxiliary files
     os.remove(Options['execpath'] + '/Graph.out')
-    os.remove(Options['execpath'] + '/Graph.out.epart.' + str(nparts))
-    os.remove(Options['execpath'] + '/Graph.out.npart.' + str(nparts)) 
+    os.remove(Options['execpath'] + '/Graph.out.epart.' + str(Options['nparts']))
+    os.remove(Options['execpath'] + '/Graph.out.npart.' + str(Options['nparts'])) 
 
 def checkWarnings():
     """
@@ -756,6 +756,7 @@ def CreateRunAnalysisFiles(plot=False):
     createPartitions()
 
     #Prints SVL Run-Analysis execution
+    print(' \x1B[32mExecute the Run-Analysis writing in a terminal the line bellow:\x1B[0m')
     print(Options['run'])
 
 
