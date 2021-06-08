@@ -352,154 +352,215 @@ Recorder::WriteSectionResponse(std::shared_ptr<Mesh> &mesh){
     OutputFile << "\n"; 
 }
 
-//Writes output data in VTK format to the file.
+//Writes output data in VTK format to the file
 void 
 Recorder::WriteVTKFiles(std::shared_ptr<Mesh> &mesh, unsigned int step){
     if(step % nSample == 0){
-        //Creates the paraview output file.
+        //Creates the paraview output file
         std::stringstream iter;
         iter << Counter;
 
+        //Header line skips for XML file format
+        std::string head1("  ");
+        std::string head2("    ");
+        std::string head3("      ");
+        std::string head4("        ");
+
         //Update the file path for the paraview output
         std::string firstPath = GetSpacedName(filePath, " ");
-        std::string Paraview  = firstPath  + "/../Paraview/" +  Combo + "/" + File + "." + iter.str() + ".vtk";
+        std::string Paraview  = firstPath  + "/../Paraview/" +  Combo + "/" + File + "." + iter.str() + ".vtu";
 
-        //Creates the output file.
+        //Creates the output file
         OutputFile.open(Paraview.c_str()); 
         OutputFile.precision(Precision);
         OutputFile.setf(std::ios::scientific);
 
-        //Model Global Information:
-        OutputFile << "# vtk DataFile Version 4.0\n";
-        OutputFile << "SEISMOVLAB: VTK POST-PROCESS FILE\n";
-        OutputFile << "ASCII\n";
-        OutputFile << "DATASET UNSTRUCTURED_GRID\n";
-        OutputFile << "\n";
-
-        //Gets all Points/Elements from the mesh.
+        //Gets all Points/Elements from the mesh
         std::map<unsigned int, std::shared_ptr<Node> > Nodes = mesh->GetNodes();
         std::map<unsigned int, std::shared_ptr<Element> > Elements = mesh->GetElements();
 
-        //Animated nodal mesh coordinates.
-        OutputFile << "POINTS " << Nodes.size() << " float\n";
+        //VTK header file information
+        OutputFile << "<?xml version=\"1.0\"?>\n";
+        OutputFile << "<VTKFile type=\"UnstructuredGrid\" version=\"1.0\" byte_order=\"BigEndian\">\n" << head1;
+        OutputFile << "<UnstructuredGrid>\n" << head2 ;
+        OutputFile << "<Piece NumberOfPoints=\"" << Nodes.size() << "\" NumberOfCells=\"" << Elements.size() << "\">\n" << head3;
+
+        //Node Coordinates
+        OutputFile << "<Points>\n" << head4;
+        OutputFile << "<DataArray type=\"Float32\" NumberOfComponents=\"3\" Format=\"ascii\">\n";
+        
         for(auto it : Nodes){
             auto &nTag = it.first;
 
-            //Get Node information.
+            //Get Node information
             Eigen::VectorXd X = Nodes[nTag]->GetCoordinates();
 
-            OutputFile << X(0) << " " << X(1) << " ";
-            if(X.size() == 2)
-                OutputFile << "0.00000\n";
-            else if(X.size() == 3)
-                OutputFile << X(2) << "\n";
+            if(nDimensions == 2)
+                OutputFile << head4 << X(0) << " " << X(1) << " 0.00000\n";
+            else if(nDimensions == 3)
+                OutputFile << head4 << X(0) << " " << X(1) << " " << X(2) << "\n";
         }
 
-        //Elements Connectivities.
-        OutputFile << "\nCELLS " << Elements.size() << " " << nParaview << "\n";
+        OutputFile << head4; 
+        OutputFile << "</DataArray>\n" << head3;
+        OutputFile << "</Points>\n" << head3;
+
+        //Elements Connectivities
+        OutputFile << "<Cells>\n" << head4;
+        OutputFile << "<DataArray type=\"Int32\" Name=\"connectivity\" Format=\"ascii\">\n";
+
         for(auto it : Elements){
             auto &eTag = it.first;
             std::vector<unsigned int> connection = Elements[eTag]->GetNodes();
 
-            OutputFile << connection.size();
+            OutputFile << head4;
             for(unsigned int k = 0; k < connection.size(); k++)
-                OutputFile << " " << Tag[connection[k]];
+                OutputFile << Tag[connection[k]] << " ";
             OutputFile << "\n";
         }
 
-        //Elements Geometry Types.
-        OutputFile << "\nCELL_TYPES " << Elements.size() << "\n";
+        OutputFile << head4;
+        OutputFile << "</DataArray>\n" << head4;
+
+        //Elements Number of Nodes Offset.
+        OutputFile << "<DataArray type=\"Int32\" Name=\"offsets\" Format=\"ascii\">\n" << head4;
+
+        unsigned int nOffsets = 0;
         for(auto it : Elements){
             auto &eTag = it.first;
-            OutputFile << Elements[eTag]->GetVTKCellType() <<"\n";
+
+            nOffsets += Elements[eTag]->GetNumberOfNodes();
+            OutputFile << " " << nOffsets;
         }
 
-        //Writes the displacement at each node.
-        OutputFile << "\nPOINT_DATA " << Nodes.size() << "\n";
-        OutputFile << "VECTORS Displacement float\n";
+        OutputFile << "\n" << head4;
+        OutputFile << "</DataArray>\n" << head4;
+
+        //Elements Geometry Types.
+        OutputFile << "<DataArray type=\"Int32\" Name=\"types\" Format=\"ascii\">\n" << head4;
+
+        for(auto it : Elements){
+            auto &eTag = it.first;
+            OutputFile << Elements[eTag]->GetVTKCellType() << " ";
+        }
+
+        OutputFile << "\n" << head4;
+        OutputFile << "</DataArray>\n" << head3;
+        OutputFile << "</Cells>\n" << head3;
+
+        //Writes the Node information
+        OutputFile << "<PointData>\n" << head4;
+
+        //Writes the node identifiers
+        OutputFile << "<DataArray type=\"Int32\" Name=\"GlobalNodeId\" format=\"ascii\">\n"; // RangeMin="0" RangeMax="2591">\n";
 
         for(auto it : Nodes){
             auto &nTag = it.first;
-            //Get Node information.
+            OutputFile << nTag << " ";
+        }
+        
+        OutputFile << "\n" << head4;
+        OutputFile << "</DataArray>\n" << head4;
+        
+        //Writes the displacement at each node.
+        OutputFile << "<DataArray type=\"Float32\" Name=\"Displacement\" NumberOfComponents=\"3\" ComponentName0=\"U1\" ComponentName1=\"U2\" ComponentName2=\"U3\" Format=\"ascii\">\n";
+
+        for(auto it : Nodes){
+            auto &nTag = it.first;
+            //Get Node displacements.
             Eigen::VectorXd U = Nodes[nTag]->GetDisplacements();
 
-            OutputFile << U(0) << " " << U(1) << " ";
             if(nDimensions == 2)
-                OutputFile << "0.00000\n";
+                OutputFile << head4 << U(0) << " " << U(1) << " 0.00000\n";
             else if(nDimensions == 3)
-                OutputFile << U(2) << "\n";
+                OutputFile << head4 << U(0) << " " << U(1) << " " << U(2) << "\n";
         }
+
+        OutputFile << head4;
+        OutputFile << "</DataArray>\n" << head4;
 
         //Writes the velocity at each node.
-        OutputFile << "\nVECTORS Velocity float\n";
+        OutputFile << "<DataArray type=\"Float32\" Name=\"Velocity\" NumberOfComponents=\"3\" ComponentName0=\"V1\" ComponentName1=\"V2\" ComponentName2=\"V3\" Format=\"ascii\">\n";
 
         for(auto it : Nodes){
             auto &nTag = it.first;
-
-            //Get Node information.
+            //Get Node velocities.
             Eigen::VectorXd V = Nodes[nTag]->GetVelocities();
 
-            OutputFile << V(0) << " " << V(1) << " ";
             if(nDimensions == 2)
-                OutputFile << "0.00000\n";
+                OutputFile << head4 << V(0) << " " << V(1) << " 0.00000\n";
             else if(nDimensions == 3)
-                OutputFile << V(2) << "\n";
+                OutputFile << head4 << V(0) << " " << V(1) << " " << V(2) << "\n";
         }
 
-        //Writes the acceleration at each node.
-        OutputFile << "\nVECTORS Acceleration float\n";
+        OutputFile << head4;
+        OutputFile << "</DataArray>\n" << head4;
 
+        //Writes the acceleration at each node.
+        OutputFile << "<DataArray type=\"Float32\" Name=\"Acceleration\" NumberOfComponents=\"3\" ComponentName0=\"A1\" ComponentName1=\"A2\" ComponentName2=\"A3\" Format=\"ascii\">\n";
+        
         for(auto it : Nodes){
             auto &nTag = it.first;
-
-            //Get Node information.
+            //Get Node accelerations
             Eigen::VectorXd A = Nodes[nTag]->GetAccelerations();
 
-            OutputFile << A(0) << " " << A(1) << " ";
             if(nDimensions == 2)
-                OutputFile << "0.00000\n";
+                OutputFile << head4 << A(0) << " " << A(1) << " 0.00000\n";
             else if(nDimensions == 3)
-                OutputFile << A(2) << "\n";
+                OutputFile << head4 << A(0) << " " << A(1) << " " << A(2) << "\n";
         }
 
-        //Writes the acceleration at each node.
-        OutputFile << "\nVECTORS Reaction float\n";
+        OutputFile << head4;
+        OutputFile << "</DataArray>\n" << head3;
+        OutputFile << "</PointData>\n" << head3;
 
-        for(auto it : Nodes){
-            auto &nTag = it.first;
-            //Get Node information.
-            Eigen::VectorXd R = Nodes[nTag]->GetReaction();
+        //Writes the Element information
+        OutputFile << "<CellData>\n" << head4;
 
-            OutputFile << R(0) << " " << R(1) << " ";
-            if(nDimensions == 2)
-                OutputFile << "0.00000\n";
-            else if(nDimensions == 3)
-                OutputFile << R(2) << "\n";
+        //Writes the element identifiers
+        OutputFile << "<DataArray type=\"Int32\" Name=\"GlobalElementId\" format=\"ascii\">\n"; // RangeMin="0" RangeMax="2591">\n";
+
+        for(auto it : Elements){
+            auto &eTag = it.first;
+            OutputFile << eTag << " ";
         }
+        
+        OutputFile << "\n" << head4;
+        OutputFile << "</DataArray>\n" << head4;
 
-        //TODO: Implement Paraview Record for Stresses/Internal Forces.
-        OutputFile << "\nCELL_DATA " << Elements.size() << "\n"; 
-        OutputFile << "FIELD attributes 2\n";
+        //Writes the strains at each element
+        OutputFile << "<DataArray type=\"Float32\" Name=\"Strains\" NumberOfComponents=\"6\" ComponentName0=\"E11\" ComponentName1=\"E22\" ComponentName2=\"E33\" ComponentName3=\"E12\" ComponentName4=\"E23\" ComponentName5=\"E13\" Format=\"ascii\">\n";
 
-        //Writes the acceleration at each node.
-        OutputFile << "Strains 6 " << Elements.size() << " float\n";
         for(auto it : Elements){
             auto &eTag = it.first;
 
             //Gets the material stress.
             Eigen::VectorXd Strain = Elements[eTag]->GetVTKResponse("Strain");
-            OutputFile << Strain(0) << " " << Strain(1) << " " << Strain(2) << " " << Strain(3) << " " << Strain(4) << " " << Strain(5) << "\n";
+            OutputFile << head4 << Strain(0) << " " << Strain(1) << " " << Strain(2) << " " << Strain(3) << " " << Strain(4) << " " << Strain(5) << "\n";
         }
 
-        //Writes the acceleration at each node.
-        OutputFile << "\nStresses 6 " << Elements.size() << " float\n";
+        OutputFile << head4;
+        OutputFile << "</DataArray>\n" << head4;
+
+        //Writes the stresses at each element
+        OutputFile << "<DataArray type=\"Float32\" Name=\"Stresses\" NumberOfComponents=\"6\" ComponentName0=\"S11\" ComponentName1=\"S22\" ComponentName2=\"S33\" ComponentName3=\"S12\" ComponentName4=\"S23\" ComponentName5=\"S13\" Format=\"ascii\">\n";
+
         for(auto it : Elements){
             auto &eTag = it.first;
 
             //Gets the material stress.
             Eigen::VectorXd Stress = Elements[eTag]->GetVTKResponse("Stress");
-            OutputFile << Stress(0) << " " << Stress(1) << " " << Stress(2) << " "  << Stress(3) << " " << Stress(4) << " " << Stress(5) << "\n";
+            OutputFile << head4 << Stress(0) << " " << Stress(1) << " " << Stress(2) << " "  << Stress(3) << " " << Stress(4) << " " << Stress(5) << "\n";
         }
+
+        OutputFile << head4;
+        OutputFile << "</DataArray>\n" << head3;
+        OutputFile << "</CellData>\n"  << head2;
+
+        //VTK footer file information:
+        OutputFile << "</Piece>\n" << head1;
+        OutputFile << "</UnstructuredGrid>\n";
+        OutputFile << "</VTKFile>";
 
         OutputFile.close();
         Counter++;
