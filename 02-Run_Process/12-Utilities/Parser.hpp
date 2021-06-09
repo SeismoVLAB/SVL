@@ -1,3 +1,37 @@
+//==============================================================================
+//
+//                       Seismo Virtual Laboratory
+//             Module for Serial and Parallel Analysis of seismic 
+//         wave propagation and soil-structure interaction simulation
+//         Copyright (C) 2018-2021, The California Institute of Technology
+//                         All Rights Reserved.
+//
+// Commercial use of this program without express permission of the California
+// Institute of Technology, is strictly  prohibited. See  file "COPYRIGHT"  in
+// main  directory  for  information on  usage  and  redistribution, and for a
+// DISCLAIMER OF ALL WARRANTIES.
+//
+//==============================================================================
+//
+// Written by:
+//   Danilo S. Kusanovic (dkusanov@caltech.edu)
+//   Elnaz E. Seylabi    (elnaze@unr.edu)
+//
+// Supervised by:
+//   Domniki M. Asimaki  (domniki@caltech.edu)
+//
+// References : 
+//  [1] Computers and Structures Inc., "Etabs extended three analysis of building 
+//      system". None Property.
+//
+// Description:
+///This file contains the JSON "Parsing" functions to create, modify and analyze
+///a finite element model.
+//------------------------------------------------------------------------------
+
+#ifndef _PARSER_HPP_
+#define _PARSER_HPP_
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <cstring>
@@ -1551,3 +1585,5 @@ RunFromJSON(bool parsefile){
         }
     }
 }
+
+#endif

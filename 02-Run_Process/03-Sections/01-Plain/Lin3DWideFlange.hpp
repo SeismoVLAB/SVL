@@ -1,10 +1,10 @@
 //==============================================================================
 //
-//                    (Seismo)s (V)irtual (Lab)oratory
+//                       Seismo Virtual Laboratory
 //             Module for Serial and Parallel Analysis of seismic 
 //         wave propagation and soil-structure interaction simulation
-//         Copyright (C) 2018, The California Institute of Technology
-//                           All Rights Reserved.
+//         Copyright (C) 2018-2021, The California Institute of Technology
+//                         All Rights Reserved.
 //
 // Commercial use of this program without express permission of the California
 // Institute of Technology, is strictly  prohibited. See  file "COPYRIGHT"  in
