@@ -452,7 +452,7 @@ Recorder::WriteVTKFiles(std::shared_ptr<Mesh> &mesh, unsigned int step){
         OutputFile << "<PointData>\n" << head4;
 
         //Writes the node identifiers
-        OutputFile << "<DataArray type=\"Int32\" Name=\"GlobalNodeId\" format=\"ascii\">\n"; // RangeMin="0" RangeMax="2591">\n";
+        OutputFile << "<DataArray type=\"Int32\" Name=\"GlobalNodeId\" format=\"ascii\">\n" << head4;
 
         for(auto it : Nodes){
             auto &nTag = it.first;
@@ -518,7 +518,7 @@ Recorder::WriteVTKFiles(std::shared_ptr<Mesh> &mesh, unsigned int step){
         OutputFile << "<CellData>\n" << head4;
 
         //Writes the element identifiers
-        OutputFile << "<DataArray type=\"Int32\" Name=\"GlobalElementId\" format=\"ascii\">\n"; // RangeMin="0" RangeMax="2591">\n";
+        OutputFile << "<DataArray type=\"Int32\" Name=\"GlobalElementId\" format=\"ascii\">\n";
 
         for(auto it : Elements){
             auto &eTag = it.first;
@@ -528,33 +528,45 @@ Recorder::WriteVTKFiles(std::shared_ptr<Mesh> &mesh, unsigned int step){
         OutputFile << "\n" << head4;
         OutputFile << "</DataArray>\n" << head4;
 
+        //Writes the element group identifier
+        OutputFile << "<DataArray type=\"Int32\" Name=\"GroupElementId\" format=\"ascii\" RangeMin=\"0\" RangeMax=\"100\">\n";
+
+        for(auto it : Elements){
+            auto &eTag = it.first;
+            OutputFile << Elements[eTag]->GetVTKGroupType() << " ";
+        }
+        
+        OutputFile << "\n" << head4;
+        OutputFile << "</DataArray>\n" << head4;
+
         //Writes the strains at each element
-        OutputFile << "<DataArray type=\"Float32\" Name=\"Strains\" NumberOfComponents=\"6\" ComponentName0=\"E11\" ComponentName1=\"E22\" ComponentName2=\"E33\" ComponentName3=\"E12\" ComponentName4=\"E23\" ComponentName5=\"E13\" Format=\"ascii\">\n";
+        OutputFile << "<DataArray type=\"Float32\" Name=\"ElementStrains\" NumberOfComponents=\"18\" ComponentName0=\"E11 (Solid)\" ComponentName1=\"E22 (Solid)\" ComponentName2=\"E33 (Solid)\" ComponentName3=\"E12 (Solid)\" ComponentName4=\"E23 (Solid)\" ComponentName5=\"E13 (Solid)\" ComponentName6=\"e11 (Shell)\" ComponentName7=\"e22 (Shell)\" ComponentName8=\"e12 (Shell)\" ComponentName9=\"kappa11 (Shell)\" ComponentName10=\"kappa22 (Shell)\" ComponentName11=\"kappa12 (Shell)\" ComponentName12=\"epsilon (Frame)\" ComponentName13=\"gamma2 (Frame)\" ComponentName14=\"gamma3 (Frame)\" ComponentName15=\"phi (Frame)\" ComponentName16=\"kappa2 (Frame)\" ComponentName17=\"kappa3 (Frame)\" Format=\"ascii\">\n";
 
         for(auto it : Elements){
             auto &eTag = it.first;
 
             //Gets the material stress.
             Eigen::VectorXd Strain = Elements[eTag]->GetVTKResponse("Strain");
-            OutputFile << head4 << Strain(0) << " " << Strain(1) << " " << Strain(2) << " " << Strain(3) << " " << Strain(4) << " " << Strain(5) << "\n";
+            OutputFile << head4 << Strain.transpose() << "\n";
         }
 
         OutputFile << head4;
         OutputFile << "</DataArray>\n" << head4;
 
         //Writes the stresses at each element
-        OutputFile << "<DataArray type=\"Float32\" Name=\"Stresses\" NumberOfComponents=\"6\" ComponentName0=\"S11\" ComponentName1=\"S22\" ComponentName2=\"S33\" ComponentName3=\"S12\" ComponentName4=\"S23\" ComponentName5=\"S13\" Format=\"ascii\">\n";
+        OutputFile << "<DataArray type=\"Float32\" Name=\"ElementStresses\" NumberOfComponents=\"18\" ComponentName0=\"S11 (Solid)\" ComponentName1=\"S22 (Solid)\" ComponentName2=\"S33 (Solid)\" ComponentName3=\"S12 (Solid)\" ComponentName4=\"S23 (Solid)\" ComponentName5=\"S13 (Solid)\" ComponentName6=\"N11 (Shell)\" ComponentName7=\"N22 (Shell)\" ComponentName8=\"N12 (Shell)\" ComponentName9=\"M11 (Shell)\" ComponentName10=\"M22 (Shell)\" ComponentName11=\"M12 (Shell)\" ComponentName12=\"N (Frame)\" ComponentName13=\"V2 (Frame)\" ComponentName14=\"V3 (Frame)\" ComponentName15=\"T (Frame)\" ComponentName16=\"M2 (Frame)\" ComponentName17=\"M3 (Frame)\" Format=\"ascii\">\n";
 
         for(auto it : Elements){
             auto &eTag = it.first;
 
             //Gets the material stress.
             Eigen::VectorXd Stress = Elements[eTag]->GetVTKResponse("Stress");
-            OutputFile << head4 << Stress(0) << " " << Stress(1) << " " << Stress(2) << " "  << Stress(3) << " " << Stress(4) << " " << Stress(5) << "\n";
+            OutputFile << head4 << Stress.transpose() << "\n";
         }
 
         OutputFile << head4;
         OutputFile << "</DataArray>\n" << head3;
+        
         OutputFile << "</CellData>\n"  << head2;
 
         //VTK footer file information:
