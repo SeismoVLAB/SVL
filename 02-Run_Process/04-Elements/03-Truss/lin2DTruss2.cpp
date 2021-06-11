@@ -11,7 +11,7 @@ const unsigned int VTKCELL = 3;
 
 //Overload constructor.
 lin2DTruss2::lin2DTruss2(const std::vector<unsigned int> nodes, std::unique_ptr<Material> &material, const double area) :
-Element("lin2DTruss2", nodes, 4, VTKCELL), A(area){
+Element("lin2DTruss2", nodes, 4, VTKCELL, GROUPTRUSS), A(area){
     //The element nodes.
     theNodes.resize(2);
 
@@ -160,16 +160,16 @@ lin2DTruss2::GetStressAt(double UNUSED(x3), double UNUSED(x2)) const{
 Eigen::VectorXd 
 lin2DTruss2::GetVTKResponse(std::string response) const{
     //The VTK response vector.
-    Eigen::VectorXd theResponse(6);
+    Eigen::VectorXd theResponse(18);
 
     if (strcasecmp(response.c_str(),"Strain") == 0){
         double nu = theMaterial->GetPoissonRatio();
         Eigen::VectorXd Strain = theMaterial->GetStrain();
-        theResponse << Strain(0), -nu*Strain(0), -nu*Strain(0), 0.0, 0.0, 0.0;
+        theResponse << Strain(0), -nu*Strain(0), -nu*Strain(0), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0;
     }
     else if(strcasecmp(response.c_str(),"Stress") == 0){
         Eigen::VectorXd Stress = theMaterial->GetTotalStress();
-        theResponse << Stress(0), 0.0, 0.0, 0.0, 0.0, 0.0;
+        theResponse << Stress(0), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0;
     }
 
     return theResponse;

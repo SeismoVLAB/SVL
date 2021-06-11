@@ -8,7 +8,7 @@ const unsigned int VTKCELL = 3;
 
 //Overload constructor.
 UnxBoucWen2DLink::UnxBoucWen2DLink(const std::vector<unsigned int> nodes, std::vector<double> params, std::vector<double> vars, const unsigned int dim, const unsigned int dir, double tol, unsigned int nmax) :
-Element("UnxBoucWen2DLink", nodes, 2*dim, VTKCELL), Tol(tol), nMax(nmax), Dimension(dim), Direction(dir){
+Element("UnxBoucWen2DLink", nodes, 2*dim, VTKCELL, GROUPBWEN), Tol(tol), nMax(nmax), Dimension(dim), Direction(dir){
     //The element nodes.
     theNodes.resize(2);
 
@@ -195,7 +195,7 @@ Eigen::VectorXd
 UnxBoucWen2DLink::GetVTKResponse(std::string UNUSED(response)) const{
     //TODO: Stress/Strain responses
     //The VTK response vector.
-    Eigen::VectorXd theResponse(6);
+    Eigen::VectorXd theResponse(18);
     theResponse.fill(0.0);
 
     return theResponse;

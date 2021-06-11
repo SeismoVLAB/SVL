@@ -11,7 +11,7 @@ const unsigned int VTKCELL = 3;
 
 //Overload constructor.
 null3DFrame2::null3DFrame2(const std::vector<unsigned int> nodes) :
-Element("null3DFrame2", nodes, 12, VTKCELL){
+Element("null3DFrame2", nodes, 12, VTKCELL, GROUPNULL){
     //The element nodes.
     theNodes.resize(2);
 }
@@ -139,7 +139,7 @@ null3DFrame2::GetStressAt(double UNUSED(x3), double UNUSED(x2)) const{
 Eigen::VectorXd 
 null3DFrame2::GetVTKResponse(std::string UNUSED(response)) const{
     //The VTK response vector.
-    Eigen::VectorXd theResponse(6);
+    Eigen::VectorXd theResponse(18);
     theResponse.fill(0.0);
 
     return theResponse;

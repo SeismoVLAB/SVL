@@ -12,7 +12,7 @@ const unsigned int VTKCELL = 25;
 
 //Overload constructor.
 lin3DHexa20::lin3DHexa20(const std::vector<unsigned int> nodes, std::unique_ptr<Material> &material, const std::string quadrature, const unsigned int nGauss) :
-Element("lin3DHexa20", nodes, 60, VTKCELL){
+Element("lin3DHexa20", nodes, 60, VTKCELL, GROUPHEXA){
     //The element nodes.
     theNodes.resize(20);
 
@@ -218,17 +218,17 @@ lin3DHexa20::GetStressAt(double UNUSED(x3), double UNUSED(x2)) const{
 Eigen::VectorXd 
 lin3DHexa20::GetVTKResponse(std::string response) const{
     //The VTK response vector.
-    Eigen::VectorXd theResponse(6);
+    Eigen::VectorXd theResponse(18);
 
     if (strcasecmp(response.c_str(),"Strain") == 0){
         Eigen::MatrixXd strain = GetStrain();
         Eigen::VectorXd Strain = strain.colwise().mean();
-        theResponse << Strain(0), Strain(1), Strain(2), Strain(3), Strain(4), Strain(5);
+        theResponse << Strain(0), Strain(1), Strain(2), Strain(3), Strain(4), Strain(5), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0;
     }
     else if(strcasecmp(response.c_str(),"Stress") == 0){
         Eigen::MatrixXd stress = GetStress();
         Eigen::VectorXd Stress = stress.colwise().mean();
-        theResponse << Stress(0), Stress(1), Stress(2), Stress(3), Stress(4), Stress(5);
+        theResponse << Stress(0), Stress(1), Stress(2), Stress(3), Stress(4), Stress(5), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0;
     }
 
     return theResponse;

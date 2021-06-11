@@ -14,7 +14,7 @@ const unsigned int VTKCELL = 21;
 
 //Overload constructor.
 lin2DTruss3::lin2DTruss3(const std::vector<unsigned int> nodes, std::unique_ptr<Material> &material, const double area, const std::string quadrature, const unsigned int nGauss) :
-Element("lin2DTruss3", nodes, 6, VTKCELL), A(area){
+Element("lin2DTruss3", nodes, 6, VTKCELL, GROUPTRUSS), A(area){
     //The element nodes.
     theNodes.resize(3);
 
@@ -220,18 +220,18 @@ lin2DTruss3::GetStressAt(double UNUSED(x3), double UNUSED(x2)) const{
 Eigen::VectorXd 
 lin2DTruss3::GetVTKResponse(std::string response) const{
     //The VTK response vector.
-    Eigen::VectorXd theResponse(6);
+    Eigen::VectorXd theResponse(18);
 
     if (strcasecmp(response.c_str(),"Strain") == 0){
         double nu = theMaterial[0]->GetPoissonRatio();
         Eigen::MatrixXd strain = GetStrain();
         Eigen::VectorXd Strain = strain.colwise().mean();
-        theResponse << Strain(0), -nu*Strain(0), -nu*Strain(0), 0.0, 0.0, 0.0;
+        theResponse << Strain(0), -nu*Strain(0), -nu*Strain(0), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0;
     }
     else if(strcasecmp(response.c_str(),"Stress") == 0){
         Eigen::MatrixXd stress = GetStress();
         Eigen::VectorXd Stress = stress.colwise().mean();
-        theResponse << Stress(0), 0.0, 0.0, 0.0, 0.0, 0.0;
+        theResponse << Stress(0), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0;
     }
 
     return theResponse;

@@ -12,7 +12,7 @@ const unsigned int VTKCELL = 3;
 
 //Overload constructor.
 HDRBYamamoto3DLink::HDRBYamamoto3DLink(const std::vector<unsigned int> nodes, double De, double Di, double hr, unsigned int dim) :
-Element("HDRBYamamoto3DLink", nodes, 2*dim, VTKCELL), Hr(hr), Dimension(dim){
+Element("HDRBYamamoto3DLink", nodes, 2*dim, VTKCELL, GROUPHDRB), Hr(hr), Dimension(dim){
     //The element nodes.
     theNodes.resize(2);
 
@@ -208,7 +208,7 @@ Eigen::VectorXd
 HDRBYamamoto3DLink::GetVTKResponse(std::string UNUSED(response)) const{
     //TODO: Stress/Strain responses
     //The VTK response vector.
-    Eigen::VectorXd theResponse(6);
+    Eigen::VectorXd theResponse(18);
     theResponse.fill(0.0);
 
     return theResponse;

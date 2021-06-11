@@ -16,7 +16,7 @@ const unsigned int VTKCELL = 9;
 
 //Overload constructor.
 TIEQlin2DQuad4::TIEQlin2DQuad4(const std::vector<unsigned int> nodes, std::unique_ptr<Material> &material, const double th, const std::string quadrature, const unsigned int nGauss, const std::string Type, const double zref, const double cf1, const double cf2, const double eref) :
-Element("TIEQlin2DQuad4", nodes, 8, VTKCELL), t(th), cf1(cf1), cf2(cf2), zref(zref), eref(eref), Type(Type) {
+Element("TIEQlin2DQuad4", nodes, 8, VTKCELL, GROUPQUAD), t(th), cf1(cf1), cf2(cf2), zref(zref), eref(eref), Type(Type) {
     //The element nodes.
     theNodes.resize(4);
 
@@ -255,17 +255,17 @@ TIEQlin2DQuad4::GetStressAt(double UNUSED(x3), double UNUSED(x2)) const{
 Eigen::VectorXd 
 TIEQlin2DQuad4::GetVTKResponse(std::string response) const{
     //The VTK response vector.
-    Eigen::VectorXd theResponse(6);
+    Eigen::VectorXd theResponse(18);
 
     if (strcasecmp(response.c_str(),"Strain") == 0){
         Eigen::MatrixXd strain = GetStrain();
         Eigen::VectorXd Strain = strain.colwise().mean();
-        theResponse << Strain(0), Strain(1), 0.0, Strain(2), 0.0, 0.0;
+        theResponse << Strain(0), Strain(1), 0.0, Strain(2), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0;
     }
     else if(strcasecmp(response.c_str(),"Stress") == 0){
         Eigen::MatrixXd stress = GetStress();
         Eigen::VectorXd Stress = stress.colwise().mean();
-        theResponse << Stress(0), Stress(1), 0.0, Stress(2), 0.0, 0.0; 
+        theResponse << Stress(0), Stress(1), 0.0, Stress(2), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0; 
     }
 
     return theResponse;

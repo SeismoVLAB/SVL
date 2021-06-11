@@ -2,8 +2,8 @@
 #include "Definitions.hpp"
 
 //Default Constructor.
-Element::Element(std::string name, const std::vector<unsigned int> nodes, unsigned int ndofs, unsigned int VTKcell) : 
-Name(name), VTKCell(VTKcell), NumberOfNodes(nodes.size()), NumberOfDegreeOfFreedom(ndofs), Nodes(nodes){
+Element::Element(std::string name, const std::vector<unsigned int> nodes, unsigned int ndofs, unsigned int VTKcell, unsigned int SVLcell) : 
+Name(name), VTKCell(VTKcell), SVLCell(SVLcell), NumberOfNodes(nodes.size()), NumberOfDegreeOfFreedom(ndofs), Nodes(nodes){
     //Does nothing.
 }
 
@@ -22,6 +22,12 @@ Element::GetName() const{
 unsigned int 
 Element::GetVTKCellType() const{
     return VTKCell;
+}
+
+//Gets the Element SeismoVLAB cell type.
+unsigned int 
+Element::GetVTKGroupType() const{
+    return SVLCell;
 }
 
 //Returns the number of nodes in element.

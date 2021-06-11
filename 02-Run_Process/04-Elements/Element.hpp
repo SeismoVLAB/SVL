@@ -56,9 +56,10 @@ class Element{
         ///@param nodes The Node connectivity array.
         ///@param ndofs The number of degree-of-freedom of the Element object.
         ///@param VTKcell The VTK cell number for Paraview display.
+        ///@param SVLcell The SeismoVLAB element type for Paraview display.
         ///@note More details can be found at @ref linkElement.
         ///@see Element::Name, Element::VTKCell, Element::NumberOfNodes, Element::Nodes.
-        Element(std::string name, const std::vector<unsigned int> nodes, unsigned int ndofs, unsigned int VTKcell);
+        Element(std::string name, const std::vector<unsigned int> nodes, unsigned int ndofs, unsigned int VTKcell, unsigned int SVLcell);
 
         ///Destroys this Element object.
         virtual ~Element() = 0;
@@ -203,6 +204,11 @@ class Element{
         ///@see Element::VTKCell.
         unsigned int GetVTKCellType() const;
 
+        ///Gets the Element VTK group type.
+        ///@return Value with the SVL cell type for Paraview.
+        ///@see Element::SVLCell.
+        unsigned int GetVTKGroupType() const;
+
         ///Returns the number of nodes in element.
         ///@return The number of Node in this Element.
         ///@see Element::NumberOfNodes.
@@ -228,6 +234,9 @@ class Element{
 
         ///The VTK element number.
         unsigned int VTKCell;
+
+        ///The SeismoVLAB element type.
+        unsigned int SVLCell;
 
         ///The number of nodes in element.
         unsigned int NumberOfNodes;

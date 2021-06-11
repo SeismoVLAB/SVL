@@ -13,7 +13,7 @@ const unsigned int VTKCELL = 12;
 
 //Overload constructor.
 PML3DHexa8::PML3DHexa8(const std::vector<unsigned int> nodes, std::unique_ptr<Material> &material, const std::vector<double> parameters, const std::string quadrature, const unsigned int nGauss) :
-Element("PML3DHexa8", nodes, 72, VTKCELL), m_pml(parameters[0]), L_pml(parameters[1]), R_pml(parameters[2]), x0_pml(parameters[3]), y0_pml(parameters[4]), z0_pml(parameters[5]), nx_pml(parameters[6]), ny_pml(parameters[7]), nz_pml(parameters[8]) {
+Element("PML3DHexa8", nodes, 72, VTKCELL, GROUPPML), m_pml(parameters[0]), L_pml(parameters[1]), R_pml(parameters[2]), x0_pml(parameters[3]), y0_pml(parameters[4]), z0_pml(parameters[5]), nx_pml(parameters[6]), ny_pml(parameters[7]), nz_pml(parameters[8]) {
     //The element nodes.
     theNodes.resize(8);
 
@@ -199,7 +199,7 @@ PML3DHexa8::GetStressAt(double UNUSED(x3), double UNUSED(x2)) const{
 Eigen::VectorXd 
 PML3DHexa8::GetVTKResponse(std::string UNUSED(response)) const{
     //IMPORTANT: Since PML is a buffer for absorbing waves, we decided not to show results. 
-    Eigen::VectorXd theResponse(6);
+    Eigen::VectorXd theResponse(18);
     theResponse.fill(0.0);
 
     return theResponse;

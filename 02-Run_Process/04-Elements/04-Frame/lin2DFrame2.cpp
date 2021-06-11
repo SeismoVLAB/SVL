@@ -13,7 +13,7 @@ const unsigned int VTKCELL = 3;
 
 //Overload constructor.
 lin2DFrame2::lin2DFrame2(const std::vector<unsigned int> nodes, std::unique_ptr<Section> &section, bool formulation, const std::string quadrature, unsigned int nGauss) :
-Element("lin2DFrame2", nodes, 6, VTKCELL), Formulation(formulation), Phi(0.0){
+Element("lin2DFrame2", nodes, 6, VTKCELL, GROUPFRAME), Formulation(formulation), Phi(0.0){
     //The element nodes.
     theNodes.resize(2);
 
@@ -212,21 +212,21 @@ lin2DFrame2::GetStressAt(double x3, double x2) const{
 Eigen::VectorXd 
 lin2DFrame2::GetVTKResponse(std::string response) const{   
     //The VTK response vector.
-    Eigen::VectorXd theResponse(6);
+    Eigen::VectorXd theResponse(18);
 
     if (strcasecmp(response.c_str(),"Strain") == 0){
         Eigen::MatrixXd strain = GetStrain();
         Eigen::VectorXd Strain = strain.colwise().mean();
 
         //[exx, kzz, txy] = [u,x, v,xx, u,y+v,x]
-        theResponse << Strain(0), 0.0, Strain(2), 0.0, 0.0, Strain(1);
+        theResponse << 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, Strain(0), 0.0, Strain(2), 0.0, 0.0, Strain(1);
     }
     else if(strcasecmp(response.c_str(),"Stress") == 0){
         Eigen::MatrixXd stress = GetStress();
         Eigen::VectorXd Stress = stress.colwise().mean();
 
         //[Fx, Mzz, Qy] = [EA u,x, EI v,xx, GA (u,y+v,x)]
-        theResponse << Stress(0), 0.0, Stress(2), 0.0, 0.0, Stress(1);
+        theResponse << 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, Stress(0), 0.0, Stress(2), 0.0, 0.0, Stress(1);
     }
 
     return theResponse;

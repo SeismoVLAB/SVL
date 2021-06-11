@@ -13,7 +13,7 @@ const unsigned int VTKCELL = 3;
 
 //Overload constructor.
 lin3DFrame2::lin3DFrame2(const std::vector<unsigned int> nodes, std::unique_ptr<Section> &section, bool formulation, const std::string quadrature, unsigned int nGauss) :
-Element("lin3DFrame2", nodes, 12, VTKCELL), Formulation(formulation), Phiy(0.0), Phiz(0.0){
+Element("lin3DFrame2", nodes, 12, VTKCELL, GROUPFRAME), Formulation(formulation), Phiy(0.0), Phiz(0.0){
     //The element nodes.
     theNodes.resize(2);
 
@@ -214,21 +214,21 @@ lin3DFrame2::GetStressAt(double x3, double x2) const{
 Eigen::VectorXd 
 lin3DFrame2::GetVTKResponse(std::string response) const{   
     //The VTK response vector.
-    Eigen::VectorXd theResponse(6);
+    Eigen::VectorXd theResponse(18);
 
     if (strcasecmp(response.c_str(),"Strain") == 0){
         Eigen::MatrixXd strain = GetStrain();
         Eigen::VectorXd Strain = strain.colwise().mean();
 
         //[exx, phi, kyy, kzz, txy, txz] = [u,x, phi,x, v,xx, w,xx, u,y+v,x, u,z+w,x]
-        theResponse << Strain(0), Strain(4), Strain(5), Strain(1), Strain(2), Strain(3);
+        theResponse << 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, Strain(0), Strain(4), Strain(5), Strain(1), Strain(2), Strain(3);
     }
     else if(strcasecmp(response.c_str(),"Stress") == 0){
         Eigen::MatrixXd stress = GetStress();
         Eigen::VectorXd Stress = stress.colwise().mean();
 
         //[Fx, Tx, Myy, Mzz, Qy, Qz] = [EA u,x, GJ phi,x, EIyy v,xx, EIzz w,xx, GAy (u,y+v,x), GAz (u,z+w,x)]
-        theResponse << Stress(0), Stress(4), Stress(5), Stress(1), Stress(2), Stress(3);
+        theResponse << 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, Stress(0), Stress(4), Stress(5), Stress(1), Stress(2), Stress(3);
     }
 
     return theResponse;

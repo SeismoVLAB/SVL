@@ -11,7 +11,7 @@ const unsigned int VTKCELL = 3;
 
 //Overload constructor.
 kin2DFrame2::kin2DFrame2(const std::vector<unsigned int> nodes, std::unique_ptr<Section> &section) :
-Element("kin2DFrame2", nodes, 6, VTKCELL){
+Element("kin2DFrame2", nodes, 6, VTKCELL, GROUPFRAME){
     //The element nodes.
     theNodes.resize(2);
 
@@ -153,19 +153,19 @@ kin2DFrame2::GetStressAt(double x3, double x2) const{
 Eigen::VectorXd 
 kin2DFrame2::GetVTKResponse(std::string response) const{   
     //The VTK response vector.
-    Eigen::VectorXd theResponse(6);
+    Eigen::VectorXd theResponse(18);
 
     if (strcasecmp(response.c_str(),"Strain") == 0){
         Eigen::MatrixXd Strain = GetStrain();
 
         //[exx, kzz, txy] = [u,x, v,xx, u,y+v,x]
-        theResponse << Strain(0,0), 0.0, Strain(0,2), 0.0, 0.0, Strain(0,1);
+        theResponse << 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, Strain(0,0), 0.0, Strain(0,2), 0.0, 0.0, Strain(0,1);
     }
     else if(strcasecmp(response.c_str(),"Stress") == 0){
         Eigen::MatrixXd Stress = GetStress();
 
         //[Fx, Mzz, Qy] = [EA u,x, EI v,xx, GA (u,y+v,x)]
-        theResponse << Stress(0,0), 0.0, Stress(0,2), 0.0, 0.0, Stress(0,1);
+        theResponse << 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, Stress(0,0), 0.0, Stress(0,2), 0.0, 0.0, Stress(0,1);
     }
 
     return theResponse;
