@@ -44,6 +44,20 @@
 ///Define macro for unused parameter
 #define UNUSED(x)
 
+///Define group of elements for ParaView
+#define GROUPTRUSS 10
+#define GROUPTRIA  11
+#define GROUPQUAD  12
+#define GROUPTETRA 13
+#define GROUPHEXA  14
+#define GROUPFRAME 20
+#define GROUPSHELL 21
+#define GROUPZERO  31
+#define GROUPPML   32
+#define GROUPBWEN  41
+#define GROUPHDRB  42
+#define GROUPNULL  50
+
 ///The processor number.
 extern int rank;
 
