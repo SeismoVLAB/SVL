@@ -463,7 +463,7 @@ Recorder::WriteVTKFiles(std::shared_ptr<Mesh> &mesh, unsigned int step){
         OutputFile << "</DataArray>\n" << head4;
         
         //Writes the displacement at each node.
-        OutputFile << "<DataArray type=\"Float32\" Name=\"Displacement\" NumberOfComponents=\"3\" ComponentName0=\"U1\" ComponentName1=\"U2\" ComponentName2=\"U3\" Format=\"ascii\">\n";
+        OutputFile << "<DataArray type=\"Float32\" Name=\"Displacements\" NumberOfComponents=\"3\" ComponentName0=\"Ux\" ComponentName1=\"Uy\" ComponentName2=\"Uz\" Format=\"ascii\">\n";
 
         for(auto it : Nodes){
             auto &nTag = it.first;
@@ -480,7 +480,7 @@ Recorder::WriteVTKFiles(std::shared_ptr<Mesh> &mesh, unsigned int step){
         OutputFile << "</DataArray>\n" << head4;
 
         //Writes the velocity at each node.
-        OutputFile << "<DataArray type=\"Float32\" Name=\"Velocity\" NumberOfComponents=\"3\" ComponentName0=\"V1\" ComponentName1=\"V2\" ComponentName2=\"V3\" Format=\"ascii\">\n";
+        OutputFile << "<DataArray type=\"Float32\" Name=\"Velocities\" NumberOfComponents=\"3\" ComponentName0=\"Vx\" ComponentName1=\"Vy\" ComponentName2=\"Vz\" Format=\"ascii\">\n";
 
         for(auto it : Nodes){
             auto &nTag = it.first;
@@ -497,7 +497,7 @@ Recorder::WriteVTKFiles(std::shared_ptr<Mesh> &mesh, unsigned int step){
         OutputFile << "</DataArray>\n" << head4;
 
         //Writes the acceleration at each node.
-        OutputFile << "<DataArray type=\"Float32\" Name=\"Acceleration\" NumberOfComponents=\"3\" ComponentName0=\"A1\" ComponentName1=\"A2\" ComponentName2=\"A3\" Format=\"ascii\">\n";
+        OutputFile << "<DataArray type=\"Float32\" Name=\"Accelerations\" NumberOfComponents=\"3\" ComponentName0=\"Ax\" ComponentName1=\"Ay\" ComponentName2=\"Az\" Format=\"ascii\">\n";
         
         for(auto it : Nodes){
             auto &nTag = it.first;
