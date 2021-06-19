@@ -35,15 +35,21 @@ Recorder::~Recorder(){
 std::unique_ptr<Recorder>
 Recorder::CopyRecorder(){
     //Selects the recorder type.
-    if(strcasecmp(Name.c_str(),"paraview") == 0){
+    if(strcasecmp(Name.c_str(),"PARAVIEW") == 0){
         return std::make_unique<Recorder>(File, Name, nParaview, nSample, Precision);
     }
-    else if(strcasecmp(Name.c_str(),"section") == 0){
+    else if(strcasecmp(Name.c_str(),"SECTION") == 0){
         return std::make_unique<Recorder>(File, Name, Response, Position, IDs, nSample, Precision);
     }
     else{
         return std::make_unique<Recorder>(File, Name, Response, IDs, nSample, Precision);
     }
+}
+
+//Return the recorder name
+std::string 
+Recorder::GetName(){
+    return Name;
 }
 
 //Initialize the recorder.
@@ -52,7 +58,7 @@ Recorder::Initialize(std::shared_ptr<Mesh> &mesh, unsigned int nsteps){
     //Starts profiling this function.
     PROFILE_FUNCTION();
 
-    if(strcasecmp(Name.c_str(),"paraview") == 0){
+    if(strcasecmp(Name.c_str(),"PARAVIEW") == 0){
         //Gets node and element information from the mesh.
         std::map<unsigned int, std::shared_ptr<Node> > Nodes = mesh->GetNodes();
 
@@ -64,7 +70,7 @@ Recorder::Initialize(std::shared_ptr<Mesh> &mesh, unsigned int nsteps){
             k++;
         }
     }
-    else if(strcasecmp(Name.c_str(),"node") == 0){       
+    else if(strcasecmp(Name.c_str(),"NODE") == 0){       
         //Update the file path if is element recorder
         std::string secondPath = GetSpacedName(filePath, " ");
         std::string theFile = secondPath + "/../Solution/" + Combo + "/" + File;
@@ -98,7 +104,7 @@ Recorder::Initialize(std::shared_ptr<Mesh> &mesh, unsigned int nsteps){
         }
 
     }
-    else if(strcasecmp(Name.c_str(),"element") == 0){
+    else if(strcasecmp(Name.c_str(),"ELEMENT") == 0){
         //Update the file path if is element recorder
         std::string secondPath = GetSpacedName(filePath, " ");
         std::string theFile = secondPath + "/../Solution/" + Combo + "/" + File;
@@ -118,7 +124,7 @@ Recorder::Initialize(std::shared_ptr<Mesh> &mesh, unsigned int nsteps){
         OutputFile << IDs.size() << " " << numberOfTotalDofs << " " << nsteps << "\n";
 
         //List with element information.
-        if(strcasecmp(Response.c_str(),"internalforce") == 0){
+        if(strcasecmp(Response.c_str(),"INTERNALFORCE") == 0){
                 
             for(unsigned int k = 0; k < IDs.size(); k++){
                 OutputFile << IDs[k] << " " << Elements[IDs[k]]->GetNumberOfDegreeOfFreedom();
@@ -136,21 +142,21 @@ Recorder::Initialize(std::shared_ptr<Mesh> &mesh, unsigned int nsteps){
                 OutputFile << "\n";
             }
         }
-        else if(strcasecmp(Response.c_str(),"stress") == 0){
+        else if(strcasecmp(Response.c_str(),"STRESS") == 0){
             for(unsigned int k = 0; k < IDs.size(); k++){
                 Eigen::MatrixXd MatInfo = Elements[IDs[k]]->GetStress();
 
                 OutputFile << IDs[k] << " " << MatInfo.rows() << " " << MatInfo.cols() << "\n";
             }
         }
-        else if(strcasecmp(Response.c_str(),"strain") == 0){
+        else if(strcasecmp(Response.c_str(),"STRAIN") == 0){
             for(unsigned int k = 0; k < IDs.size(); k++){
                 Eigen::MatrixXd MatInfo = Elements[IDs[k]]->GetStrain();
 
                 OutputFile << IDs[k] << " " << MatInfo.rows() << " " << MatInfo.cols() << "\n";
             }
         }
-        else if(strcasecmp(Response.c_str(),"strainrate") == 0){
+        else if(strcasecmp(Response.c_str(),"STRAINRATE") == 0){
             for(unsigned int k = 0; k < IDs.size(); k++){
                 Eigen::MatrixXd MatInfo = Elements[IDs[k]]->GetStrainRate();
 
@@ -158,7 +164,7 @@ Recorder::Initialize(std::shared_ptr<Mesh> &mesh, unsigned int nsteps){
             }
         }
     }
-    else if(strcasecmp(Name.c_str(),"section") == 0){
+    else if(strcasecmp(Name.c_str(),"SECTION") == 0){
         //Update the file path if is element recorder
         std::string secondPath = GetSpacedName(filePath, " ");
         std::string theFile = secondPath + "/../Solution/" + Combo + "/" + File;
@@ -178,13 +184,13 @@ Recorder::Initialize(std::shared_ptr<Mesh> &mesh, unsigned int nsteps){
         OutputFile << "\n";
 
         //TODO: Section recorder.
-        if(strcasecmp(Response.c_str(),"strain") == 0){
+        if(strcasecmp(Response.c_str(),"STRAIN") == 0){
             for(unsigned int k = 0; k < IDs.size(); k++){
                 Eigen::MatrixXd SectionInfo = Elements[IDs[k]]->GetStrainAt();
                 OutputFile << IDs[k] << " " << SectionInfo.rows() << " " << SectionInfo.cols() << "\n";
             }
         }
-        else if(strcasecmp(Response.c_str(),"stress") == 0){
+        else if(strcasecmp(Response.c_str(),"STRESS") == 0){
             for(unsigned int k = 0; k < IDs.size(); k++){
                 Eigen::MatrixXd SectionInfo = Elements[IDs[k]]->GetStressAt();
                 OutputFile << IDs[k] << " " << SectionInfo.rows() << " " << SectionInfo.cols() << "\n";
@@ -200,16 +206,16 @@ Recorder::WriteResponse(std::shared_ptr<Mesh> &mesh, unsigned int step){
     PROFILE_FUNCTION();
 
     //Selects the object to be written.
-    if(strcasecmp(Name.c_str(),"paraview") == 0){
+    if(strcasecmp(Name.c_str(),"PARAVIEW") == 0){
         WriteVTKFiles(mesh, step);
     }
-    else if(strcasecmp(Name.c_str(),"node") == 0){
+    else if(strcasecmp(Name.c_str(),"NODE") == 0){
         WriteNodalResponse(mesh);
     }
-    else if(strcasecmp(Name.c_str(),"element") == 0){
+    else if(strcasecmp(Name.c_str(),"ELEMENT") == 0){
         WriteElementResponse(mesh);
     }
-    else if(strcasecmp(Name.c_str(),"section") == 0){
+    else if(strcasecmp(Name.c_str(),"SECTION") == 0){
         WriteSectionResponse(mesh);
     }
 }
@@ -218,7 +224,7 @@ Recorder::WriteResponse(std::shared_ptr<Mesh> &mesh, unsigned int step){
 void 
 Recorder::Finalize(){
     //Closes the output File:
-    if(strcasecmp(Name.c_str(),"paraview") != 0)
+    if(strcasecmp(Name.c_str(),"PARAVIEW") != 0)
         OutputFile.close(); 
 }
 
@@ -240,16 +246,16 @@ Recorder::WriteNodalResponse(std::shared_ptr<Mesh> &mesh){
         Eigen::VectorXd U;
 
         //Selects the state variable according to this recorder.
-        if(strcasecmp(Response.c_str(),"disp") == 0){
+        if(strcasecmp(Response.c_str(),"DISP") == 0){
             U = Nodes[IDs[k]]->GetDisplacements();
         }
-        else if(strcasecmp(Response.c_str(),"vel") == 0){
+        else if(strcasecmp(Response.c_str(),"VEL") == 0){
             U = Nodes[IDs[k]]->GetVelocities();
         }
-        else if(strcasecmp(Response.c_str(),"accel") == 0){
+        else if(strcasecmp(Response.c_str(),"ACCEL") == 0){
             U = Nodes[IDs[k]]->GetAccelerations();
         }
-        else if(strcasecmp(Response.c_str(),"reaction") == 0){
+        else if(strcasecmp(Response.c_str(),"REACTION") == 0){
             U = Nodes[IDs[k]]->GetReaction();
         }
 
@@ -268,7 +274,7 @@ Recorder::WriteElementResponse(std::shared_ptr<Mesh> &mesh){
     std::map<unsigned int, std::shared_ptr<Element> > Elements = mesh->GetElements();
 
     //Select the element response to be recorded.
-    if(strcasecmp(Response.c_str(),"strain") == 0){
+    if(strcasecmp(Response.c_str(),"STRAIN") == 0){
         for(unsigned int k = 0; k < IDs.size(); k++){
             //Gets the material strain.
             Eigen::MatrixXd Strain = Elements[IDs[k]]->GetStrain();
@@ -280,7 +286,7 @@ Recorder::WriteElementResponse(std::shared_ptr<Mesh> &mesh){
             }
         }
     }
-    else if(strcasecmp(Response.c_str(),"stress") == 0){
+    else if(strcasecmp(Response.c_str(),"STRESS") == 0){
         for(unsigned int k = 0; k < IDs.size(); k++){
             //Gets the material stress.
             Eigen::MatrixXd Stress = Elements[IDs[k]]->GetStress();
@@ -292,7 +298,7 @@ Recorder::WriteElementResponse(std::shared_ptr<Mesh> &mesh){
             }
         }
     }
-    else if(strcasecmp(Response.c_str(),"internalforce") == 0){
+    else if(strcasecmp(Response.c_str(),"INTERNALFORCE") == 0){
         for(unsigned int k = 0; k < IDs.size(); k++){
             //Internal force vector.
             Eigen::VectorXd force = Elements[IDs[k]]->ComputeInternalForces();
@@ -302,7 +308,7 @@ Recorder::WriteElementResponse(std::shared_ptr<Mesh> &mesh){
                 OutputFile << force(i) << " ";
         }
     }
-    else if(strcasecmp(Response.c_str(),"strainrate") == 0){
+    else if(strcasecmp(Response.c_str(),"STRAINRATE") == 0){
         for(unsigned int k = 0; k < IDs.size(); k++){
             //Gets the material stress.
             Eigen::MatrixXd StrainRate = Elements[IDs[k]]->GetStrainRate();
@@ -325,7 +331,7 @@ Recorder::WriteSectionResponse(std::shared_ptr<Mesh> &mesh){
     std::map<unsigned int, std::shared_ptr<Element> > Elements = mesh->GetElements();
 
     //Select the element response to be recorded.
-    if(strcasecmp(Response.c_str(),"strain") == 0){
+    if(strcasecmp(Response.c_str(),"STRAIN") == 0){
         for(unsigned int k = 0; k < IDs.size(); k++){
             //Gets the section strain matrix.
             Eigen::MatrixXd SecStrain = Elements[IDs[k]]->GetStrainAt(Position[0], Position[1]);
@@ -337,7 +343,7 @@ Recorder::WriteSectionResponse(std::shared_ptr<Mesh> &mesh){
             }
         }
     }
-    else if(strcasecmp(Response.c_str(),"stress") == 0){
+    else if(strcasecmp(Response.c_str(),"STRESS") == 0){
         for(unsigned int k = 0; k < IDs.size(); k++){
             //Gets the section strain matrix.
             Eigen::MatrixXd SecStress = Elements[IDs[k]]->GetStressAt(Position[0], Position[1]);
@@ -547,6 +553,10 @@ Recorder::WriteVTKFiles(std::shared_ptr<Mesh> &mesh, unsigned int step){
 
             //Gets the material stress.
             Eigen::VectorXd Strain = Elements[eTag]->GetVTKResponse("Strain");
+
+            //PATCH: Sets the DRM strains to be zero (visualization)
+            if(IsDRMElem[eTag]) Strain.fill(0.0);
+
             OutputFile << head4 << Strain.transpose() << "\n";
         }
 
@@ -561,6 +571,10 @@ Recorder::WriteVTKFiles(std::shared_ptr<Mesh> &mesh, unsigned int step){
 
             //Gets the material stress.
             Eigen::VectorXd Stress = Elements[eTag]->GetVTKResponse("Stress");
+
+            //PATCH: Sets the DRM strains to be zero (visualization)
+            if(IsDRMElem[eTag]) Stress.fill(0.0);
+
             OutputFile << head4 << Stress.transpose() << "\n";
         }
 
@@ -598,4 +612,10 @@ Recorder::GetSpacedName(std::string theFile, std::string toReplace){
     correctedFile = auxName;
 
     return correctedFile;
+}
+
+//Sets the possible DRM Element indexes. 
+void 
+Recorder::SetDRMParaviewInterface(std::map<unsigned int, bool>& DRMElems){
+    IsDRMElem = DRMElems;
 }

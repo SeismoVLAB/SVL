@@ -90,6 +90,10 @@ class Recorder{
         ///@return A Recorder pointer to store solution.
         std::unique_ptr<Recorder> CopyRecorder();
 
+        ///Return the recorder name
+        ///@return Provide a string with the name.
+        std::string GetName();
+
         ///Initialize the recorder.
         ///@param mesh The finite element Mesh object.  
         ///@param nsteps The number of time step of this simulation.  
@@ -106,6 +110,10 @@ class Recorder{
         ///Sets the combination's name.
         ///@param name The LoadCombo name.  
         void SetComboName(std::string name);
+
+        ///Sets the possible DRM Element indexes.
+        ///@param DRMElems Maps that specify if the Element is DRM. 
+        void SetDRMParaviewInterface(std::map<unsigned int, bool>& DRMElems);
         
     private:
         ///The name of the file to record.    
@@ -140,6 +148,9 @@ class Recorder{
 
         ///Nodal Local indexes for this partition.
         std::map<unsigned int, unsigned int> Tag;
+
+        ///Nodal Local indexes for this partition.
+        std::map<unsigned int, bool> IsDRMElem;
 
         ///Name of the recorder handler.
         std::ofstream OutputFile;
