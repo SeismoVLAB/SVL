@@ -1367,9 +1367,8 @@ ParseMesh(std::shared_ptr<Mesh> &theMesh, std::vector<std::shared_ptr<Recorder> 
         for(auto it = jsonFile["Recorders"].as_object().begin(); it != jsonFile["Recorders"].as_object().end(); ++it){
             //Recorder name and identifier.
             std::string name = it->second["name"].as<std::string>();
-
             std::string file = it->second["file"].as<std::string>();
-            unsigned int presicion = it->second["ndps"].as<int>();
+            unsigned int precision = it->second["ndps"].as<int>();
             unsigned int nsample = it->second["nsamp"].as<int>();
 
             //Creates a Recorder Object.
@@ -1379,7 +1378,7 @@ ParseMesh(std::shared_ptr<Mesh> &theMesh, std::vector<std::shared_ptr<Recorder> 
                 unsigned int features = it->second["features"].as<int>();
 
                 //Creates the Paraview Recorder object.
-                theRecorder = std::make_shared<Recorder>(file, name, features, nsample, presicion);
+                theRecorder = std::make_shared<Recorder>(file, name, features, nsample, precision);
             }
             else if(strcasecmp(name.c_str(),"SECTION") == 0){
                 unsigned int nlist = it->second["list"].size();
@@ -1395,7 +1394,7 @@ ParseMesh(std::shared_ptr<Mesh> &theMesh, std::vector<std::shared_ptr<Recorder> 
                     IDs[k] =  it->second["list"][k].as<int>();
 
                 //Creates the Paraview Recorder object.
-                theRecorder = std::make_shared<Recorder>(file, name, response, coord, IDs, nsample, presicion);
+                theRecorder = std::make_shared<Recorder>(file, name, response, coord, IDs, nsample, precision);
             }
             else{
                 std::string response = it->second["resp"].as<std::string>();
@@ -1406,7 +1405,7 @@ ParseMesh(std::shared_ptr<Mesh> &theMesh, std::vector<std::shared_ptr<Recorder> 
                     IDs[k] =  it->second["list"][k].as<int>();
 
                 //Creates the Point/Element Recorder object.
-                theRecorder = std::make_shared<Recorder>(file, name, response, IDs, nsample, presicion);
+                theRecorder = std::make_shared<Recorder>(file, name, response, IDs, nsample, precision);
             }
 
             //Adds the recorder to the analysis.
@@ -1536,7 +1535,7 @@ ParseAnalysis(std::shared_ptr<Mesh> &theMesh, std::unique_ptr<Analysis> &theAnal
 
 //Perform modification on the Mesh object as specified in json file
 void 
-UpateDomain(std::shared_ptr<Mesh>& UNUSED(theMesh), std::string UNUSED(InputFile)){
+UpdateDomain(std::shared_ptr<Mesh>& UNUSED(theMesh), std::string UNUSED(InputFile)){
     //TODO: Parse instruction in JSON to modify mesh
 }
 
@@ -1581,7 +1580,7 @@ RunFromJSON(bool parsefile){
             theMesh->NextSimulation();
 
             //Change the Mesh subdomain for next analysis
-            UpateDomain(theMesh, fileName);
+            UpdateDomain(theMesh, fileName);
         }
     }
 }
