@@ -1,3 +1,4 @@
+#include "Load.hpp"
 #include "Analysis.hpp"
 #include "Definitions.hpp"
 #include "Profiler.hpp"
@@ -74,6 +75,35 @@ Analysis::StartRecorders(std::shared_ptr<Mesh> &mesh, unsigned int nsteps){
     for(unsigned int k = 0; k < theRecorders.size(); k++){
         theRecorders[k]->SetComboName(name);
         theRecorders[k]->Initialize(mesh, nsteps);
+
+        //PATCH: This section is to remove the high values of stress/strain generated in the DRM element interface.
+        if(strcasecmp(theRecorders[k]->GetName().c_str(), "PARAVIEW") == 0){
+            std::vector<unsigned int> lTags = theLoadCombo->GetLoadCombination();
+            std::map<unsigned int, std::shared_ptr<Load> > Loads = mesh->GetLoads();
+
+            //There is a DRM Load Pattern Applied
+            for(unsigned int m = 0; m < lTags.size(); m++){
+                if( Loads[lTags[m]]->GetClassification() == 7 ){
+                    //The DRM Elements applied to this load pattern
+                    std::vector<unsigned int> DRMElems = Loads[lTags[m]]->GetElements();
+
+                    //Gets the element information from the mesh.
+                    std::map<unsigned int, std::shared_ptr<Element> > Elements = mesh->GetElements();
+
+                    std::map<unsigned int, bool> DRMConditions;
+                    for(auto it : Elements){
+                        auto &eTag = it.first;
+                        if( std::find(DRMElems.begin(), DRMElems.end(), eTag) != DRMElems.end() ){
+                            DRMConditions[eTag] = true;
+                        }
+                        else{
+                            DRMConditions[eTag] = false;
+                        }
+                    }
+                    theRecorders[k]->SetDRMParaviewInterface(DRMConditions);
+                }
+            }           
+        }
     }
 }
 

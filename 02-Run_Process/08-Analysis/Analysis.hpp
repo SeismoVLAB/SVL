@@ -35,6 +35,7 @@
 #include <ctime>
 #include <memory>
 #include <iostream>
+#include <algorithm>
 
 #include "Mesh.hpp"
 #include "Recorder.hpp"
