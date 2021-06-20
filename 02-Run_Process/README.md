@@ -54,17 +54,19 @@ Once **Seismo-VLAB** is compiled, write in a terminal (Linux/MacOSX) or command 
 and the following message will be printed:
 
 <pre>
-       _____      _                    _    ____          __            
-      / ___/___  (_)________ ___  ____| |  / / /   ____  / /_           
-      \__ \/ _ \/ / ___/ __ `__ \/ __ \ | / / /   / __ `/ __ \    
-     ___/ /  __/ /__  / / / / / / /_/ / |/ / /___/ /_/ / /_/ /          
-    /____/\___/_/____/_/ /_/ /_/\____/|___/_____/\__,_/_.___/          
+                ░                                              
+  ███████╗ ░░░░   ░░░░ ░░░░░░░ ░░░░ ██╗   ██╗ ██╗   ░░░  ░░░░  
+  ██╔════╝ ░    ░ ░    ░  ░  ░ ░  ░ ██║   ██║ ██║  ░   ░ ░   ░ 
+  ███████╗ ░░░  ░ ░░░░ ░  ░  ░ ░███╗██║   ██║ ██║  ░   ░ ░░░░  
+  ╚════██║ ░    ░    ░ ░  ░  ░ ░╚═░╝╚██╗ ██╔╝ ██║  ░░░░░ ░   ░ 
+  ███████║ ░░░░ ░ ░░░░ ░  ░  ░ ░░░░  ╚████╔╝  ███████╗ ░ ░░░░ 
+  ╚══════╝                            ╚═══╝   ╚══════╝           
                                                                         
-               (Seismo)s (V)irtual (Lab)oratory                         
+                  Seismo Virtual Laboratory                         
         Module for Serial and Parallel analysis of seismic              
    wave propagation and soil-structure interaction simulation           
    Copyright (C) 2020, The California Institute of Technology 
-                     All Rights Reserved.                               
+                    All Rights Reserved.                               
                                                                         
  Written by:                                         
    Danilo S. Kusanovic (dkusanov@caltech.edu)                           
