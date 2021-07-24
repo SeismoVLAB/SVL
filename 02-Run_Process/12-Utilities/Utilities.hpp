@@ -65,27 +65,27 @@ printLogo(){
         tm *timePtr = localtime(&t);
         unsigned int year = timePtr->tm_year + 1900;
 
-        std::cout << "                                                                       \n";
-        std::cout << "                   ░                                                   \n";
-        std::cout << "     ███████╗ ░░░░   ░░░░ ░░░░░░░ ░░░░ ██╗   ██╗ ██╗   ░░░  ░░░░       \n";
-        std::cout << "     ██╔════╝ ░    ░ ░    ░  ░  ░ ░  ░ ██║   ██║ ██║  ░   ░ ░   ░      \n";
-        std::cout << "     ███████╗ ░░░  ░ ░░░░ ░  ░  ░ ░███╗██║   ██║ ██║  ░   ░ ░░░░       \n";
-        std::cout << "     ╚════██║ ░    ░    ░ ░  ░  ░ ░╚═░╝╚██╗ ██╔╝ ██║  ░░░░░ ░   ░      \n";
-        std::cout << "     ███████║ ░░░░ ░ ░░░░ ░  ░  ░ ░░░░  ╚████╔╝  ███████╗ ░ ░░░░       \n";
-        std::cout << "     ╚══════╝                            ╚═══╝   ╚══════╝              \n";
-        std::cout << "                    Seismo Virtual Laboratory                          \n";
-        std::cout << "          Module for Serial and Parallel Analysis of seismic           \n";
-        std::cout << "      wave propagation and soil-structure interaction simulation       \n";
-        std::cout << " Copyright (C) " << year << ", The California Institute of Technology  \n";
-        std::cout << "                       All Rights Reserved.                            \n";
-        std::cout << "                                                                       \n";
-        std::cout << " \033[1;34mWritten by:                                        \033[1;0m\n";
-        std::cout << "   Danilo S. Kusanovic (dkusanov@caltech.edu)                          \n";
-        std::cout << "   Elnaz E. Seylabi    (elnaze@unr.edu)                                \n";
-        std::cout << "                                                                       \n";
-        std::cout << " \033[1;33mSupervised by:                                     \033[1;0m\n";
-        std::cout << "   Domniki M. Asimaki  (domniki@caltech.edu)                           \n";
-        std::cout << "                                                                       \n";
+        std::cout << "                                                                          \n";
+        std::cout << "                   ░                                                      \n";
+        std::cout << "     ███████╗ ░░░░   ░░░░ ░░░░░░░ ░░░░ ██╗   ██╗ ██╗   ░░░  ░░░░          \n";
+        std::cout << "     ██╔════╝ ░    ░ ░    ░  ░  ░ ░  ░ ██║   ██║ ██║  ░   ░ ░   ░         \n";
+        std::cout << "     ███████╗ ░░░  ░ ░░░░ ░  ░  ░ ░███╗██║   ██║ ██║  ░   ░ ░░░░          \n";
+        std::cout << "     ╚════██║ ░    ░    ░ ░  ░  ░ ░╚═░╝╚██╗ ██╔╝ ██║  ░░░░░ ░   ░         \n";
+        std::cout << "     ███████║ ░░░░ ░ ░░░░ ░  ░  ░ ░░░░  ╚████╔╝  ███████╗ ░ ░░░░          \n";
+        std::cout << "     ╚══════╝                            ╚═══╝   ╚══════╝                 \n";
+        std::cout << "                    Seismo Virtual Laboratory                             \n";
+        std::cout << "          Module for Serial and Parallel Analysis of seismic              \n";
+        std::cout << "      wave propagation and soil-structure interaction simulation          \n";
+        std::cout << "      Copyright (C) " << year << ", The California Institute of Technology\n";
+        std::cout << "                       All Rights Reserved.                               \n";
+        std::cout << "                                                                          \n";
+        std::cout << " \033[1;34mWritten by:                                           \033[1;0m\n";
+        std::cout << "   Danilo S. Kusanovic (dkusanov@caltech.edu)                             \n";
+        std::cout << "   Elnaz E. Seylabi    (elnaze@unr.edu)                                   \n";
+        std::cout << "                                                                          \n";
+        std::cout << " \033[1;33mSupervised by:                                        \033[1;0m\n";
+        std::cout << "   Domniki M. Asimaki  (domniki@caltech.edu)                              \n";
+        std::cout << "                                                                          \n";
     }
 }
 
