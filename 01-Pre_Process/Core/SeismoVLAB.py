@@ -170,7 +170,7 @@ def Entities2Processor(matSubdomain, secSubdomain, nodeSubdomain, massSubdomain,
                     magnitude = Entities['Functions'][fTag]['attributes']['mag']
                     attributes = {'name': fname, 'mag': magnitude, 'dir': fdir, 'list': nTags}
                     ToProcessor['Loads'][str(lTag)] = {'name': name, 'attributes': attributes}
-                elif fname == 'TIMESERIE':
+                elif fname[0:9] == 'TIMESERIE':
                     filepath = Entities['Functions'][fTag]['attributes']['file']
                     attributes = {'name': fname, 'file': filepath, 'dir': fdir, 'list': nTags}
                     ToProcessor['Loads'][str(lTag)] = {'name': name, 'attributes': attributes}
@@ -192,7 +192,7 @@ def Entities2Processor(matSubdomain, secSubdomain, nodeSubdomain, massSubdomain,
                     magnitude = Entities['Functions'][fTag]['attributes']['mag']
                     attributes = {'name': fname, 'type': lname, 'mag': magnitude, 'dir': fdir, 'list': eTags}
                     ToProcessor['Loads'][str(lTag)] = {'name': name, 'attributes': attributes}
-                elif fname == 'TIMESERIE':
+                elif fname[0:9] == 'TIMESERIE':
                     filepath = Entities['Functions'][fTag]['attributes']['file']
                     if lname == 'GENERALWAVE':
                         attributes = {'name': fname, 'type': lname, 'file': filepath, 'list': eTags}
@@ -521,7 +521,7 @@ def checkWarnings():
                 if nDOF != nDIR:
                     print('   *** Load[%s] (POINTLOAD) with Function[%s] (\'dir\') does not match Node[%s] (\'ndof\') ***' % (lTag,fTag,n))
             
-            #Check if TimeSerie file can be opened (local and then global address)
+            #Check if TimeSeries file can be opened (local and then global address)
             if 'file' in Entities['Functions'][fTag]['attributes']:
                 #Tries the path given by user
                 filename = Entities['Functions'][fTag]['attributes']['file']
@@ -545,7 +545,7 @@ def checkWarnings():
                 if nDIR != Options['dimension']:
                     print('   *** Load[%s] (ELEMENTLOAD) with Function[%s] (\'dir\') does not match Options (\'dimension\') ***' % (lTag,fTag))
 
-            #Check if TimeSerie file can be opened
+            #Check if TimeSeries file can be opened
             if 'file' in Entities['Functions'][fTag]['attributes']:
                 LOAD = Entities['Loads'][lTag]['attributes']['type'].upper()
                 filename = Entities['Functions'][fTag]['attributes']['file']
@@ -631,7 +631,7 @@ def checkWarnings():
                             Entities['Functions'][fTag]['attributes']['file'] = filepath
         elif Name == 'SUPPORTMOTION':
             nTag = Entities['Loads'][lTag]['attributes']['list']
-            #Check if TimeSerie file can be opened
+            #Check if TimeSeries file can be opened
             for n in nTag:
                 if 'file' in Entities['Supports'][n]:
                     filenames = Entities['Supports'][n]['file']
