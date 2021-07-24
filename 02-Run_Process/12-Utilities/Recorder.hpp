@@ -177,6 +177,11 @@ class Recorder{
         ///@param toReplace The string pattern to be replaced with. 
         ///@return String with the replaced pattern.
         std::string GetSpacedName(std::string theFile, std::string toReplace);
+
+        ///Windows patch for small values
+        ///@param U The vector to set threshold
+        ///@param WinTol The threshold value for windows machines
+        void SetThreshold(Eigen::VectorXd &U, double WinTol=1E-33);
 };
 
 #endif

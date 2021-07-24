@@ -475,6 +475,7 @@ Recorder::WriteVTKFiles(std::shared_ptr<Mesh> &mesh, unsigned int step){
             auto &nTag = it.first;
             //Get Node displacements.
             Eigen::VectorXd U = Nodes[nTag]->GetDisplacements();
+            SetThreshold(U);
 
             if(nDimensions == 2)
                 OutputFile << head4 << U(0) << " " << U(1) << " 0.00000\n";
@@ -492,6 +493,7 @@ Recorder::WriteVTKFiles(std::shared_ptr<Mesh> &mesh, unsigned int step){
             auto &nTag = it.first;
             //Get Node velocities.
             Eigen::VectorXd V = Nodes[nTag]->GetVelocities();
+            SetThreshold(V);
 
             if(nDimensions == 2)
                 OutputFile << head4 << V(0) << " " << V(1) << " 0.00000\n";
@@ -509,6 +511,7 @@ Recorder::WriteVTKFiles(std::shared_ptr<Mesh> &mesh, unsigned int step){
             auto &nTag = it.first;
             //Get Node accelerations
             Eigen::VectorXd A = Nodes[nTag]->GetAccelerations();
+            SetThreshold(A);
 
             if(nDimensions == 2)
                 OutputFile << head4 << A(0) << " " << A(1) << " 0.00000\n";
@@ -553,9 +556,12 @@ Recorder::WriteVTKFiles(std::shared_ptr<Mesh> &mesh, unsigned int step){
 
             //Gets the material stress.
             Eigen::VectorXd Strain = Elements[eTag]->GetVTKResponse("Strain");
+            SetThreshold(Strain);
 
             //PATCH: Sets the DRM strains to be zero (visualization)
-            if(IsDRMElem[eTag]) Strain.fill(0.0);
+            if(IsDRMElem[eTag]){
+                Strain.fill(0.0);
+            }
 
             OutputFile << head4 << Strain.transpose() << "\n";
         }
@@ -571,9 +577,12 @@ Recorder::WriteVTKFiles(std::shared_ptr<Mesh> &mesh, unsigned int step){
 
             //Gets the material stress.
             Eigen::VectorXd Stress = Elements[eTag]->GetVTKResponse("Stress");
+            SetThreshold(Stress);
 
             //PATCH: Sets the DRM strains to be zero (visualization)
-            if(IsDRMElem[eTag]) Stress.fill(0.0);
+            if(IsDRMElem[eTag]){
+                Stress.fill(0.0);
+            }
 
             OutputFile << head4 << Stress.transpose() << "\n";
         }
@@ -618,4 +627,13 @@ Recorder::GetSpacedName(std::string theFile, std::string toReplace){
 void 
 Recorder::SetDRMParaviewInterface(std::map<unsigned int, bool>& DRMElems){
     IsDRMElem = DRMElems;
+}
+
+//Windows patch for small values
+void 
+Recorder::SetThreshold(Eigen::VectorXd &U, double WinTol){
+    for(unsigned int k = 0; k < U.size(); k++){
+        if(fabs(U(k)) < WinTol)
+            U(k) = 0.0;
+    }
 }
