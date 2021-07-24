@@ -110,9 +110,9 @@ def GenerateFiberSection():
                 for pTag in Patches:
                     patch = Patches[pTag]
                     tag = patch['fiber']
-                    nfibz = patch['nfibz']
-                    nfiby = patch['nfiby']
                     if patch['name'].upper() == 'RECTANGULAR':
+                        nfibz = patch['nfibz']
+                        nfiby = patch['nfiby']
                         points = np.matrix(patch['coords'])
                         DX = (points[1,0] - points[0,0])/nfibz
                         DY = (points[1,1] - points[0,1])/nfiby
@@ -124,7 +124,27 @@ def GenerateFiberSection():
                                 Ai.append(abs(DX*DY))
                                 Tags.append(tag)
                     elif patch['name'].upper() == 'CIRCULAR':
-                        pass
+                        nfibr = patch['nfibr']
+                        nfibt = patch['nfibt']
+                        center = patch['center']
+                        points = np.matrix(patch['coords'])
+                        r1 = points[0,0]
+                        DR = np.abs((points[1,0] - points[0,0]))/nfibr
+                        DT = np.abs((points[1,1] - points[0,1]))/nfibt
+                        for j in range(nfibr):
+                            for i in range(nfibt):
+                                #Center fiber only for Solid Circular section
+                                if j == 0 and r1 == 0 and np.abs((points[1,1] - points[0,1])) == 360:
+                                    zi.append(center[0])
+                                    yi.append(center[1])
+                                    Ai.append(np.pi*DR**2)
+                                    Tags.append(tag)
+                                    break
+                                coords = points[0,:] + np.array([DR*(0.5 + j), DT*(0.5 + i)])
+                                zi.append(center[0] - coords[0,0]*np.cos(np.radians(coords[0,1])))
+                                yi.append(center[1] + coords[0,0]*np.sin(np.radians(coords[0,1])))
+                                Ai.append(0.5*np.radians(DR)*DT*(2.0*r1 + (2*j+1)*DR))
+                                Tags.append(tag)
                     '''
                     elif patch['name'].upper() == 'QUADRILATERAL':
                         DX = 2.0/nfibz
@@ -175,7 +195,29 @@ def GenerateFiberSection():
                                 Ai.append(area)
                                 Tags.append(tag)
                     elif layer['name'].upper() == 'ARCH':
-                        pass
+                        angles = layer['angle']
+                        radius = layer['radius']
+                        center = layer['center']
+                        if nfib == 1:
+                            xm = 0.5*(angles[0] + angles[1])
+                            zi.append(center[0] - radius*np.cos(np.radians(xm)))
+                            yi.append(center[1] + radius*np.sin(np.radians(xm)))
+                            Ai.append(area)
+                            Tags.append(tag)
+                        elif nfib == 2:
+                            for k in range(nfib):
+                                zi.append(center[0] - radius*np.cos(np.radians(angles[k])))
+                                yi.append(center[1] + radius*np.sin(np.radians(angles[k])))
+                                Ai.append(area)
+                                Tags.append(tag)
+                        else:
+                            D = np.abs((angles[1] - angles[0]))/nfib if abs(angles[1] - angles[0]) == 360 else np.abs((angles[1] - angles[0]))/(nfib - 1)
+                            for k in range(nfib):
+                                alpha = angles[0] + D*k
+                                zi.append(center[0] - radius*np.cos(np.radians(alpha)))
+                                yi.append(center[1] + radius*np.sin(np.radians(alpha)))
+                                Ai.append(area)
+                                Tags.append(tag)
             attributes = {'zi': zi, 'yi': yi, 'Ai': Ai, 'fiber': Tags}
             if 'h' in section['attributes']:
                 attributes['h'] = section['attributes']['h']
