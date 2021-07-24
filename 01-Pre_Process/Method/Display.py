@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: Utf-8 -*-
 
+import os
 import numpy as np
 from Core.Utilities import debugInfo, setFileExtension
 from Core.Definitions import Entities, Options, SVLclasses
@@ -27,9 +28,14 @@ def renderData(filename=''):
     -------
     The ParaView VTK file
     """
+    #Create the Folder to store file
+    dirName = Options['path'] + '/' + 'Paraview'
+    if not os.path.exists(dirName):
+        os.mkdir(dirName)
+
     #Pre-defined VTK ParaView file name
     filename = setFileExtension(filename, '.vtu')
-    filepath = Options['path'] + '/' + filename
+    filepath = Options['path'] + '/Paraview/' + filename
     nNodes   = len(Entities['Nodes'])
     nElems   = len(Entities['Elements'])
 
