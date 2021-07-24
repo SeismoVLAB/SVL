@@ -766,7 +766,7 @@ def Coords2Tag(mesh, xp, tol=1E-6):
             Dictionary that contains the node information in SVL format
         'Elements'  : dict
             Dictionary that contains the element information in SVL format
-    xp: array
+    xp: numpy matrix
         The coordinates (matrix) to be find
     tol: float
         Tolerance for which the node is accepted
