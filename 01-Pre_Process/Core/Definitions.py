@@ -160,6 +160,9 @@ SVLclasses = {
         'LIN2DWIDEFLANGE': {
             'dim': [2]
         },
+        'LIN2DUSERDEFINED': {
+            'dim': [2]
+        },
         'LIN3DANGLE': {
             'dim': [3]
         },
@@ -167,7 +170,6 @@ SVLclasses = {
             'dim': [3]
         },
         'LIN3DCIRCULAR': {
-            'color': [255,0,255], 
             'dim': [3]
         },
         'LIN3DCIRCULARTUBE': {
@@ -186,6 +188,9 @@ SVLclasses = {
             'dim': [3]
         },
         'LIN3DWIDEFLANGE': {
+            'dim': [3]
+        },
+        'LIN3DUSERDEFINED': {
             'dim': [3]
         },
         'FIB3DLINESECTION': {
