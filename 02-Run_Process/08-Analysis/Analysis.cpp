@@ -89,8 +89,8 @@ Analysis::StartRecorders(std::shared_ptr<Mesh> &mesh, unsigned int nsteps){
 
                     //Gets the element information from the mesh.
                     std::map<unsigned int, std::shared_ptr<Element> > Elements = mesh->GetElements();
-
                     std::map<unsigned int, bool> DRMConditions;
+                    
                     for(auto it : Elements){
                         auto &eTag = it.first;
                         if( std::find(DRMElems.begin(), DRMElems.end(), eTag) != DRMElems.end() ){
