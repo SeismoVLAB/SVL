@@ -73,6 +73,8 @@
 #include "Lin2DCircularTube.hpp"
 #include "Lin3DCircularTube.hpp"
 #include "Lin3DThinArea.hpp"
+#include "Lin2DUserDefined.hpp"
+#include "Lin3DUserDefined.hpp"
 
 #include "Fib3DLineSection.hpp"
 
@@ -663,6 +665,28 @@ ParseMesh(std::shared_ptr<Mesh> &theMesh, std::vector<std::shared_ptr<Recorder> 
 
                     //Instantiate the section object.
                     theSection = std::make_unique<Lin3DWideFlange>(h, b, tw, tf, theMesh->GetMaterial(matTag), theta, ip);
+                }
+                else if(strcasecmp(Name.c_str(),"Lin2DUserDefined") == 0){
+                    std::vector<double> prop(3, 0.0);
+                    prop[0] = it->second["attributes"]["A"].as<double>();
+                    prop[1] = it->second["attributes"]["As2"].as<double>(0.0);
+                    prop[2] = it->second["attributes"]["I33"].as<double>();
+
+                    //Instantiate the section object.
+                    theSection = std::make_unique<Lin2DUserDefined>(prop, theMesh->GetMaterial(matTag), theta);
+                }
+                else if(strcasecmp(Name.c_str(),"Lin3DUserDefined") == 0){
+                    std::vector<double> prop(7, 0.0);
+                    prop[0] = it->second["attributes"]["A"].as<double>();
+                    prop[3] = it->second["attributes"]["J"].as<double>();
+                    prop[1] = it->second["attributes"]["As2"].as<double>(0.0);
+                    prop[2] = it->second["attributes"]["As3"].as<double>(0.0);
+                    prop[4] = it->second["attributes"]["I22"].as<double>();
+                    prop[5] = it->second["attributes"]["I33"].as<double>();
+                    prop[6] = it->second["attributes"]["I23"].as<double>(0.0);
+
+                    //Instantiate the section object.
+                    theSection = std::make_unique<Lin3DUserDefined>(prop, theMesh->GetMaterial(matTag), theta);
                 }
                 else if(strcasecmp(Name.c_str(),"Lin3DThinArea") == 0){
                     double th = it->second["attributes"]["th"].as<double>();
