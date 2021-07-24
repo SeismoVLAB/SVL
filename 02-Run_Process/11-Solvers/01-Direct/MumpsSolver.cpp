@@ -81,7 +81,7 @@ MumpsSolver::SolveSystem(Eigen::SparseMatrix<double> &A, Eigen::VectorXd &b){
         }
     }
 
-    //Pointer to Upper-Triangular Matrix indeces.
+    //Pointer to Upper-Triangular Matrix indices.
     int *irn = new int[nz];
     int *jcn = new int[nz];
     double *ptrs = new double[nz];
