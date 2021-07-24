@@ -3,6 +3,7 @@
 
 import os
 import numpy as np
+from scipy import signal
 import concurrent.futures
 from scipy import integrate
 from Core.Utilities import *
@@ -209,7 +210,7 @@ def Ricker(parameters, option=""):
     nt = int(Ts/dt + 1)
     t = np.linspace(0.0, Ts, nt)
 
-    #%Input Signal:
+    #Input Signal:
     beta = np.square(np.pi*f0*(t - to))
     vels = Ap*np.multiply(1 - 2.0*beta, np.exp(-beta))
     disp = integrate.cumtrapz(vels, t, initial=0) 
@@ -362,13 +363,54 @@ def SVbackground2Dfield(Values, t, X, X0, Xmin, nt, fTag):
 
     return Z
 
-def RHbackground2Dfield(Values, Vp, Vs, Vr, w, kR, qR, sR, x0, xmin, x, y):
+def SVbackground2DfieldCritical(Values, SP, SS, Vp, Vs, cj, sj, p, w, xp, xmin):
     """
+    The script is to calculate the displacement, velocity or acceleration components 
+    of a 2D rayleigh wave by using real FFT and inverse real FFT, accounting for both 
+    amplitude and phase or the incident angle larger than critical one.
     @visit  https://github.com/SeismoVLAB/SVL\n
     @author Kien T. Nguyen 2021
     """
-    #x = x - xmin[0]
-    y = x0[1] - y
+    #TODO: This is not working and needs to be corrected
+    x     = xp[0]
+    y     = xp[1]
+    x0    = xmin[0]
+    y0    = xmin[1]
+    xrel  = x - x0
+    yrel  = y0 - y 
+    FSVin = np.fft.rfft(Values)
+    
+    #Horizontal U1, U2, U3 due to upgoing SV, downgoing P, downgoing SV
+    U1 = cj*FSVin*np.exp(-1j*(p*xrel-cj/Vs*yrel)*w)
+    U2 = Vp*p*SP*np.exp(np.sqrt(p*p-1.0/Vp/Vp)*y*w)*FSVin*np.exp(-1j*(p*xrel-cj/Vs*y0)*w)
+    U3 = cj*SS*FSVin*np.exp(-1j*(p*xrel-cj/Vs*(y+y0))*w)
+    
+    #Vertical V1, V2, V3 due to upgoing SV, downgoing P, downgoing SV
+    V1 = -sj*FSVin*np.exp(-1j*(p*xrel-cj/Vs*yrel)*w)
+    V2 = -1j*np.sqrt(Vp*Vp*p*p-1.0)*SP*np.exp(np.sqrt(p*p-1.0/Vp/Vp)*y*w)*FSVin*np.exp(-1j*(p*xrel-cj/Vs*y0)*w)
+    V3 = sj*SS*FSVin*np.exp(-1j*(p*xrel-cj/Vs*(y+y0))*w)
+        
+    U_fft = U1 + U2 + U3
+    V_fft = V1 + V2 + V3
+    
+    U = np.real(np.fft.irfftn(U_fft))
+    V = np.real(np.fft.irfftn(V_fft))
+
+    #Gathers the field components
+    Z = np.stack([U,V], axis=1)
+
+    return Z
+
+def RHbackground2Dfield(Values, t, Vp, Vs, Vr, w, kR, qR, sR, x0, xmin, x1, x2):
+    """
+    The script is to calculate the displacement, velocity or acceleration components 
+    of a 2D rayleigh wave by using real FFT and inverse real FFT, accounting for both 
+    amplitude and phase
+    @visit  https://github.com/SeismoVLAB/SVL\n
+    @author Kien T. Nguyen 2021
+    """
+    x = x1
+    y = x0[1] - x2
     Bn = np.fft.rfft(Values)
     An = 2.0*(Vs/Vr)**2*Bn # scale factor An = A*kR in I.9 Viktorov
 
@@ -376,7 +418,7 @@ def RHbackground2Dfield(Values, Vp, Vs, Vr, w, kR, qR, sR, x0, xmin, x, y):
     U_fft = An*(np.exp(-qR*y)-(1.0-Vr**2.0/2.0/Vs**2)*np.exp(-sR*y))*np.exp(-1j*x/Vr*w)
     V_fft = np.exp(1j*(-np.pi/2.0))*An*np.sqrt(1.0-Vr**2.0/Vp**2.0)*(np.exp(-qR*y)-1.0/(1.0-Vr**2/2.0/Vs**2.0)*np.exp(-sR*y))*np.exp(-1j*x/Vr*w)
     
-    U = np.real(np.fft.irfftn(U_fft))
+    U =  np.real(np.fft.irfftn(U_fft))
     V = -np.real(np.fft.irfftn(V_fft))
 
     #Gathers the field components
@@ -384,9 +426,10 @@ def RHbackground2Dfield(Values, Vp, Vs, Vr, w, kR, qR, sR, x0, xmin, x, y):
 
     return Z
 
-def SHbackground3Dfield(Values, t, X, X0, Xmin, nt, fTag):
+def SHbackground3Dfield(Values, t, X, X0, Xmin, di, nt, fTag):
     """
     """
+    #TODO: This is not working and needs to be corrected
     #Compute the 3D Field Components.
     U = np.zeros(nt)
     V = np.zeros(nt)
@@ -397,7 +440,7 @@ def SHbackground3Dfield(Values, t, X, X0, Xmin, nt, fTag):
 
     return Z
 
-def SVbackground3Dfield(Values, t, X, X0, Xmin, nt, fTag):
+def SVbackground3Dfield(Values, t, X, X0, Xmin, di, nt, fTag):
     """
     This function generates the 3D DRM field to be specified at a particular node. The 
     displacement,, velocity and acceleration fields are computed assuming homogenous
@@ -415,11 +458,8 @@ def SVbackground3Dfield(Values, t, X, X0, Xmin, nt, fTag):
 
     #Signal properties
     angle   = Entities['Functions'][fTag]['attributes']['theta']
-    azimut  = Entities['Functions'][fTag]['attributes']['phi']
-    phi     = azimut*np.pi/180.0
     theta_s = angle*np.pi/180.0
     theta_p = np.arcsin(Vp/Vs*np.sin(theta_s))
-    di      = np.array([np.cos(phi), np.sin(phi)]) 
 
     #Reference time and coordinates for signal
     x_rela =  X[0] - X0[0]
@@ -463,11 +503,15 @@ def SVbackground3Dfield(Values, t, X, X0, Xmin, nt, fTag):
 
     return Z
 
-def RHbackground3Dfield(Values, t, X, X0, Xmin, nt, fTag):
+def SVbackground3DfieldCritical(Values, SP, SS, Vp, Vs, cj, sj, p, w, di, xp, xmin, nt):
     """
+    The script is to calculate the displacement, velocity or acceleration components 
+    of a 3D rayleigh wave by using real FFT and inverse real FFT, accounting for both 
+    amplitude and phase or the incident angle larger than critical one.
     @visit  https://github.com/SeismoVLAB/SVL\n
     @author Kien T. Nguyen 2021
     """
+    #TODO: This is not working and needs to be corrected
     #Compute the 3D Field Components.
     U = np.zeros(nt)
     V = np.zeros(nt)
@@ -477,6 +521,49 @@ def RHbackground3Dfield(Values, t, X, X0, Xmin, nt, fTag):
     Z = np.stack([U,V,W], axis=1)
 
     return Z
+
+def RHbackground3Dfield(Values, Vp, Vs, Vr, w, kR, qR, sR, x0, xmin, di, x1, x2, x3):
+    """
+    The script is to calculate the displacement, velocity or acceleration components 
+    of a 3D rayleigh wave by using real FFT and inverse real FFT, accounting for both 
+    amplitude and phase
+    @visit  https://github.com/SeismoVLAB/SVL\n
+    @author Kien T. Nguyen 2021
+    """
+    x = x1*di[0] + x2*di[1]
+    y = x0[2] - x3
+    Bn = np.fft.rfft(Values)
+    An = 2.0*(Vs/Vr)**2*Bn # scale factor An = A*kR in I.9 Viktorov
+
+    #Compute the 2D Field Components.
+    U_fft = An*(np.exp(-qR*y)-(1.0-Vr**2.0/2.0/Vs**2)*np.exp(-sR*y))*np.exp(-1j*x/Vr*w)
+    V_fft = np.exp(1j*(-np.pi/2.0))*An*np.sqrt(1.0-Vr**2.0/Vp**2.0)*(np.exp(-qR*y)-1.0/(1.0-Vr**2/2.0/Vs**2.0)*np.exp(-sR*y))*np.exp(-1j*x/Vr*w)
+
+    #Compute the 3D Field Components.
+    U = di[0]*np.real(np.fft.irfftn(U_fft))
+    V = di[1]*np.real(np.fft.irfftn(U_fft))
+    W = -np.real(np.fft.irfftn(V_fft))
+
+    #Gathers the field components
+    Z = np.stack([U,V,W], axis=1)
+
+    return Z
+
+def ComputeSVCriticalAngle(fTag):
+    """
+    @visit  https://github.com/SeismoVLAB/SVL\n
+    @author Kien T. Nguyen 2021
+    """
+    mTag = Entities['Functions'][fTag]['attributes']['material']
+    Es  = Entities['Materials'][mTag]['attributes']['E']
+    nu  = Entities['Materials'][mTag]['attributes']['nu']
+    rho = Entities['Materials'][mTag]['attributes']['rho']
+    Vs  = np.sqrt(Es/2.0/rho/(1.0 + nu)) 
+    Vp  = Vs*np.sqrt(2.0*(1.0 - nu)/(1.0 - 2.0*nu))
+    Angle = Entities['Functions'][fTag]['attributes']['theta']*np.pi/180.0
+    Theta = Vp/Vs*np.sin(Angle)
+
+    return Theta, Vs, Vp
 
 def GetRayleighVelocity(Vs, nu):
     """
@@ -526,19 +613,50 @@ def GenerateDRMFiles():
 
                 nt = len(t)
                 nd = Options['dimension']
+
+                #Tapper fucntion
+                shift = 0 if (nt % 2) == 0 else 1
+                window = signal.tukey(nt, alpha = 0.15)
+                Disp *= window
+                Vels *= window
+                Accel *= window
                 
                 if nd == 2:
                     if funOption.upper() == 'SV':
-                        #PlaneWave angles are not provided 
                         if 'theta' not in Entities['Functions'][fTag]['attributes']:
                             Entities['Functions'][fTag]['attributes']['theta'] = 0.0
-                        with concurrent.futures.ProcessPoolExecutor() as executor: 
-                            for k, n in enumerate(nodes):
-                                x = Entities['Nodes'][n]['coords']
-                                U = SVbackground2Dfield(Disp, t, x, x0, xmin, nt, fTag)
-                                V = SVbackground2Dfield(Vels, t, x, x0, xmin, nt, fTag)
-                                A = SVbackground2Dfield(Accel, t, x, x0, xmin, nt, fTag)        
-                                executor.submit(WriteDRMFile, dirName, funName, fTag, U, V, A, nt, 6, n, conditions[k])
+                        thetacr, Vs, Vp = ComputeSVCriticalAngle(fTag)
+
+                        if thetacr < 1.0:
+                            with concurrent.futures.ProcessPoolExecutor() as executor: 
+                                for k, n in enumerate(nodes):
+                                    x = Entities['Nodes'][n]['coords']
+                                    U = SVbackground2Dfield(Disp, t, x, x0, xmin, nt, fTag)
+                                    V = SVbackground2Dfield(Vels, t, x, x0, xmin, nt, fTag)
+                                    A = SVbackground2Dfield(Accel, t, x, x0, xmin, nt, fTag)        
+                                    executor.submit(WriteDRMFile, dirName, funName, fTag, U, V, A, nt, 6, n, conditions[k])
+                        else:
+                            angle = Entities['Functions'][fTag]['attributes']['theta']
+                            sj = np.sin(angle/180.0*np.pi)
+                            cj = np.cos(angle/180.0*np.pi)
+                            p  = sj/Vs
+                            ci = 1j*np.sqrt(Vp**2*p**2-1.0)
+
+                            cons1 = 1.0/Vs/Vs-2.0*p*p
+                            cons2 = 4.0*p*p*ci*cj/Vs/Vp
+
+                            SP = 4.0*Vs/Vp*p*cj/Vs*cons1/(cons1*cons1 + cons2)
+                            SS = (cons1*cons1-cons2)/(cons1*cons1 + cons2)
+                            nn = np.arange(np.floor_divide(nt,2) + shift)
+                            w  = 2*np.pi/t[-1]*nn
+
+                            with concurrent.futures.ProcessPoolExecutor() as executor: 
+                                for k, n in enumerate(nodes):
+                                    x = Entities['Nodes'][n]['coords']
+                                    U = SVbackground2DfieldCritical(Disp, SP, SS, Vp, Vs, cj, sj, p, w, x, xmin)
+                                    V = SVbackground2DfieldCritical(Vels, SP, SS, Vp, Vs, cj, sj, p, w, x, xmin)
+                                    A = SVbackground2DfieldCritical(Accel,SP, SS, Vp, Vs, cj, sj, p, w, x, xmin)        
+                                    executor.submit(WriteDRMFile, dirName, funName, fTag, U, V, A, nt, 6, n, conditions[k])
                     elif funOption.upper() == 'RAYLEIGH':
                         mTag = Entities['Functions'][fTag]['attributes']['material']
                         Es  = Entities['Materials'][mTag]['attributes']['E']
@@ -549,7 +667,7 @@ def GenerateDRMFiles():
                         Vp = Vs*np.sqrt(2.0*(1.0 - nu)/(1.0 - 2.0*nu))
                         Vr = GetRayleighVelocity(Vs,nu)
 
-                        nn  = np.arange(np.rint(nt/2)+1)
+                        nn = np.arange(np.floor_divide(nt,2) + shift)
                         w  = 2*np.pi/t[-1]*nn
                         kR = 1.0/Vr*w
                         qR = np.sqrt(1.0-(Vr/Vp)**2)*kR
@@ -558,41 +676,88 @@ def GenerateDRMFiles():
                         with concurrent.futures.ProcessPoolExecutor() as executor:
                             for k, n in enumerate(nodes):
                                 x = Entities['Nodes'][n]['coords']  
-                                U = RHbackground2Dfield(Disp, Vp, Vs, Vr, w, kR, qR, sR, x0, xmin, x[0], x[1])
-                                V = RHbackground2Dfield(Vels, Vp, Vs, Vr, w, kR, qR, sR, x0, xmin, x[0], x[1])
-                                A = RHbackground2Dfield(Accel, Vp, Vs, Vr, w, kR, qR, sR, x0, xmin, x[0], x[1])
+                                U = RHbackground2Dfield(Disp, t, Vp, Vs, Vr, w, kR, qR, sR, x0, xmin, x[0], x[1])
+                                V = RHbackground2Dfield(Vels, t, Vp, Vs, Vr, w, kR, qR, sR, x0, xmin, x[0], x[1])
+                                A = RHbackground2Dfield(Accel, t, Vp, Vs, Vr, w, kR, qR, sR, x0, xmin, x[0], x[1])
                                 executor.submit(WriteDRMFile, dirName, funName, fTag, U, V, A, nt, 6, n, conditions[k])
                     else:
                         print('\x1B[31m ERROR \x1B[0m: The specified PLANEWAVE (2D) option (=%s) is not recognized' % funOption)
                 elif nd == 3:
+                    if 'phi' not in Entities['Functions'][fTag]['attributes']:
+                        Entities['Functions'][fTag]['attributes']['phi'] = 0.0
+
+                    #The wave direction on horizontal plane
+                    azimut  = Entities['Functions'][fTag]['attributes']['phi']
+                    phi     = azimut*np.pi/180.0
+                    di      = np.array([np.cos(phi), np.sin(phi)]) 
+
                     if funOption.upper() == 'SH':
                         with concurrent.futures.ProcessPoolExecutor() as executor: 
                             for k, n in enumerate(nodes):
                                 x = Entities['Nodes'][n]['coords']
-                                U = SHbackground3Dfield(Disp, t, x, x0, xmin, nt, fTag)
-                                V = SHbackground3Dfield(Vels, t, x, x0, xmin, nt, fTag)
-                                A = SHbackground3Dfield(Accel, t, x, x0, xmin, nt, fTag)
+                                U = SHbackground3Dfield(Disp, t, x, x0, xmin, di, nt, fTag)
+                                V = SHbackground3Dfield(Vels, t, x, x0, xmin, di, nt, fTag)
+                                A = SHbackground3Dfield(Accel, t, x, x0, xmin, di, nt, fTag)
                                 executor.submit(WriteDRMFile, dirName, funName, fTag, U, V, A, nt, 9, n, conditions[k])
                     elif funOption.upper() == 'SV':
-                        #PlaneWave angles are not provided 
                         if 'theta' not in Entities['Functions'][fTag]['attributes']:
                             Entities['Functions'][fTag]['attributes']['theta'] = 0.0
                         if 'phi' not in Entities['Functions'][fTag]['attributes']:
                             Entities['Functions'][fTag]['attributes']['phi'] = 0.0
-                        with concurrent.futures.ProcessPoolExecutor() as executor: 
-                            for k, n in enumerate(nodes):
-                                x = Entities['Nodes'][n]['coords']
-                                U = SVbackground3Dfield(Disp, t, x, x0, xmin, nt, fTag)
-                                V = SVbackground3Dfield(Vels, t, x, x0, xmin, nt, fTag)
-                                A = SVbackground3Dfield(Accel, t, x, x0, xmin, nt, fTag)        
-                                executor.submit(WriteDRMFile, dirName, funName, fTag, U, V, A, nt, 9, n, conditions[k])
+                        thetacr, Vs, Vp = ComputeSVCriticalAngle(fTag)
+
+                        if thetacr < 1.0:
+                            with concurrent.futures.ProcessPoolExecutor() as executor: 
+                                for k, n in enumerate(nodes):
+                                    x = Entities['Nodes'][n]['coords']
+                                    U = SVbackground3Dfield(Disp, t, x, x0, xmin, di, nt, fTag)
+                                    V = SVbackground3Dfield(Vels, t, x, x0, xmin, di, nt, fTag)
+                                    A = SVbackground3Dfield(Accel, t, x, x0, xmin, di, nt, fTag)        
+                                    executor.submit(WriteDRMFile, dirName, funName, fTag, U, V, A, nt, 9, n, conditions[k])
+                        else:
+                            angle = Entities['Functions'][fTag]['attributes']['theta']
+                            sj = np.sin(angle/180.0*np.pi)
+                            cj = np.cos(angle/180.0*np.pi)
+                            p  = sj/Vs
+                            ci = 1j*np.sqrt(Vp**2*p**2-1.0)
+
+                            cons1 = 1.0/Vs/Vs-2.0*p*p
+                            cons2 = 4.0*p*p*ci*cj/Vs/Vp
+
+                            SP = 4.0*Vs/Vp*p*cj/Vs*cons1/(cons1*cons1 + cons2)
+                            SS = (cons1*cons1-cons2)/(cons1*cons1 + cons2)
+                            nn = np.arange(np.floor_divide(nt,2) + shift)
+                            w  = 2*np.pi/t[-1]*nn
+
+                            with concurrent.futures.ProcessPoolExecutor() as executor: 
+                                for k, n in enumerate(nodes):
+                                    x = Entities['Nodes'][n]['coords']
+                                    U = SVbackground3DfieldCritical(Disp, SP, SS, Vp, Vs, cj, sj, p, w, di, x, xmin, nt)
+                                    V = SVbackground3DfieldCritical(Vels, SP, SS, Vp, Vs, cj, sj, p, w, di, x, xmin, nt)
+                                    A = SVbackground3DfieldCritical(Accel,SP, SS, Vp, Vs, cj, sj, p, w, di, x, xmin, nt)        
+                                    executor.submit(WriteDRMFile, dirName, funName, fTag, U, V, A, nt, 9, n, conditions[k])
                     elif funOption.upper() == 'RAYLEIGH':
+                        mTag = Entities['Functions'][fTag]['attributes']['material']
+                        Es  = Entities['Materials'][mTag]['attributes']['E']
+                        nu  = Entities['Materials'][mTag]['attributes']['nu']
+                        rho = Entities['Materials'][mTag]['attributes']['rho']
+                        Vs  = np.sqrt(Es/2.0/rho/(1.0 + nu)) 
+
+                        Vp = Vs*np.sqrt(2.0*(1.0 - nu)/(1.0 - 2.0*nu))
+                        Vr = GetRayleighVelocity(Vs,nu)
+
+                        nn = np.arange(np.floor_divide(nt,2) + shift)
+                        w  = 2*np.pi/t[-1]*nn
+                        kR = 1.0/Vr*w
+                        qR = np.sqrt(1.0-(Vr/Vp)**2)*kR
+                        sR = np.sqrt(1.0-(Vr/Vs)**2)*kR
+
                         with concurrent.futures.ProcessPoolExecutor() as executor:
                             for k, n in enumerate(nodes):
                                 x = Entities['Nodes'][n]['coords']
-                                U = RHbackground3Dfield(Disp, t, x, x0, xmin, nt, fTag)
-                                V = RHbackground3Dfield(Vels, t, x, x0, xmin, nt, fTag)
-                                A = RHbackground3Dfield(Accel, t, x, x0, xmin, nt, fTag)
+                                U = RHbackground3Dfield(Disp, Vp, Vs, Vr, w, kR, qR, sR, x0, xmin, di, x[0], x[1], x[2])
+                                V = RHbackground3Dfield(Vels, Vp, Vs, Vr, w, kR, qR, sR, x0, xmin, di, x[0], x[1], x[2])
+                                A = RHbackground3Dfield(Accel, Vp, Vs, Vr, w, kR, qR, sR, x0, xmin, di, x[0], x[1], x[2])
                                 executor.submit(WriteDRMFile, dirName, funName, fTag, U, V, A, nt, 9, n, conditions[k])
                     else:
                         print('\x1B[31m ERROR \x1B[0m: The specified PLANEWAVE (3D) option (=%s) is not recognized' % funOption)
