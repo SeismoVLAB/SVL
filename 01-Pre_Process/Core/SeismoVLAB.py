@@ -736,9 +736,6 @@ def CreateRunAnalysisFiles(plot=False):
     -------
     None
     """
-    #Creates the fiber section
-    GenerateFiberSection()
-
     #Enforce diaphragm constraints
     ApplyConstraints()
 
