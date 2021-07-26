@@ -30,13 +30,13 @@ def parseFile(filepath=None, fileformat=None):
     if fileformat.upper() == 'JSON':
         mesh = parseJSON(filepath)
     elif fileformat.upper() == 'ANSYS':
-        mesh = parseGMSH(filepath)
+        mesh = parseANSYS(filepath)
     elif fileformat.upper() == 'ETABS':
         mesh = parseETABS(filepath)
     elif fileformat.upper() == 'SAP':
         mesh = parseSAP(filepath)
     elif fileformat.upper() == 'ABAQUS':
-        mesh = parseGMSH(filepath)
+        mesh = parseABAQUS(filepath)
     else:
         mesh = {}
         info = debugInfo(2)
