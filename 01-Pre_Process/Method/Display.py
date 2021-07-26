@@ -155,14 +155,16 @@ def renderData(filename=''):
             Paraviewfile.write("%d " % SVLclasses['Elements'][name]['group'])
 
         Paraviewfile.write("\n%s" % head4)
-        Paraviewfile.write("</DataArray>\n%s" % head4)
 
         if len(Options['partition']) != 0:
+            Paraviewfile.write("</DataArray>\n%s" % head4)
             Paraviewfile.write("<DataArray type=\"Int32\" Name=\"DomainPartition\" format=\"ascii\">\n%s" % head4)
 
             for k in Options['partition']:
                 Paraviewfile.write("%d " % k)
             Paraviewfile.write("\n%s" % head4)
+            Paraviewfile.write("</DataArray>\n%s" % head3)
+        else:
             Paraviewfile.write("</DataArray>\n%s" % head3)
 
         Paraviewfile.write("</CellData>\n%s" % head2)
