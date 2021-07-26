@@ -2,8 +2,9 @@
 # -*- coding: Utf-8 -*-
 
 import numpy as np
-from Method.Remove import delConstraint
 from Core.Utilities import debugInfo
+from Method.Remove import delConstraint
+from Method.Compute import GenerateFiberSection
 from Core.Definitions import Entities, Options, ConvergeTest, SolverOption
 
 def addNode(tag=np.nan, ndof=0, coords=[], freedof=[], totaldof=[]):
@@ -457,6 +458,8 @@ def addSection(tag=np.nan, name='Unknown', model='Unknown', attributes={}):
 
     #Check whether the Section exists
     if tag not in Entities['Sections']:
+        if model.upper() == 'FIBER':
+            attributes = GenerateFiberSection(attributes)
         Entities['Sections'][tag] = {'name': name.upper(), 'model': model.upper(), 'attributes': attributes}
         return True
     else:

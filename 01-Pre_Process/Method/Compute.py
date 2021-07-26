@@ -90,149 +90,156 @@ def SurfaceFace(name, surf, conn):
         if len(wTag) == 4:
             return 6
 
-#TODO: FINISH THIS FUNCTION
-def GenerateFiberSection():
+def GenerateFiberSection(section):
     """
     This function takes information from patches and layers and transform it
     into a fiber section using the JSON Run-Analysis format.\n
     @visit  https://github.com/SeismoVLAB/SVL\n
     @author Danilo S. Kusanovic 2020
-    """
-    for sTag in Entities['Sections']:
-        section = Entities['Sections'][sTag]
-        if section['model'] == 'FIBER':
-            zi = list()
-            yi = list()
-            Ai = list()
-            Tags = list()
-            if 'patch' in section['attributes']:
-                Patches = section['attributes']['patch']
-                for pTag in Patches:
-                    patch = Patches[pTag]
-                    tag = patch['fiber']
-                    if patch['name'].upper() == 'RECTANGULAR':
-                        nfibz = patch['nfibz']
-                        nfiby = patch['nfiby']
-                        points = np.matrix(patch['coords'])
-                        DX = (points[1,0] - points[0,0])/nfibz
-                        DY = (points[1,1] - points[0,1])/nfiby
-                        for j in range(nfiby):
-                            for i in range(nfibz):
-                                coords = points[0,:] + np.array([DX*(0.5 + i), DY*(0.5 + j)])
-                                zi.append(coords[0,0])
-                                yi.append(coords[0,1])
-                                Ai.append(abs(DX*DY))
-                                Tags.append(tag)
-                    elif patch['name'].upper() == 'CIRCULAR':
-                        nfibr = patch['nfibr']
-                        nfibt = patch['nfibt']
-                        center = patch['center']
-                        points = np.matrix(patch['coords'])
-                        r1 = points[0,0]
-                        DR = np.abs((points[1,0] - points[0,0]))/nfibr
-                        DT = np.abs((points[1,1] - points[0,1]))/nfibt
-                        for j in range(nfibr):
-                            for i in range(nfibt):
-                                #Center fiber only for Solid Circular section
-                                if j == 0 and r1 == 0 and np.abs((points[1,1] - points[0,1])) == 360:
-                                    zi.append(center[0])
-                                    yi.append(center[1])
-                                    Ai.append(np.pi*DR**2)
-                                    Tags.append(tag)
-                                    break
-                                coords = points[0,:] + np.array([DR*(0.5 + j), DT*(0.5 + i)])
-                                zi.append(center[0] - coords[0,0]*np.cos(np.radians(coords[0,1])))
-                                yi.append(center[1] + coords[0,0]*np.sin(np.radians(coords[0,1])))
-                                Ai.append(0.5*np.radians(DR)*DT*(2.0*r1 + (2*j+1)*DR))
-                                Tags.append(tag)
-                    '''
-                    elif patch['name'].upper() == 'QUADRILATERAL':
-                        DX = 2.0/nfibz
-                        DZ = 2.0/nfiby
-                        points = np.matrix(patch['coords'])
-                        for j in range(nfiby):
-                            si = 1.0*j + DY/2.0 - 1.0
-                            for k in range(nfibz):
-                                ri = 1.0*k + DX/2.0 - 1.0
-                                H1 = 0.25*(1.0 - ri)*(1.0 - si)
-                                H2 = 0.25*(1.0 + ri)*(1.0 - si)
-                                H3 = 0.25*(1.0 + ri)*(1.0 + si)
-                                H4 = 0.25*(1.0 - ri)*(1.0 + si)
-                                Xi = H1*points[0,0] + H2*points[1,0] + H3*points[2,0] + H4*points[3,0]
-                                Yi = H1*points[0,1] + H2*points[1,1] + H3*points[2,1] + H4*points[3,1]
-                                zi.append(Xi)
-                                yi.append(Yi)
-                                Ai.append(area)####
-                                Tags.append(tag)
-                    '''
-            if 'layer' in section['attributes']:
-                Layers = section['attributes']['layer']
-                for lTag in Layers:
-                    layer = Layers[lTag]
-                    tag = layer['fiber']
-                    nfib = layer['nfib']
-                    area = layer['area']
-                    if layer['name'].upper() == 'LINE':
-                        points = np.matrix(layer['coords'])
-                        if nfib == 1:
-                            xm = 0.5*(points[0,:] + points[1,:])
-                            zi.append(xm[0,0])
-                            yi.append(xm[0,1])
-                            Ai.append(area)
-                            Tags.append(tag)
-                        elif nfib == 2:
-                            for k in range(nfib):
-                                zi.append(points[k,0])
-                                yi.append(points[k,1])
-                                Ai.append(area)
-                                Tags.append(tag)
-                        else:
-                            D = (points[1,:] - points[0,:])/(nfib - 1.0)
-                            for k in range(nfib):
-                                coords = points[0,:] + D*k
-                                zi.append(coords[0,0])
-                                yi.append(coords[0,1])
-                                Ai.append(area)
-                                Tags.append(tag)
-                    elif layer['name'].upper() == 'ARCH':
-                        angles = layer['angle']
-                        radius = layer['radius']
-                        center = layer['center']
-                        if nfib == 1:
-                            xm = 0.5*(angles[0] + angles[1])
-                            zi.append(center[0] - radius*np.cos(np.radians(xm)))
-                            yi.append(center[1] + radius*np.sin(np.radians(xm)))
-                            Ai.append(area)
-                            Tags.append(tag)
-                        elif nfib == 2:
-                            for k in range(nfib):
-                                zi.append(center[0] - radius*np.cos(np.radians(angles[k])))
-                                yi.append(center[1] + radius*np.sin(np.radians(angles[k])))
-                                Ai.append(area)
-                                Tags.append(tag)
-                        else:
-                            D = np.abs((angles[1] - angles[0]))/nfib if abs(angles[1] - angles[0]) == 360 else np.abs((angles[1] - angles[0]))/(nfib - 1)
-                            for k in range(nfib):
-                                alpha = angles[0] + D*k
-                                zi.append(center[0] - radius*np.cos(np.radians(alpha)))
-                                yi.append(center[1] + radius*np.sin(np.radians(alpha)))
-                                Ai.append(area)
-                                Tags.append(tag)
-            attributes = {'zi': zi, 'yi': yi, 'Ai': Ai, 'fiber': Tags}
-            if 'h' in section['attributes']:
-                attributes['h'] = section['attributes']['h']
-            if 'b' in section['attributes']:
-                attributes['b'] = section['attributes']['b']
-            if 'kappa2' in section['attributes']:
-                attributes['kappa2'] = section['attributes']['kappa2']
-            if 'kappa3' in section['attributes']:
-                attributes['kappa3'] = section['attributes']['kappa3']
-            if 'ip' in section['attributes']:
-                attributes['ip'] = section['attributes']['ip']
-            if 'theta' in section['attributes']:
-                attributes['theta'] = section['attributes']['theta']
 
-            Entities['Sections'][sTag]['attributes'] = attributes
+    Parameters
+    ----------
+    section : Dictionary with fiber section information
+        patch : Area to generate a number of fibers over a geometric cross-section 
+        layer : Line to generate a row of fibers along a geometric-arc 
+
+    Returns
+    -------
+    attributes : dict
+        The section transformed into fibers
+    """
+    zi = list()
+    yi = list()
+    Ai = list()
+    Tags = list()
+    if 'patch' in section:
+        Patches = section['patch']
+        for pTag in Patches:
+            patch = Patches[pTag]
+            tag = patch['fiber']
+            if patch['name'].upper() == 'RECTANGULAR':
+                nfibz = patch['nfibz']
+                nfiby = patch['nfiby']
+                points = np.matrix(patch['coords'])
+                DX = (points[1,0] - points[0,0])/nfibz
+                DY = (points[1,1] - points[0,1])/nfiby
+                for j in range(nfiby):
+                    for i in range(nfibz):
+                        coords = points[0,:] + np.array([DX*(0.5 + i), DY*(0.5 + j)])
+                        zi.append(coords[0,0])
+                        yi.append(coords[0,1])
+                        Ai.append(abs(DX*DY))
+                        Tags.append(tag)
+            elif patch['name'].upper() == 'CIRCULAR':
+                nfibr = patch['nfibr']
+                nfibt = patch['nfibt']
+                center = patch['center']
+                points = np.matrix(patch['coords'])
+                r1 = points[0,0]
+                DR = np.abs((points[1,0] - points[0,0]))/nfibr
+                DT = np.abs((points[1,1] - points[0,1]))/nfibt
+                for j in range(nfibr):
+                    for i in range(nfibt):
+                        #Center fiber only for Solid Circular section
+                        if j == 0 and r1 == 0 and np.abs((points[1,1] - points[0,1])) == 360:
+                            zi.append(center[0])
+                            yi.append(center[1])
+                            Ai.append(np.pi*DR**2)
+                            Tags.append(tag)
+                            break
+                        coords = points[0,:] + np.array([DR*(0.5 + j), DT*(0.5 + i)])
+                        zi.append(center[0] - coords[0,0]*np.cos(np.radians(coords[0,1])))
+                        yi.append(center[1] + coords[0,0]*np.sin(np.radians(coords[0,1])))
+                        Ai.append(0.5*np.radians(DR)*DT*(2.0*r1 + (2*j+1)*DR))
+                        Tags.append(tag)
+            '''
+            elif patch['name'].upper() == 'QUADRILATERAL':
+                DX = 2.0/nfibz
+                DZ = 2.0/nfiby
+                points = np.matrix(patch['coords'])
+                for j in range(nfiby):
+                    si = 1.0*j + DY/2.0 - 1.0
+                    for k in range(nfibz):
+                        ri = 1.0*k + DX/2.0 - 1.0
+                        H1 = 0.25*(1.0 - ri)*(1.0 - si)
+                        H2 = 0.25*(1.0 + ri)*(1.0 - si)
+                        H3 = 0.25*(1.0 + ri)*(1.0 + si)
+                        H4 = 0.25*(1.0 - ri)*(1.0 + si)
+                        Xi = H1*points[0,0] + H2*points[1,0] + H3*points[2,0] + H4*points[3,0]
+                        Yi = H1*points[0,1] + H2*points[1,1] + H3*points[2,1] + H4*points[3,1]
+                        zi.append(Xi)
+                        yi.append(Yi)
+                        Ai.append(area)####
+                        Tags.append(tag)
+            '''
+    if 'layer' in section:
+        Layers = section['layer']
+        for lTag in Layers:
+            layer = Layers[lTag]
+            tag = layer['fiber']
+            nfib = layer['nfib']
+            area = layer['area']
+            if layer['name'].upper() == 'LINE':
+                points = np.matrix(layer['coords'])
+                if nfib == 1:
+                    xm = 0.5*(points[0,:] + points[1,:])
+                    zi.append(xm[0,0])
+                    yi.append(xm[0,1])
+                    Ai.append(area)
+                    Tags.append(tag)
+                elif nfib == 2:
+                    for k in range(nfib):
+                        zi.append(points[k,0])
+                        yi.append(points[k,1])
+                        Ai.append(area)
+                        Tags.append(tag)
+                else:
+                    D = (points[1,:] - points[0,:])/(nfib - 1.0)
+                    for k in range(nfib):
+                        coords = points[0,:] + D*k
+                        zi.append(coords[0,0])
+                        yi.append(coords[0,1])
+                        Ai.append(area)
+                        Tags.append(tag)
+            elif layer['name'].upper() == 'ARCH':
+                angles = layer['angle']
+                radius = layer['radius']
+                center = layer['center']
+                if nfib == 1:
+                    xm = 0.5*(angles[0] + angles[1])
+                    zi.append(center[0] - radius*np.cos(np.radians(xm)))
+                    yi.append(center[1] + radius*np.sin(np.radians(xm)))
+                    Ai.append(area)
+                    Tags.append(tag)
+                elif nfib == 2:
+                    for k in range(nfib):
+                        zi.append(center[0] - radius*np.cos(np.radians(angles[k])))
+                        yi.append(center[1] + radius*np.sin(np.radians(angles[k])))
+                        Ai.append(area)
+                        Tags.append(tag)
+                else:
+                    D = np.abs((angles[1] - angles[0]))/nfib if abs(angles[1] - angles[0]) == 360 else np.abs((angles[1] - angles[0]))/(nfib - 1)
+                    for k in range(nfib):
+                        alpha = angles[0] + D*k
+                        zi.append(center[0] - radius*np.cos(np.radians(alpha)))
+                        yi.append(center[1] + radius*np.sin(np.radians(alpha)))
+                        Ai.append(area)
+                        Tags.append(tag)
+    attributes = {'fiber': Tags, 'zi': zi, 'yi': yi, 'Ai': Ai}
+    if 'h' in section:
+        attributes['h'] = section['h']
+    if 'b' in section:
+        attributes['b'] = section['b']
+    if 'kappa2' in section:
+        attributes['kappa2'] = section['kappa2']
+    if 'kappa3' in section:
+        attributes['kappa3'] = section['kappa3']
+    if 'ip' in section:
+        attributes['ip'] = section['ip']
+    if 'theta' in section:
+        attributes['theta'] = section['theta']
+
+    return attributes
 
 def RigidLinkConstraints():
     """
