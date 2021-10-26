@@ -141,13 +141,20 @@ class Elastic1DGap : public Material {
         void UpdateState(const Eigen::VectorXd strain, const unsigned int cond=0);
 
     private:
-		//Elastic Gap properties: 
+        ///The elastic moduli of this material
 		double E;
+
+        ///The separation from which the material start reacting
 		double Gap;
+
+        ///The material behavior (true: Tension, false: Compression)
 		bool Behavior;
 
-		//Elastic Gap history variables:
+		///Elastic Gap history variables:
 		double oldStrain;
+
+		///Commited Elastic Gap history variables:
+		double newStrain;
 };
 
 #endif

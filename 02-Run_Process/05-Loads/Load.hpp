@@ -27,12 +27,14 @@
 //   The load formulation are given as,
 //       [1] Static point-load.
 //       [2] Dynamic point-load.
-//       [3] Static surface-load.
-//       [4] Static body-load.
-//       [5] Dynamic body-load.
-//       [6] Dynamic wave-front load.
-//       [7] Dynamic user's define wave load.
-//       [8] Static/Dynamic displacement support motion.
+//       [3] Static body point-load.
+//       [4] Dynamic body point-load.
+//       [5] Static surface-load.
+//       [6] Dynamic surface-load.
+//       [7] Static body-load.
+//       [8] Dynamic body-load.
+//       [9] Dynamic user's define wave load.
+//       [10] Static/Dynamic displacement support motion.
 //
 // Description:   
 ///This file contains the "Load" class declarations, which defines a load that 

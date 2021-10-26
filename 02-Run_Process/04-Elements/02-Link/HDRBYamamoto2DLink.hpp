@@ -234,6 +234,9 @@ class HDRBYamamoto2DLink : public Element{
         ///Non-linear Restoring Force Vector
         Eigen::VectorXd Fn;
 
+        ///Non-linear Commited Restoring Force Vector
+        Eigen::VectorXd Fc;
+
         ///Trial Displacement Trajectory Vector
         Eigen::VectorXd Paux;
 

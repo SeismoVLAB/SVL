@@ -83,7 +83,7 @@ class PetscSolver : public LinearSystem {
         ///Gets the soultion vector.
         ///@return The solution vector.
         ///@see PetscSolver::x.
-        Eigen::VectorXd GetSolution();
+        const Eigen::VectorXd& GetSolution();
 
     protected:
         ///Number of nonzero in diagonal per row. 

@@ -156,11 +156,8 @@ class Hertzian1DLinear : public Material{
         ///Strain vector.
         Eigen::VectorXd Strain;
 
-        ///Stress vector.
-        Eigen::VectorXd Stress;
-
-        ///Tangent stiffness matrix.
-        Eigen::MatrixXd TangentStiffness;
+        ///Commited Strain vector.
+        Eigen::VectorXd newStrain;
 };
 
 #endif

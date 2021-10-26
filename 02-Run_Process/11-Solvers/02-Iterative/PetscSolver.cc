@@ -45,8 +45,7 @@ d_nz(dnz), o_nz(onz), Tolerance(tol) {
 
 //Destructor:
 PetscSolver::~PetscSolver(){
-    //Clears full vectors.
-    x.resize(0);
+    //does nothing
 }
 
 //Solve the linear system.
@@ -151,7 +150,7 @@ PetscSolver::SolveSystem(Eigen::SparseMatrix<double> &K, Eigen::VectorXd &b){
 }
 
 //Gets the soultion vector.    
-Eigen::VectorXd 
+const Eigen::VectorXd& 
 PetscSolver::GetSolution(){
     //Starts profiling this function.
     PROFILE_FUNCTION();

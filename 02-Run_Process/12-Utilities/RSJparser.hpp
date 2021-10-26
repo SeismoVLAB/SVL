@@ -1,4 +1,4 @@
-/** **************************************************************************************
+/* **************************************************************************************
 *                                                                                        *
 *    A Ridiculously Simple JSON Parser for C++ (RSJp-cpp)                                *
 *    Version 2.x                                                                         *
@@ -20,7 +20,7 @@
 *              https://www.lehigh.edu/~sub216/ , http://subhrajit.net/                   *
 *                                                                                        *
 *                                                                                        *
-*************************************************************************************** **/
+***************************************************************************************  */
 
 #ifndef __RSJPARSE_HPP__
 #define __RSJPARSE_HPP__
@@ -33,6 +33,15 @@
 #include <utility>
 #include <iostream>
 #include <climits>
+
+///This file contains the implementation of "A Ridiculously Simple JSON Parser for C++." This great
+///parsing class was taken from http://subhrajit.net/  
+
+/// @author    Subhrajit Bhattacharya  (http://subhrajit.net/)
+/// @date      2018
+/// @version   2.x
+/// @file      RSJparser.hpp
+/// @see       main.cpp Driver.hpp
 
 
 static char const* RSJobjectbrackets = "{}";

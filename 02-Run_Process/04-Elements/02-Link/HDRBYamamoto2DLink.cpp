@@ -4,12 +4,9 @@
 #include "Definitions.hpp"
 #include "Profiler.hpp"
 
-//Define VTK cell value for Paraview:
-const unsigned int VTKCELL = 3; 
-
 //Overload constructor.
 HDRBYamamoto2DLink::HDRBYamamoto2DLink(const std::vector<unsigned int> nodes, double De, double Di, double hr, unsigned int dim) :
-Element("HDRBYamamoto2DLink", nodes, 2*dim, VTKCELL, GROUPHDRB), Hr(hr), Dimension(dim){
+Element("HDRBYamamoto2DLink", nodes, 2*dim, VTK_LINEAR_LINE, GROUP_ELEMENT_HDRB), Hr(hr), Dimension(dim){
     //The element nodes.
     theNodes.resize(2);
 
@@ -27,6 +24,7 @@ Element("HDRBYamamoto2DLink", nodes, 2*dim, VTKCELL, GROUPHDRB), Hr(hr), Dimensi
     Pn.resize(2); Pn.fill(0.0);
     Qn.resize(2); Qn.fill(0.0);
     Fn.resize(2); Fn.fill(0.0);
+    Fc.resize(2); Fc.fill(0.0);
 
     Paux.resize(2); Paux.fill(0.0);
     Qaux.resize(2); Qaux.fill(0.0);
@@ -45,6 +43,7 @@ void
 HDRBYamamoto2DLink::CommitState(){
     Qn = Qaux;
     Pn = Paux;
+    Fc = Fn;
 }
 
 //Reverse the internal states to previous converged state in this element.
@@ -52,6 +51,7 @@ void
 HDRBYamamoto2DLink::ReverseState(){
     Qaux = Qn;
     Paux = Pn;
+    Fn = Fc;
 }
 
 //Brings the internal state to its initial state in this element.
@@ -60,6 +60,7 @@ HDRBYamamoto2DLink::InitialState(){
     Pn.fill(0.0);
     Qn.fill(0.0);
     Fn.fill(0.0);
+    Fc.fill(0.0);
 
     Paux.fill(0.0);
     Qaux.fill(0.0);

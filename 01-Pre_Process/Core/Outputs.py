@@ -26,7 +26,7 @@ class NumpyArrayEncoder(JSONEncoder):
             return super(JSONEncoder, self).default(obj)
         return JSONEncoder.default(self, obj)
 
-def dict2json(d, np):
+def dict2json(d, fn):
     """
     This function writes a dictionary using JSON format. The serialization
     used was taken from: https://pynative.com/python-serialize-numpy-ndarray-into-json/\n
@@ -37,19 +37,16 @@ def dict2json(d, np):
     ----------
     d : dict
         Dictionary to be transformed into json format
-    np : int
-        The processor number
+    fn : str
+        The full path where the file will be written
 
     Returns
     -------
     None
     """
-    #The JSON output file name
-    filename = Options['path'] + '/' + 'Partition' + '/' + Options['file'] + '.' + str(np) + '.json'
-
     #Serializing json
     JSONdata = json.dumps(d, cls=NumpyArrayEncoder, indent=4)
 
     #Writes the file in json format
-    with open(filename, "w") as outfile: 
+    with open(fn, "w") as outfile: 
         outfile.write(JSONdata)

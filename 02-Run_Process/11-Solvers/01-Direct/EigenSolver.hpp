@@ -69,7 +69,7 @@ class EigenSolver : public LinearSystem {
         ///Gets the soultion vector.
         ///@return The solution vector.
         ///@see EigenSolver::x.
-        Eigen::VectorXd GetSolution();
+        const Eigen::VectorXd& GetSolution();
 
     protected:
         ///Analysis flag.

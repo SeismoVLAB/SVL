@@ -40,6 +40,7 @@
 #include "Mesh.hpp"
 #include "Recorder.hpp"
 #include "LoadCombo.hpp"
+#include "Integrator.hpp"
 
 /// @author    Danilo S. Kusanovic (dkusanov@caltech.edu)
 /// @date      November 22, 2018
@@ -53,7 +54,8 @@ class Analysis{
     public:
         ///Creates a Analysis object.
         ///@param loadcombo Pointer to the LoadCombo object.
-        Analysis(std::shared_ptr<LoadCombo> &loadcombo);
+        ///@param nteps The number of time steps to evolve solution.
+        Analysis(std::shared_ptr<LoadCombo> &loadcombo, unsigned int nteps);
 
         ///Destroys this Analysis object.
         virtual ~Analysis() = 0;
@@ -61,6 +63,12 @@ class Analysis{
         ///Performs the required analysis on the domain.
         ///@return Whether or not the analysis was successful.
         virtual bool Analyze() = 0;
+
+        ///Update internal variables in Mesh according to form of simulation.
+        ///@param mesh The finite element mesh object where changes are performed
+        ///@param integrator The integrator object where changed are taken from
+        ///@see Mesh::Nodes Mesh::Elements.
+        void UpdateMesh(std::shared_ptr<Mesh> &mesh, std::shared_ptr<Integrator> &integrator);
 
         ///Sets the recorder for the analysis.
         ///@param recorder Pointer to the recorder where solution is stored.
@@ -96,6 +104,9 @@ class Analysis{
         void PrintProgress(unsigned int percent);
 
     private:
+        ///Total number of time increments.
+        unsigned int NumberOfSteps;
+
         ///The load combination to be used.
         std::shared_ptr<LoadCombo> theLoadCombo;
 

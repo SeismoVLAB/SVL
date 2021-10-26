@@ -229,6 +229,12 @@ class Plastic3DBA : public Material{
 
         ///Internal hardening parameters
         double kappa;
+
+        ///Internal hardening parameter at time n.
+        double psi_n;
+
+        ///Internal hardening parameter at time n.
+        double kappa_n;
     
         ///Strain vector.
         Eigen::VectorXd Strain;
@@ -245,14 +251,26 @@ class Plastic3DBA : public Material{
         ///Stress tensor at F0
         Eigen::VectorXd DeviatoricStress0;
 
+        ///Stress tensor at F0 at time n.
+        Eigen::VectorXd DeviatoricStress0_n;
+
         ///Consistent tangent stiffness.
         Eigen::MatrixXd TangentStiffness;
 
+        ///Consistent tangent stiffness at time n.
+        Eigen::MatrixXd TangentStiffness_n;
+
         ///First loading flag
         int FirstLoadFlag;
+
+        ///First loading flag at time n.
+        int FirstLoadFlag_n;
         
         ///Flag to control the linear system solution.
         int rootFlag;
+
+        ///Flag to control the linear system solution at time n.
+        int rootFlag_n;
         
         ///The hardening function.
         double Hn;

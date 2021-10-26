@@ -9,12 +9,9 @@
 //Define constant tolerance value:
 const double TOL = 0.9999995;
 
-//Define VTK cell value for Paraview:
-const unsigned int VTKCELL = 21;
-
 //Overload constructor.
 lin3DTruss3::lin3DTruss3(const std::vector<unsigned int> nodes, std::unique_ptr<Material> &material, const double area, const std::string quadrature, const unsigned int nGauss) :
-Element("lin3DTruss3", nodes, 9, VTKCELL, GROUPTRUSS), A(area){
+Element("lin3DTruss3", nodes, 9, VTK_QUADRATIC_LINE, GROUP_ELEMENT_TRUSS), A(area){
     //The element nodes.
     theNodes.resize(3);
 

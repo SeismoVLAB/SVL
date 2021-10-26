@@ -11,6 +11,7 @@ Material("Elastic1DGap", false), E(E), Behavior(behavior){
     //Initialize fiber internal variables.
     Gap = fabs(gap),
 	oldStrain = 0.0;
+	newStrain = 0.0;
 }
 
 //Destructor.
@@ -83,14 +84,9 @@ Elastic1DGap::GetStrain() const{
 //Returns material stress vector.
 Eigen::VectorXd
 Elastic1DGap::GetStress() const{
+    //Material stress vector
 	Eigen::VectorXd Stress(1);
-    
-    if(Behavior){
-        Stress << E*(oldStrain - Gap)*(oldStrain > Gap);
-    }
-    else{
-        Stress << E*(oldStrain + Gap)*(oldStrain < -Gap);
-    }
+    Stress << E*(oldStrain - Gap)*(oldStrain > Gap)*(Behavior) + E*(oldStrain + Gap)*(oldStrain < -Gap)*(!Behavior);
 
     return Stress;
 }
@@ -114,15 +110,9 @@ Elastic1DGap::GetTotalStress() const{
 //Computes consistent material matrix.
 Eigen::MatrixXd
 Elastic1DGap::GetTangentStiffness() const{
+    //Consistent material stiffness
 	Eigen::MatrixXd TangentStiffness(1,1);
-    TangentStiffness << 0.0;
-
-    if(Behavior){
-        TangentStiffness << E*(oldStrain > Gap);
-    }
-    else{
-        TangentStiffness << E*(oldStrain < -Gap);
-    }
+    TangentStiffness << E*(oldStrain > Gap)*(Behavior) + E*(oldStrain < -Gap)*(!Behavior);
 
     return TangentStiffness;
 }
@@ -139,19 +129,20 @@ Elastic1DGap::GetInitialTangentStiffness() const{
 //Perform converged material state update.
 void 
 Elastic1DGap::CommitState(){
-    //Does nothing
+    newStrain = oldStrain;
 }
 
 //Reverse the material states to previous converged state.
 void 
 Elastic1DGap::ReverseState(){
-    //Does nothing
+    oldStrain = newStrain;
 }
 
 //Brings the material states to its initial state in the element.
 void 
 Elastic1DGap::InitialState(){
 	oldStrain = 0.0;
+    newStrain = 0.0;
 }
 
 //Update the material state for this iteration.

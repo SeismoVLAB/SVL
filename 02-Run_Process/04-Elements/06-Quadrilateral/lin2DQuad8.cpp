@@ -7,12 +7,9 @@
 #include "Definitions.hpp"
 #include "Profiler.hpp"
 
-//Define VTK cell value for Paraview:
-const unsigned int VTKCELL = 23;
-
 //Overload constructor.
 lin2DQuad8::lin2DQuad8(const std::vector<unsigned int> nodes, std::unique_ptr<Material> &material, const double th, const std::string quadrature, const unsigned int nGauss) :
-Element("lin2DQuad8", nodes, 16, VTKCELL, GROUPQUAD), t(th){
+Element("lin2DQuad8", nodes, 16, VTK_QUADRATIC_QUAD, GROUP_ELEMENT_QUAD), t(th){
     //The element nodes.
     theNodes.resize(8);
 

@@ -152,8 +152,11 @@ class Elastic1DFiber : public Material {
         ///Material density.
         double Rho;
 
-        ///Strain vector.
-        Eigen::VectorXd Strain;
+        ///Updated Strain vector.
+        Eigen::VectorXd oldStrain;
+
+        ///Commited Strain vector.
+        Eigen::VectorXd newStrain;
 };
 
 #endif

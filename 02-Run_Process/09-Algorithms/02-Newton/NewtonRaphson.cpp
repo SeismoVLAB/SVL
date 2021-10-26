@@ -33,16 +33,14 @@ NewtonRaphson::ComputeNewIncrement(std::shared_ptr<Mesh> &mesh, unsigned int i){
     dU.fill(0.0);
 
     //Initialize Stiffness Matrix and Force Vector.
+    Eigen::VectorXd du(numberOfFreeDofs); 
     Eigen::VectorXd Feff(numberOfFreeDofs); 
     Eigen::SparseMatrix<double> Keff(numberOfFreeDofs, numberOfFreeDofs); 
 
-    //Assemble the total force vector.
-    theIntegrator->ComputeEffectiveForce(mesh, Feff, LoadFactor, i);
-
-    //Computes the residual.
-    Residual = ComputeConvergence(Feff, 0.0, true);
-
     do{
+        //Assemble the total force vector.
+        theIntegrator->ComputeEffectiveForce(mesh, Feff, LoadFactor, i);
+
         //Assemble the total stiffness matrix.
         theIntegrator->ComputeEffectiveStiffness(mesh, Keff);
 
@@ -56,16 +54,14 @@ NewtonRaphson::ComputeNewIncrement(std::shared_ptr<Mesh> &mesh, unsigned int i){
         if(stop) return stop;
 
         //Gets the total incremental displacement vector.
-        dU += theSolver->GetSolution();
+        du = theSolver->GetSolution();
+        dU += du;
+
+        //Updates the residual.
+        Residual = ComputeConvergence(Feff, dU, du, k);
 
         //Update the incremental state variables in the mesh.
         UpdateStatesIncrements(mesh, dU);
-
-        //Assemble the total force vector.
-        theIntegrator->ComputeEffectiveForce(mesh, Feff, LoadFactor, i);
-
-        //Updates the residual.
-        Residual = ComputeConvergence(Feff, dU.norm(), false);
 
         k++;
     }
@@ -79,7 +75,7 @@ NewtonRaphson::ComputeNewIncrement(std::shared_ptr<Mesh> &mesh, unsigned int i){
 }
 
 //Gets the displacement increment.
-Eigen::VectorXd 
+const Eigen::VectorXd& 
 NewtonRaphson::GetDisplacementIncrement(){
     //Starts profiling this function.
     PROFILE_FUNCTION();

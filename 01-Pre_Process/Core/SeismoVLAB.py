@@ -45,7 +45,7 @@ def createFolders():
             if not os.path.exists(dirName):
                 os.mkdir(dirName)
 
-def Entities2Processor(matSubdomain, secSubdomain, nodeSubdomain, massSubdomain, conSubdomain, elemSubdomain, surfSubdomain, k):
+def Entities2Processor(matSubdomain, secSubdomain, nodeSubdomain, massSubdomain, conSubdomain, elemSubdomain, surfSubdomain, k, combo):
     """
     This function creates a dictionary that holds all information required to
     be written in the k-th processor  
@@ -94,12 +94,12 @@ def Entities2Processor(matSubdomain, secSubdomain, nodeSubdomain, massSubdomain,
     
     #Global parameters stored in Entities for simulation
     ToProcessor['Global'] = {
-        'ndim': Options['dimension'], 
-        'ntotal': Options['ntotal'], 
-        'nfree': Options['nfree'], 
-        'massform': Options['massform'].upper(), 
-        'solution': Options['solution'].upper()
-    } 
+        'ndim'    : Options['dimension'], 
+        'ntotal'  : Options['ntotal'], 
+        'nfree'   : Options['nfree'], 
+        'update'  : Options['update'].upper(),
+        'massform': Options['massform'].upper()
+    }
 
     #Gets the materials for this partition
     for tag in matSubdomain:
@@ -164,15 +164,16 @@ def Entities2Processor(matSubdomain, secSubdomain, nodeSubdomain, massSubdomain,
             nTags = sorted(nodeSubdomain.intersection(Entities['Loads'][lTag]['attributes']['list']))
             if nTags:
                 fTag  = Entities['Loads'][lTag]['attributes']['fun']
+                ltype = Entities['Loads'][lTag]['attributes']['type']
                 fname = Entities['Functions'][fTag]['name']
                 fdir  = Entities['Functions'][fTag]['attributes']['dir']
                 if fname == 'CONSTANT':
                     magnitude = Entities['Functions'][fTag]['attributes']['mag']
-                    attributes = {'name': fname, 'mag': magnitude, 'dir': fdir, 'list': nTags}
+                    attributes = {'name': fname, 'type': ltype, 'mag': magnitude, 'dir': fdir, 'list': nTags}
                     ToProcessor['Loads'][str(lTag)] = {'name': name, 'attributes': attributes}
-                elif fname[0:9] == 'TIMESERIE':
+                elif fname == 'TIMESERIES':
                     filepath = Entities['Functions'][fTag]['attributes']['file']
-                    attributes = {'name': fname, 'file': filepath, 'dir': fdir, 'list': nTags}
+                    attributes = {'name': fname, 'type': ltype, 'file': filepath, 'dir': fdir, 'list': nTags}
                     ToProcessor['Loads'][str(lTag)] = {'name': name, 'attributes': attributes}
                 loadSubdomain.append(lTag)
                 Entities['Loads'][lTag]['attributes']['list'] = list(set(Entities['Loads'][lTag]['attributes']['list']).difference(nTags))
@@ -192,10 +193,10 @@ def Entities2Processor(matSubdomain, secSubdomain, nodeSubdomain, massSubdomain,
                     magnitude = Entities['Functions'][fTag]['attributes']['mag']
                     attributes = {'name': fname, 'type': lname, 'mag': magnitude, 'dir': fdir, 'list': eTags}
                     ToProcessor['Loads'][str(lTag)] = {'name': name, 'attributes': attributes}
-                elif fname[0:9] == 'TIMESERIE':
+                elif fname == 'TIMESERIES':
                     filepath = Entities['Functions'][fTag]['attributes']['file']
                     if lname == 'GENERALWAVE':
-                        attributes = {'name': fname, 'type': lname, 'file': filepath, 'list': eTags}
+                        attributes = {'name': 'TIMESERIES', 'type': lname, 'file': filepath, 'list': eTags}
                         ToProcessor['Loads'][str(lTag)] = {'name': name, 'attributes': attributes}
                     elif lname == 'PLANEWAVE':
                         features = {} #Entities['Functions'][fTag]['features']
@@ -215,21 +216,22 @@ def Entities2Processor(matSubdomain, secSubdomain, nodeSubdomain, massSubdomain,
 
     #Gets the load combinations for this partition
     for cTag in Entities['Combinations']:
-        name = Entities['Combinations'][cTag]['name']
-        lTag = list(set(Entities['Combinations'][cTag]['attributes']['load']).intersection(loadSubdomain))
-        if lTag:
-            load    = Entities['Combinations'][cTag]['attributes']['load']
-            factors = Entities['Combinations'][cTag]['attributes']['factor']
-            folder  = Entities['Combinations'][cTag]['attributes']['folder']
-            attributes = {'folder': folder, 'load': [], 'factor': []}
-            for j in loadSubdomain:
-                for i in range(len(load)):
-                    if load[i] == j:
-                        attributes['load'].append(load[i])
-                        attributes['factor'].append(factors[i])
-        else:
-             attributes = {}
-        ToProcessor['Combinations'][str(cTag)] = {'name': name, 'attributes': attributes}
+        if cTag == combo:
+            name = Entities['Combinations'][cTag]['name']
+            lTag = list(set(Entities['Combinations'][cTag]['attributes']['load']).intersection(loadSubdomain))
+            if lTag:
+                load    = Entities['Combinations'][cTag]['attributes']['load']
+                factors = Entities['Combinations'][cTag]['attributes']['factor']
+                folder  = Entities['Combinations'][cTag]['attributes']['folder']
+                attributes = {'folder': folder, 'load': [], 'factor': []}
+                for j in loadSubdomain:
+                    for i in range(len(load)):
+                        if load[i] == j:
+                            attributes['load'].append(load[i])
+                            attributes['factor'].append(factors[i])
+            else:
+                attributes = {}
+            ToProcessor['Combinations'][str(cTag)] = {'name': name, 'attributes': attributes}
 
     #Gets the recorders for this partition
     for rTag in Entities['Recorders']:
@@ -267,24 +269,25 @@ def Entities2Processor(matSubdomain, secSubdomain, nodeSubdomain, massSubdomain,
     for sTag in Entities['Simulations']:
         ctag = Entities['Simulations'][sTag]['combo']
 
-        tag = Entities['Simulations'][sTag]['attributes']['analysis']
-        analysis = Entities['Analyses'][tag]
+        if ctag == combo:
+            tag = Entities['Simulations'][sTag]['attributes']['analysis']
+            analysis = Entities['Analyses'][tag]
 
-        tag = Entities['Simulations'][sTag]['attributes']['algorithm']
-        algorithm = Entities['Algorithms'][tag]
+            tag = Entities['Simulations'][sTag]['attributes']['algorithm']
+            algorithm = Entities['Algorithms'][tag]
 
-        tag = Entities['Simulations'][sTag]['attributes']['integrator']
-        integrator = Entities['Integrators'][tag]
+            tag = Entities['Simulations'][sTag]['attributes']['integrator']
+            integrator = Entities['Integrators'][tag]
 
-        tag = Entities['Simulations'][sTag]['attributes']['solver']
-        solver = Entities['Solvers'][tag]
+            tag = Entities['Simulations'][sTag]['attributes']['solver']
+            solver = Entities['Solvers'][tag]
 
-        if solver['name'] == 'PETSC':
-            solver['d_nz'] = int(Options['d_nz'][k])
-            solver['o_nz'] = int(Options['o_nz'][k])
+            if solver['name'] == 'PETSC':
+                solver['d_nz'] = int(Options['d_nz'][k])
+                solver['o_nz'] = int(Options['o_nz'][k])
 
-        attributes = {'analysis': analysis, 'algorithm': algorithm, 'integrator': integrator, 'solver': solver}
-        ToProcessor['Simulations'][sTag] = {'combo': ctag, 'attributes': attributes} 
+            attributes = {'analysis': analysis, 'algorithm': algorithm, 'integrator': integrator, 'solver': solver}
+            ToProcessor['Simulations'] = {'combo': ctag, 'attributes': attributes} 
 
     #Removes the empty fields
     keys = list(ToProcessor.keys())
@@ -293,7 +296,7 @@ def Entities2Processor(matSubdomain, secSubdomain, nodeSubdomain, massSubdomain,
             del ToProcessor[key]
     return ToProcessor
 
-def createPartitions():
+def createPartitions(combo, filename):
     """
     This function creates the partitions according with the pattern generated
     during the domain decomposition. Basically, goes over the Entities and 
@@ -301,6 +304,13 @@ def createPartitions():
     @visit  https://github.com/SeismoVLAB/SVL\n
     @author Danilo S. Kusanovic 2020
 
+    Parameters
+    ----------
+    combo : int
+        The combination identifier for which the simulation is generated
+    filename : str
+        The full path to the json file ro be written
+    
     Returns
     -------
     None
@@ -313,6 +323,14 @@ def createPartitions():
 
     #Reads the generated domain decomposition results
     GetMetisOutputFile()
+
+    #Creates a load copy
+    dictLoads = copy.deepcopy(Entities['Loads'])
+
+    #Keeps loads in this combination only
+    lTags = Entities['Combinations'][combo]['attributes']['load']
+    LoadCombo = {k: Entities['Loads'][k] for k in lTags}
+    Entities['Loads'] = LoadCombo
 
     eTags = np.zeros(len(Entities['Elements']), dtype=np.uint32)
     for k, tag in enumerate(Entities['Elements']):
@@ -379,24 +397,26 @@ def createPartitions():
                 surfSubdomain.add(sTag)
 
         #Sets the Entities that belong to this partition
-        ToProcessor = Entities2Processor(matSubdomain,secSubdomain,nodeSubdomain,massSubdomain,conSubdomain,elemSubdomain,surfSubdomain,k)
+        ToProcessor = Entities2Processor(matSubdomain,secSubdomain,nodeSubdomain,massSubdomain,conSubdomain,elemSubdomain,surfSubdomain,k,combo)
+
+        #The file name for this processor/partition
+        filepath = str.replace(filename, "$", str(k))
 
         #Writes the partition in separated files
-        dict2json(ToProcessor, k)
-    
-    #The generated partition file name (generic) path
-    Options['execfile'] = Options['file'] + '.$.json'
-    Options['execpath'] = Options['path'] + '/Partition'
-
-    #SeismoVLAB execution command line
-    Options['run'] = ' ' + Options['runanalysis'] + '/SeismoVLAB.exe -dir \'' + Options['execpath'] + '\' -file \'' + Options['execfile'] + '\'\n'
-    if Options['nparts'] > 1:
-        Options['run'] = ' mpirun -np ' + str(Options['nparts']) + Options['run']
+        dict2json(ToProcessor, filepath)
 
     #Cleans generated auxiliary files
-    os.remove(Options['execpath'] + '/Graph.out')
-    os.remove(Options['execpath'] + '/Graph.out.epart.' + str(Options['nparts']))
-    os.remove(Options['execpath'] + '/Graph.out.npart.' + str(Options['nparts'])) 
+    execpath = Options['path'] + '/Partition'
+    os.remove(execpath + '/Graph.out')
+    os.remove(execpath + '/Graph.out.epart.' + str(Options['nparts']))
+    os.remove(execpath + '/Graph.out.npart.' + str(Options['nparts']))
+
+    #Restores default loads
+    Entities['Loads'] = dictLoads
+
+    #The generated partition file name path
+    execfile =  Options['file'] + '.' + str(combo) + '.$.json'
+    Options['execfiles'].append(execfile)
 
 def checkWarnings():
     """
@@ -409,66 +429,80 @@ def checkWarnings():
 
     Returns
     -------
-    None
+    Whether the checking was successfully or has issues
     """
     nTags = list(Entities['Nodes'].keys())
     sTags = list(Entities['Sections'].keys())
     mTags = list(Entities['Materials'].keys())
     eTags = list(Entities['Elements'].keys())
 
-    print('\n Checking for warnings:')
+    print('\n ◇ Checking for warnings:')
+    
+    #Check warning counter
+    chk = 0
 
     #[1] Check all attributes in NODES are defined in ENTITIES
     if not Entities['Nodes']:
-        print("   *** There is no definition of Nodes. ***")
+        print(" |   *** There is no definition of Nodes.")
         print("\x1B[31m   *************** THE PROCESS WILL BE ABORTED ***************\x1B[0m\n")
         sys.exit(-1)
 
     nrestrain = 0
     for nTag in Entities['Nodes']:
         if math.isnan(nTag):
-            print("   *** Node[%s] is invalid and should be removed ***" % nTag) 
+            print(" |   *** Node[%s] is invalid and should be removed" % nTag)
+            chk += 1
         if Entities['Nodes'][nTag]['ndof'] == 0:
-            print("   *** Node[%s] has ndof=0, fix this or delete it ***" % nTag) 
+            print(" |   *** Node[%s] has ndof=0, fix this or delete it" % nTag)
+            chk += 1
         ndim = len(Entities['Nodes'][nTag]['coords'])
         if Options['dimension'] != ndim:
-            print("   *** Node[%s] coordinate's dimension (=%d) disagrees with Options[\'dimension\'] (=%d) ***" % (nTag,ndim,Options['dimension']))
+            print(" |   *** Node[%s] coordinate's dimension (=%d) disagrees with Options[\'dimension\'] (=%d)" % (nTag,ndim,Options['dimension']))
+            chk += 1
         for free in Entities['Nodes'][nTag]['freedof']:
             if free == -1:
                 nrestrain += 1
 
-    if nrestrain == 0:
-        print("   *** There is no restrains applied to Nodes ***")
-        print("\x1B[31m   *************** THE PROCESS WILL BE ABORTED ***************\x1B[0m\n")
-        sys.exit(-1)
+    #if nrestrain == 0:
+    #    print(" |   *** There is no restrains applied to Nodes")
+    #    print("\x1B[31m   *************** THE PROCESS WILL BE ABORTED ***************\x1B[0m\n")
+    #    sys.exit(-1)
 
     #[2] Check all attributes in MATERIALS are defined in ENTITIES
     for mTag in Entities['Materials']:
         name = Entities['Materials'][mTag]['name']
         if math.isnan(mTag):
-            print("   *** Material[%s] is invalid and should be removed" % mTag) 
+            print(" |   *** Material[%s] is invalid and should be removed" % mTag)
+            chk += 1
         if Entities['Materials'][mTag]['name'] not in SVLclasses['Materials']:
-            print("   *** Material[%s] does not have an appropriate class name (%s) ***" % (mTag,Entities['Materials'][mTag]['name']))
+            print(" |   *** Material[%s] does not have an appropriate class name (%s)" % (mTag,Entities['Materials'][mTag]['name']))
+            chk += 1
         if name not in SVLclasses['Materials']:
-            print("   *** Section[%s] does not have an appropriate class name (%s) ***" % (mTag,Entities['Materials'][mTag]['name'])) 
+            print(" |   *** Section[%s] does not have an appropriate class name (%s)" % (mTag,Entities['Materials'][mTag]['name']))
+            chk += 1
         elif Options['dimension'] not in SVLclasses['Materials'][name]['dim']:
-            print("   *** Material[%s] cannot be used in a %sD space ***" % (mTag, Options['dimension']))
+            print(" |   *** Material[%s] cannot be used in a %sD space" % (mTag, Options['dimension']))
+            chk += 1
 
     #[3] Check all attributes in SECTIONS are defined in ENTITIES
     for sTag in Entities['Sections']:
         name = Entities['Sections'][sTag]['name']
         if math.isnan(sTag):
-            print("   *** Section[%s] is invalid and should be removed" % sTag) 
+            print(" |   *** Section[%s] is invalid and should be removed" % sTag)
+            chk += 1
         if Entities['Sections'][sTag]['name'] not in SVLclasses['Sections']:
-            print("   *** Section[%s] does not have an appropriate class name (%s) ***" % (sTag,Entities['Sections'][sTag]['name']))
+            print(" |   *** Section[%s] does not have an appropriate class name (%s)" % (sTag,Entities['Sections'][sTag]['name']))
+            chk += 1
         if name not in SVLclasses['Sections']:
-            print("   *** Section[%s] does not have an appropriate class name (%s) ***" % (sTag,Entities['Sections'][sTag]['name'])) 
+            print(" |   *** Section[%s] does not have an appropriate class name (%s)" % (sTag,Entities['Sections'][sTag]['name']))
+            chk += 1
         elif Options['dimension'] not in SVLclasses['Sections'][name]['dim']:
-            print("   *** Section[%s] cannot be used in a %sD space ***" % (sTag, Options['dimension']))
+            print(" |   *** Section[%s] cannot be used in a %sD space" % (sTag, Options['dimension']))
+            chk += 1
 
     #[4] Check all attributes in ELEMENTS are defined in ENTITIES
     if not Entities['Elements']:
-        print("   *** There is no definition of Elements. ***")
+        print(" |   *** There is no definition of Elements.")
         print("\x1B[31m   *************** THE PROCESS WILL BE ABORTED ***************\x1B[0m\n")
         sys.exit(-1)
 
@@ -476,22 +510,28 @@ def checkWarnings():
     for eTag in Entities['Elements']:
         name = Entities['Elements'][eTag]['name']
         if math.isnan(eTag):
-            print("   *** Element[%s] is invalid and should be removed" % nTag) 
+            print(" |   *** Element[%s] is invalid and should be removed" % nTag)
+            chk += 1
         if name not in SVLclasses['Elements']:
-            print("   *** Elements[%s] does not have an appropriate class name (%s) ***" % (eTag,Entities['Elements'][eTag]['name'])) 
+            print(" |   *** Elements[%s] does not have an appropriate class name (%s)" % (eTag,Entities['Elements'][eTag]['name']))
+            chk += 1
         elif Options['dimension'] not in SVLclasses['Elements'][name]['dim']:
-            print("   *** Element[%s] cannot be used in a %sD space ***" % (eTag, Options['dimension']))
+            print(" |   *** Element[%s] cannot be used in a %sD space" % (eTag, Options['dimension']))
+            chk += 1
         if 'material' in Entities['Elements'][eTag]['attributes']:
             mtag = Entities['Elements'][eTag]['attributes']['material']
             if mtag not in mTags:
-                print("   *** Material[%s] has not been defined in Elements[%s] (%s) ***" % (mtag, eTag,Entities['Elements'][eTag]['name'])) 
+                print(" |   *** Material[%s] has not been defined in Elements[%s] (%s)" % (mtag, eTag,Entities['Elements'][eTag]['name']))
+                chk += 1
         if 'section' in Entities['Elements'][eTag]['attributes']:
             stag = Entities['Elements'][eTag]['attributes']['section']
             if stag not in sTags:
-                print("   *** Section[%s] has not been defined in Elements[%s] (%s) ***" % (stag, eTag,Entities['Elements'][eTag]['name']))
+                print(" |   *** Section[%s] has not been defined in Elements[%s] (%s)" % (stag, eTag,Entities['Elements'][eTag]['name']))
+                chk += 1
         defective = set(Entities['Elements'][eTag]['conn']).difference(naux)
         if defective:
-            print('   *** Node[%s] have not been defined in Element[%s]' % (', '.join(str(s) for s in defective), eTag))
+            print(' |   *** Node[%s] have not been defined in Element[%s]' % (', '.join(str(s) for s in defective), eTag))
+            chk += 1
 
     #[5] Check all attributes in SURFACES are defined in ENTITIES
     for sTag in Entities['Surfaces']:
@@ -502,7 +542,8 @@ def checkWarnings():
             conn = np.array(Entities['Elements'][eTag]['conn'])
             Entities['Surfaces'][sTag]['face'] = SurfaceFace(SVLclasses['Elements'][name]['type'], surf, conn)
         else:
-            print('   *** Surface[%s] does not belong to Element[%s] ***' % (sTag, eTag))
+            print(' |   *** Surface[%s] does not belong to Element[%s]' % (sTag, eTag))
+            chk += 1
 
     #[6] Checks consistency between POINTLOAD/ELEMENTLOAD and other ENTITIES
     for lTag in Entities['Loads']:
@@ -519,7 +560,8 @@ def checkWarnings():
             for n in nTag:
                 nDOF = Entities['Nodes'][n]['ndof']
                 if nDOF != nDIR:
-                    print('   *** Load[%s] (POINTLOAD) with Function[%s] (\'dir\') does not match Node[%s] (\'ndof\') ***' % (lTag,fTag,n))
+                    print(' |   *** Load[%s] (POINTLOAD) with Function[%s] (\'dir\') does not match Node[%s] (\'ndof\')' % (lTag,fTag,n))
+                    chk += 1
             
             #Check if TimeSeries file can be opened (local and then global address)
             if 'file' in Entities['Functions'][fTag]['attributes']:
@@ -530,7 +572,8 @@ def checkWarnings():
                     filepath = Options['path'] + '/' + Entities['Functions'][fTag]['attributes']['file']
                     if tryOpenfile(filepath):
                         lType = Entities['Loads'][lTag]['attributes']['type']
-                        print('   *** POINTLOAD (%s) file=\'%s\' in Function[%s] could not be opened ***' % (lType,filename,fTag))
+                        print(' |   *** POINTLOAD (%s) file=\'%s\' in Function[%s] could not be opened' % (lType,filename,fTag))
+                        chk += 1
                     else:
                         Entities['Functions'][fTag]['attributes']['file'] = filepath
         elif Name == 'ELEMENTLOAD':
@@ -543,7 +586,8 @@ def checkWarnings():
             if 'dir' in Entities['Functions'][fTag]['attributes']:
                 nDIR = len(Entities['Functions'][fTag]['attributes']['dir'])
                 if nDIR != Options['dimension']:
-                    print('   *** Load[%s] (ELEMENTLOAD) with Function[%s] (\'dir\') does not match Options (\'dimension\') ***' % (lTag,fTag))
+                    print(' |   *** Load[%s] (ELEMENTLOAD) with Function[%s] (\'dir\') does not match Options (\'dimension\')' % (lTag,fTag))
+                    chk += 1
 
             #Check if TimeSeries file can be opened
             if 'file' in Entities['Functions'][fTag]['attributes']:
@@ -566,7 +610,8 @@ def checkWarnings():
                             #Tries a global path with respect to the main file
                             filepath = Options['path'] + '/' + fname
                             if tryOpenfile(filepath):
-                                print('   *** ELEMENTLOAD (%s) file=\'%s\' in Function[%s] for Node[%s] could not be opened ***' % (LOAD,fname,fTag,k))
+                                print(' |   *** ELEMENTLOAD (%s) file=\'%s\' in Function[%s] for Node[%s] could not be opened' % (LOAD,fname,fTag,k))
+                                chk += 1
                             else:
                                 cond = True
                     if cond:
@@ -577,7 +622,8 @@ def checkWarnings():
                         #Tries a global path with respect to the main file
                         filepath = Options['path'] + '/' + Entities['Functions'][fTag]['attributes']['file']
                         if tryOpenfile(filepath):
-                            print('   *** ELEMENTLOAD (%s) file=\'%s\' in Function[%s] could not be opened ***' % (LOAD,filename,fTag))
+                            print(' |   *** ELEMENTLOAD (%s) file=\'%s\' in Function[%s] could not be opened' % (LOAD,filename,fTag))
+                            chk += 1
                         else:
                             filename = filepath
                             Entities['Functions'][fTag]['attributes']['file'] = filepath
@@ -610,14 +656,16 @@ def checkWarnings():
 
                         undefined = allTag.difference(nTags)
                         if undefined:
-                            print('   *** ELEMENTLOAD (%s) in file=\'%s\' not all DRM nodes have been specified ***' % (LOAD,filename))
+                            print(' |   *** ELEMENTLOAD (%s) in file=\'%s\' not all DRM nodes have been specified' % (LOAD,filename))
+                            chk += 1
                 elif LOAD == 'BODY':
                     #Tries the path given by user
                     if tryOpenfile(filename):
                         #Tries a global path with respect to the main file
                         filepath = Options['path'] + '/' + Entities['Functions'][fTag]['attributes']['file']
                         if tryOpenfile(filepath):
-                            print('   *** ELEMENTLOAD (%s) file=\'%s\' in Function[%s] could not be opened ***' % (LOAD,filename,fTag))
+                            print(' |   *** ELEMENTLOAD (%s) file=\'%s\' in Function[%s] could not be opened' % (LOAD,filename,fTag))
+                            chk += 1
                         else:
                             Entities['Functions'][fTag]['attributes']['file'] = filepath
                 elif LOAD == 'SURFACE':
@@ -626,28 +674,35 @@ def checkWarnings():
                         #Tries a global path with respect to the main file
                         filepath = Options['path'] + '/' + Entities['Functions'][fTag]['attributes']['file']
                         if tryOpenfile(filepath):
-                            print('   *** ELEMENTLOAD (%s) file=\'%s\' in Function[%s] could not be opened ***' % (LOAD,filename,fTag))
+                            print(' |   *** ELEMENTLOAD (%s) file=\'%s\' in Function[%s] could not be opened' % (LOAD,filename,fTag))
+                            chk += 1
                         else:
                             Entities['Functions'][fTag]['attributes']['file'] = filepath
         elif Name == 'SUPPORTMOTION':
             nTag = Entities['Loads'][lTag]['attributes']['list']
             #Check if TimeSeries file can be opened
             for n in nTag:
-                if 'file' in Entities['Supports'][n]:
-                    filenames = Entities['Supports'][n]['file']
-                    for ftag, filepath in enumerate(filenames):
-                        #Tries the path given by user
-                        if tryOpenfile(filepath):
-                            #Tries a global path with respect to the main file
-                            filename = Options['path'] + '/' + filepath
-                            if tryOpenfile(filename):
-                                print('   *** SUPPORTMOTION file=\'%s\' in Supports[%s] could not be opened ***' % (filepath,ftag))
-                            else:
-                                Entities['Supports'][n]['file'][ftag] = filename
+                if n not in Entities['Supports']:
+                    keys = list(Entities['Supports'].keys())
+                    print(' |   *** SUPPORTMOTION defined in Node%s is not consistent the list in Load[%d]' % (str(keys), lTag))
+                    chk += 1
+                else:
+                    if 'file' in Entities['Supports'][n]:
+                        filenames = Entities['Supports'][n]['file']
+                        for ftag, filepath in enumerate(filenames):
+                            #Tries the path given by user
+                            if tryOpenfile(filepath):
+                                #Tries a global path with respect to the main file
+                                filename = Options['path'] + '/' + filepath
+                                if tryOpenfile(filename):
+                                    print(' |   *** SUPPORTMOTION file=\'%s\' in Supports[%s] could not be opened' % (filepath,ftag))
+                                    chk += 1
+                                else:
+                                    Entities['Supports'][n]['file'][ftag] = filename
 
     #[7] Check all attributes in DAMPING are defined in ENTITIES
-    dlist = list(Entities['Elements'].keys())
     if not Entities['Dampings']:
+        eTags = list(Entities['Elements'].keys())
         Entities['Dampings'][1] = {'name': 'FREE', 'attributes': {'list': eTags}}
     else:
         for dTag in Entities['Dampings']:
@@ -655,7 +710,8 @@ def checkWarnings():
                 if Entities['Dampings'][dTag]['attributes']['list'].upper() == 'ALL':
                     Entities['Dampings'][dTag]['attributes']['list'] = eTags
                 else:
-                    print("   *** Attribute: 'list'=%d in Dampings[%s] is not recognized ***" % (dTag, Entities['Dampings'][dTag]['attributes']['list']))
+                    print(" |   *** Attribute: 'list'=%d in Dampings[%s] is not recognized" % (dTag, Entities['Dampings'][dTag]['attributes']['list']))
+                    chk += 1
             else:
                 if Entities['Dampings'][dTag]['name'] == 'RAYLEIGH':
                     if 'am' not in Entities['Dampings'][dTag]['attributes']:
@@ -664,18 +720,20 @@ def checkWarnings():
                         Entities['Dampings'][dTag]['attributes']['ak'] = 0.0
                 elif Entities['Dampings'][dTag]['name'] == 'CAUGHEY':
                     Entities['Dampings'][dTag]['name'] = 'FREE'
-                    print("   *** CAUGHEY in Dampings[%s] is not implemented yet ***" % dTag)
+                    print(" |   *** CAUGHEY in Dampings[%s] is not implemented yet" % dTag)
+                    chk += 1
                 elif Entities['Dampings'][dTag]['name'] == 'CAPPED':
                     Entities['Dampings'][dTag]['name'] = 'FREE'
-                    print("   *** CAPPED in Dampings[%s] is not implemented yet ***" % dTag)
+                    print(" |   *** CAPPED in Dampings[%s] is not implemented yet" % dTag)
+                    chk += 1
             #Finds elements without damping 
-            daux  = dlist
+            daux  = list(Entities['Elements'].keys())
             dlist = list(set(daux).difference(Entities['Dampings'][dTag]['attributes']['list']))
 
         #Creates a new free damping with the elements without damping
         if dlist:
             dTag = 1 + max(list( Entities['Dampings'].keys()))
-            Entities['Dampings'][dTag] =  {'name': 'FREE', 'list': dlist}
+            Entities['Dampings'][dTag] =  {'name': 'FREE', 'attributes': {'list': dlist}}
 
     #[8] Check all attributes in RECORDERS are defined in ENTITIES
     for rTag in Entities['Recorders']:
@@ -700,31 +758,46 @@ def checkWarnings():
     for sTag in Entities['Solvers']:
         if Entities['Solvers'][sTag]['name'] == 'PETSC':
             if Options['allocation'] == 'NO':
-                print('   *** Solver[%s] uses PETSC (parallel) and memory allocation has not being computed ***' % sTag)
+                print(' |   *** Solver[%s] uses PETSC (parallel) and memory allocation has not being computed' % sTag)
+                chk += 1
         elif Entities['Solvers'][sTag]['name'] == 'MUMPS':
             if Options['nparts'] == 1:
-                print('   *** Solver[%s] uses MUMPS (parallel) for number of partition %d, we recommend using EIGEN (serial) ***' % (sTag,Options['nparts']))
+                print(' |   *** Solver[%s] uses MUMPS (parallel) for number of partition %d, we recommend using EIGEN (serial)' % (sTag,Options['nparts']))
+                chk += 1
         elif Entities['Solvers'][sTag]['name'] == 'EIGEN':
             if Options['nparts'] != 1:
-                print('   *** Solver[%s] uses EIGEN (serial) and number of partition is %d (parallel) ***' % (sTag,Options['nparts']))
+                print(' |   *** Solver[%s] uses EIGEN (serial) and number of partition is %d (parallel)' % (sTag,Options['nparts']))
+                chk += 1
 
     #[10] Check all attributes in SIMULATION are defined in ENTITIES
     for sTag in Entities['Simulations']:
         if Entities['Simulations'][sTag]['attributes']['analysis'] not in Entities['Analyses']:
-            print('   *** Simulation[%s] has no defined analysis  ***' % sTag)
+            print(' |   *** Simulation[%s] has no defined analysis' % sTag)
+            chk += 1
         if Entities['Simulations'][sTag]['attributes']['algorithm'] not in Entities['Algorithms']:
-            print('   *** Simulation[%s] has no defined algorithm  ***' % sTag)
+            print(' |   *** Simulation[%s] has no defined algorithm' % sTag)
+            chk += 1
         if Entities['Simulations'][sTag]['attributes']['integrator'] not in Entities['Integrators']:
-            print('   *** Simulation[%s] has no defined integrator  ***' % sTag)
+            print(' |   *** Simulation[%s] has no defined integrator' % sTag)
+            chk += 1
         if Entities['Simulations'][sTag]['attributes']['solver'] not in Entities['Solvers']:
-            print('   *** Simulation[%s] has no defined solver ***' % sTag)
+            print(' |   *** Simulation[%s] has no defined solver' % sTag)
+            chk += 1
         if Entities['Simulations'][sTag]['combo'] not in Entities['Combinations']:
-            print('   *** Simulation[%s] has no defined combination ***' % sTag)
+            print(' |   *** Simulation[%s] has no defined combination' % sTag)
+            chk += 1
            
-    print(' Done checking!\n')
-    Options['wasChecked'] = True
+    #Status of the checking process:
+    if chk != 0:
+        print(' ◇ There are', chk, 'warnings that require attention!\n')
+        Options['nWarnings'] = chk
+        return True
+    print(' ◇ No warnings detected!\n')
+    Options['nWarnings'] = 0
+    
+    return False
 
-def CreateRunAnalysisFiles(plot=False):
+def CreateRunAnalysisFiles(combo=np.nan, plot=False):
     """
     This function gathers provided model information and post-process them 
     generating constraints, fiber sections, degree of freedom numbering and
@@ -732,16 +805,38 @@ def CreateRunAnalysisFiles(plot=False):
     @visit  https://github.com/SeismoVLAB/SVL\n
     @author Danilo S. Kusanovic 2020
 
+    Parameters
+    ----------
+    combo : int
+        The combination identifier for which the simulation is generated
+    plot : bool
+        If the stiffness matrix structure needs to be ploted
+
     Returns
     -------
     None
     """
-    #Enforce diaphragm constraints
+    #Check there are multiple combinations defined
+    if np.isnan(combo):
+        if len(Entities['Combinations']) == 1:
+            keys  = list(Entities['Combinations'].keys())
+            combo = int(keys[0])
+        else:
+            info = debugInfo(2)
+            print('\x1B[33m ALERT \x1B[0m: In file=\'%s\' at line=%d CreateRunAnalysisFiles(combo=?) must be specified.' %(info.filename,info.lineno))
+            exit(-1)
+
+    #The JSON output file name
+    filename = Options['path'] + '/' + 'Partition' + '/' + Options['file'] + '.' + str(combo) + '.$.json'
+
+    #Comute combinational factors for constraints
     ApplyConstraints()
 
     #Check if the model is properly done
-    if not Options['wasChecked']:
-        checkWarnings()
+    if checkWarnings():
+        info = debugInfo(2) 
+        print("\x1B[32m   *************** FIX WARNINGS BEFORE CONTINUING FROM LINE %d ***************\x1B[0m\n" % info.lineno)
+        exit(-1)
 
     #Generate DRM input files
     GenerateDRMFiles()
@@ -750,12 +845,7 @@ def CreateRunAnalysisFiles(plot=False):
     setDegreeOfFreedom(plot)
 
     #Generate the Entities group
-    createPartitions()
-
-    #Prints SVL Run-Analysis execution
-    print(' \x1B[32mExecute the Run-Analysis writing in a terminal the line bellow:\x1B[0m')
-    print(Options['run'])
-
+    createPartitions(combo, filename)
 
 #Functions to be run when SeismoVLAB is imported
 printHeader()

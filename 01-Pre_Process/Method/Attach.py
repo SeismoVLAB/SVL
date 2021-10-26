@@ -330,8 +330,8 @@ def addRigidBody(tag=np.nan, attributes={}):
         return True
     else:
         info = debugInfo(2)
-        indeces = list(set( Entities['RigidBodies'][tag]['list'] + attributes['list'] ))
-        Entities['RigidBodies'][tag]['list'] = indeces
+        indexes = list(set( Entities['RigidBodies'][tag]['list'] + attributes['list'] ))
+        Entities['RigidBodies'][tag]['list'] = indexes
         print('\x1B[33m ALERT \x1B[0m: In file=\'%s\' at line=%d RigidBodies[%d] has been already defined, but list was appended.' %(info.filename,info.lineno,tag))
 
 def addSupportMotion(tag=np.nan, attributes={}):
@@ -358,6 +358,8 @@ def addSupportMotion(tag=np.nan, attributes={}):
     """
     if 'type' in attributes:
         attributes['type'] = attributes['type'].upper()
+        if attributes['type'] == 'TIMESERIE':
+            attributes['type'] = 'TIMESERIES'
     if isinstance(attributes['dof'], list):
         attributes['dof'] = [k-1 for k in attributes['dof']]
     if isinstance(attributes['dof'], int):
@@ -561,6 +563,11 @@ def addDamping(tag=np.nan, name='Unknown', attributes={}):
     if 'list' in attributes:
         if isinstance(attributes['list'], int):
             attributes['list'] = [ attributes['list'] ]
+    else:
+        if name.upper() == 'FREE':
+            attributes['list'] = 'ALL'
+        else:
+            print('\x1B[33m ALERT \x1B[0m: In file=\'%s\' at line=%d Damping[%d] attributes[\'list\'] must be provided.' %(info.filename,info.lineno,tag))
     
     #Check whether the Damping exists
     if tag not in Entities['Dampings']:
@@ -597,6 +604,10 @@ def addFunction(tag=np.nan, name='Unknown', attributes={}):
     #Generates the global path for file
     if 'file' in attributes:
         attributes['file'] = attributes['file']
+
+    #Corrects Misspelled TimeSeries
+    if name.upper() == 'TIMESERIE':
+        name = 'TIMESERIES'
     
     #Check whether the Function exists
     if tag not in Entities['Functions']:
@@ -638,6 +649,8 @@ def addLoad(tag=np.nan, name='Unknown', attributes={}):
             attributes['list'] = [ attributes['list'] ]
     if 'type' in attributes:
         attributes['type'] = attributes['type'].upper()
+        if attributes['type'] == 'TIMESERIE':
+            attributes['type'] = 'TIMESERIES'
     else:
         if name.upper() != 'SUPPORTMOTION':
             info = debugInfo(2) 
@@ -824,13 +837,14 @@ def addAlgorithm(tag=np.nan, attributes={}):
     #Sets default values
     if 'nstep' not in attributes:
         attributes['nstep'] = 1
-    if 'cnvgtol' not in attributes:
-        attributes['cnvgtol'] = 1E-3
-    if 'cnvgtest' not in attributes:
-        attributes['cnvgtest'] = ConvergeTest['UNBALANCEFORCE']
-    else:
-        CNVGTEST = attributes['cnvgtest'].upper()
-        attributes['cnvgtest'] = ConvergeTest[CNVGTEST] 
+    if attributes['name'].upper() == 'NEWTON':
+        if 'cnvgtol' not in attributes:
+            attributes['cnvgtol'] = 1E-3
+        if 'cnvgtest' not in attributes:
+            attributes['cnvgtest'] = ConvergeTest['UNBALANCEFORCE']
+        else:
+            CNVGTEST = attributes['cnvgtest'].upper()
+            attributes['cnvgtest'] = ConvergeTest[CNVGTEST] 
 
     #Upper case Algorithm name
     if 'name' in attributes:

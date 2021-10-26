@@ -1,3 +1,4 @@
+#include <vector>
 #include <string>
 
 //The processor number.
@@ -9,17 +10,20 @@ int size;
 //The problem dimension (1D, 2D, 3D). 
 unsigned int nDimensions;
 
-//The input file name (.$.) to be loaded.
-std::string fileName;
-
 //The folder where the input file is loaded.
 std::string filePath;
 
-//The Execution for each simulation.
-bool FormOfExecution;
+//The input file name (.$.) to be loaded.
+std::vector<std::string> fileName;
+
+///Whether the driver (JSON) file is provided  
+bool driverFile;
 
 //The element mass formulation.
 bool MassFormulation;
+
+//The update option for internal variables in Mesh.
+std::string UpdateOption;
 
 //Maximum memory for lumped storage sparse matrix.
 unsigned int LumpedStorage;

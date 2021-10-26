@@ -6,26 +6,42 @@ Plastic1DJ2::Plastic1DJ2(const double E, const double nu, const double rho, cons
 Material("Plastic1DJ2", false), E(E), nu(nu), Rho(rho), K(K), H(H), SigmaY(SigmaY){
     //Initialize internal hardening variable.
     alpha = 0.0;
+    alpha_n = 0.0;
 
     //Initialize strain.
     Strain.resize(1);
-    Strain.fill(0.0);
+    Strain << 0.0;
+
+    Strain_n.resize(1);
+    Strain_n << 0.0;
 
     //Initialize strain.
     Stress.resize(1);
-    Stress.fill(0.0);
+    Stress << 0.0;
+
+    Stress_n.resize(1);
+    Stress_n << 0.0;
 
     //Initialize plastic strain.
     PlasticStrain.resize(1);
-    PlasticStrain.fill(0.0);
+    PlasticStrain << 0.0;
+
+    PlasticStrain_n.resize(1);
+    PlasticStrain_n << 0.0;
     
     //Initialize back stress.
     BackStress.resize(1);
-    BackStress.fill(0.0);
+    BackStress << 0.0;
+
+    BackStress_n.resize(1);
+    BackStress_n << 0.0;
     
     //Initialize consistent tangent stiffness.
     TangentStiffness.resize(1,1);
     TangentStiffness << E;
+
+    TangentStiffness_n.resize(1,1);
+    TangentStiffness_n << E;
 }
 
 //Destructor.
@@ -133,23 +149,42 @@ Plastic1DJ2::GetInitialTangentStiffness() const{
 //Perform converged material state update.
 void 
 Plastic1DJ2::CommitState(){
+    alpha_n = alpha;
+    Stress_n = Stress;
+    Strain_n = Strain;
+    BackStress_n = BackStress;
+    PlasticStrain_n = PlasticStrain;
+    TangentStiffness_n = TangentStiffness;
 }
 
 //Reverse the material states to previous converged state.
 void 
 Plastic1DJ2::ReverseState(){
-    //TODO: Get back to previous commited state
+    alpha = alpha_n;
+    Stress = Stress_n;
+    Strain = Strain_n;
+    BackStress = BackStress_n;
+    PlasticStrain = PlasticStrain_n;
+    TangentStiffness = TangentStiffness_n;
 }
 
 //Brings the material states to its initial state in the element.
 void 
 Plastic1DJ2::InitialState(){
     alpha = 0.0;
-    Strain.fill(0.0);
-    Stress.fill(0.0);
-    PlasticStrain.fill(0.0);
-    BackStress.fill(0.0);
+    Strain << 0.0;
+    Stress << 0.0;
+    PlasticStrain << 0.0;
+    BackStress << 0.0;
+
+    alpha_n = 0.0;
+    Strain_n << 0.0;
+    Stress_n << 0.0;
+    PlasticStrain_n << 0.0;
+    BackStress_n << 0.0;
+
     TangentStiffness << E;
+    TangentStiffness_n << E;
 }
 
 //Update the material state for this iteration.

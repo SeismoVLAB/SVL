@@ -6,12 +6,9 @@
 //Define constant tolerance value:
 const double TOL = 0.9999995;
 
-//Define VTK cell value for Paraview:
-const unsigned int VTKCELL = 3;
-
 //Overload constructor.
 kin2DFrame2::kin2DFrame2(const std::vector<unsigned int> nodes, std::unique_ptr<Section> &section) :
-Element("kin2DFrame2", nodes, 6, VTKCELL, GROUPFRAME){
+Element("kin2DFrame2", nodes, 6, VTK_LINEAR_LINE, GROUP_ELEMENT_FRAME){
     //The element nodes.
     theNodes.resize(2);
 

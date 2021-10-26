@@ -32,20 +32,17 @@ Options = {
     #SVL dictionary with user's defined variables
     # https://github.com/SeismoVLAB/SVL
     # @author Danilo S. Kusanovic 2020
-    'run'         : '',
     'path'        : '',
     'file'        : 'SeismoVLAB',
     'description' : '\n',
-    'execfile'    : '',
-    'execpath'    : '',
+    'execfiles'   : [],
     'preanalysis' : '',
     'runanalysis' : '',
     'allocation'  : 'NO',
     'numbering'   : 'Plain',
     'metispath'   : '',
-    'solution'    : 'Sequential',
+    'update'      : 'Restartable', #Restartable, Progressive, Transmissive
     'massform'    : 'Consistent',
-    'wasChecked'  : False,
     'nparts'      :  1,
     'dimension'   :  0,
     'nfree'       :  0,
@@ -55,16 +52,22 @@ Options = {
     'nconsistent' :  0,
     'nparaview'   :  0,
     'nfeatures'   :  0,
+    'nwarnings'   :  0,
     'd_nz'        : [],
     'o_nz'        : [],
-    'partition'   : []
+    'partition'   : [],
+    'clustermap'  : {}
 }
 
 ConvergeTest = {
-    'UNBALANCEFORCE'                 : 1,
-    'INCREMENTALDISPLACEMENT'        : 2,
-    'RELATIVEUNBALANCEFORCE'         : 3,
-    'RELATIVEINCREMENTALDISPLACEMENT': 4
+    'UNBALANCEFORCE'                     : 1,
+    'INCREMENTALDISPLACEMENT'            : 2,
+    'INCREMENTALENERGY'                  : 3,
+    'RELATIVEUNBALANCEFORCE'             : 4,
+    'RELATIVEINCREMENTALDISPLACEMENT'    : 5,
+    'RELATIVEINCREMENTALENERGY'          : 6,
+    'TOTALRELATIVEINCREMENTDISPLACEMENT' : 7,
+    'MAXIMUMNUMBERITERATION'             : 8
 }
 
 SolverOption = {

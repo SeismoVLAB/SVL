@@ -10,12 +10,9 @@
 //Define constant value:
 const double PI = 3.1415926535897932;
 
-//Define VTK cell value for Paraview:
-const unsigned int VTKCELL = 9;
-
 //Overload constructor.
 EQlin2DQuad4::EQlin2DQuad4(const std::vector<unsigned int> nodes, std::unique_ptr<Material> &material, const double th, const std::string quadrature, const unsigned int nGauss, const std::string Type, const double zref, const double cf1, const double cf2) :
-Element("EQlin2DQuad4", nodes, 8, VTKCELL, GROUPQUAD), t(th), cf1(cf1), cf2(cf2), zref(zref), Type(Type) {
+Element("EQlin2DQuad4", nodes, 8, VTK_LINEAR_QUAD, GROUP_ELEMENT_QUAD), t(th), cf1(cf1), cf2(cf2), zref(zref), Type(Type) {
     //The element nodes.
     theNodes.resize(4);
 

@@ -7,12 +7,9 @@
 #include "Definitions.hpp"
 #include "Profiler.hpp"
 
-//Define VTK cell value for Paraview:
-const unsigned int VTKCELL = 10;
-
 //Overload constructor.
 lin3DTetra4::lin3DTetra4(const std::vector<unsigned int> nodes, std::unique_ptr<Material> &material, const std::string quadrature, const unsigned int nGauss) :
-Element("lin3DTetra4", nodes, 12, VTKCELL, GROUPTETRA){
+Element("lin3DTetra4", nodes, 12, VTK_LINEAR_TETRA, GROUP_ELEMENT_TETRA){
     //The element nodes.
     theNodes.resize(4);
 

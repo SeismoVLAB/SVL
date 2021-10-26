@@ -8,12 +8,9 @@
 #include "Definitions.hpp"
 #include "Profiler.hpp"
 
-//THIS IS THE VTK NUMBER FOR HEXA IN PARAVIEW
-const unsigned int VTKCELL = 12;
-
 //Overload constructor.
 PML3DHexa8::PML3DHexa8(const std::vector<unsigned int> nodes, std::unique_ptr<Material> &material, const std::vector<double> parameters, const std::string quadrature, const unsigned int nGauss) :
-Element("PML3DHexa8", nodes, 72, VTKCELL, GROUPPML), m_pml(parameters[0]), L_pml(parameters[1]), R_pml(parameters[2]), x0_pml(parameters[3]), y0_pml(parameters[4]), z0_pml(parameters[5]), nx_pml(parameters[6]), ny_pml(parameters[7]), nz_pml(parameters[8]) {
+Element("PML3DHexa8", nodes, 72, VTK_LINEAR_HEXA, GROUP_ELEMENT_PML), m_pml(parameters[0]), L_pml(parameters[1]), R_pml(parameters[2]), x0_pml(parameters[3]), y0_pml(parameters[4]), z0_pml(parameters[5]), nx_pml(parameters[6]), ny_pml(parameters[7]), nz_pml(parameters[8]) {
     //The element nodes.
     theNodes.resize(8);
 

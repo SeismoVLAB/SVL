@@ -7,22 +7,35 @@ Plastic3DJ2::Plastic3DJ2(const double K, const double G, const double rho, const
 Material("Plastic3DJ2", false), K(K), G(G), Rho(rho), H(Hbar), beta(beta), SigmaY(SigmaY){
     //Initialize internal hardening variable.
     alpha = 0.0;
+    alpha_n = 0.0;
 
     //Initialize strain.
     Strain.resize(6);
     Strain.fill(0.0);
 
+    Strain_n.resize(6);
+    Strain_n.fill(0.0);
+
     //Initialize strain.
     Stress.resize(6);
     Stress.fill(0.0);
 
+    Stress_n.resize(6);
+    Stress_n.fill(0.0);
+
     //Initialize plastic strain.
     PlasticStrain.resize(6);
     PlasticStrain.fill(0.0);
+
+    PlasticStrain_n.resize(6);
+    PlasticStrain_n.fill(0.0);
     
     //Initialize back stress.
     BackStress.resize(6);
     BackStress.fill(0.0);
+
+    BackStress_n.resize(6);
+    BackStress_n.fill(0.0);
 
     //Fourth-rank identity tensor.
     Eigen::MatrixXd D = ComputeIdentityTensor();
@@ -33,6 +46,9 @@ Material("Plastic3DJ2", false), K(K), G(G), Rho(rho), H(Hbar), beta(beta), Sigma
     //Initialize stiffness matrix.
     TangentStiffness.resize(6,6);
     TangentStiffness = K*D + 2.0*G*(I - 1.0/3.0*D);
+
+    TangentStiffness_n.resize(6,6);
+    TangentStiffness_n = K*D + 2.0*G*(I - 1.0/3.0*D);
 }
 
 //Destructor.
@@ -145,12 +161,23 @@ Plastic3DJ2::GetInitialTangentStiffness() const{
 //Perform converged material state update.
 void 
 Plastic3DJ2::CommitState(){
+    alpha_n = alpha;
+    Stress_n = Stress;
+    Strain_n = Strain;
+    BackStress_n = BackStress;
+    PlasticStrain_n = PlasticStrain;
+    TangentStiffness_n = TangentStiffness;
 }
 
 //Reverse the material states to previous converged state.
 void 
 Plastic3DJ2::ReverseState(){
-    //TODO: Get back to previous commited state
+    alpha = alpha_n;
+    Stress = Stress_n;
+    Strain = Strain_n;
+    BackStress = BackStress_n;
+    PlasticStrain = PlasticStrain_n;
+    TangentStiffness = TangentStiffness_n;
 }
 
 //Brings the material states to its initial state in the element.
@@ -162,9 +189,16 @@ Plastic3DJ2::InitialState(){
     PlasticStrain.fill(0.0);
     BackStress.fill(0.0);
 
+    alpha_n = 0.0;
+    Strain_n.fill(0.0);
+    Stress_n.fill(0.0);
+    PlasticStrain_n.fill(0.0);
+    BackStress_n.fill(0.0);
+
     Eigen::MatrixXd D = ComputeIdentityTensor();
     Eigen::MatrixXd I = ComputeIdentityOperator();
     TangentStiffness = K*D + 2.0*G*(I - 1.0/3.0*D);
+    TangentStiffness_n = K*D + 2.0*G*(I - 1.0/3.0*D);
 }
 
 //Update the material state for this iteration.

@@ -55,43 +55,71 @@ Algorithm::UpdateStatesIncrements(std::shared_ptr<Mesh> &mesh, const Eigen::Vect
     }
 }
 
-//Construct the residual vector force from each processor.
-void
-Algorithm::ReducedParallelResidual(const Eigen::VectorXd &Feff, double &Residual){
+//Revert to the previous converged state in the mesh.
+void 
+Algorithm::ReverseStatesIncrements(std::shared_ptr<Mesh> &mesh){
     //Starts profiling this function.
     PROFILE_FUNCTION();
 
-    //Pointer to Eigen residual vector.
-    double *vec = new double[numberOfFreeDofs];
+    //Gets all nodes from the mesh.
+    std::map<unsigned int, std::shared_ptr<Node> >  Nodes = mesh->GetNodes();    
+
+    //TODO: Use OpenMP to accelerate here.
+    for(auto it : Nodes){
+        auto &Tag = it.first;
+
+        //Gets the associated nodal degree-of-freedom.
+        unsigned int nTotalDofs = Nodes[Tag]->GetNumberOfDegreeOfFreedom();
+
+        //Creates the nodal/incremental vector state.
+        Eigen::VectorXd dUij(nTotalDofs); 
+        dUij.fill(0.0);
+
+        //Sets the nodal incremental states.
+        Nodes[Tag]->SetIncrementalDisplacements(dUij);
+    }
+
+    //Gets all elements from the mesh.
+    std::map<unsigned int, std::shared_ptr<Element> > Elements = mesh->GetElements();
+
+    for(auto it : Elements){
+        auto &Tag = it.first;
+
+        //Updates the material states for each element.
+        Elements[Tag]->ReverseState();
+    }
+}
+
+//Construct the residual vector force from each processor.
+void
+Algorithm::ReducedParallelResidual(const Eigen::VectorXd &vector, double &Residual){
+    //Starts profiling this function.
+    PROFILE_FUNCTION();
 
     //Pointer to add residual contribution for each processor.
-    double *red = new double[numberOfFreeDofs];
-
-    //Transform Eigen-vector into pointer.
-    Eigen::Map<Eigen::VectorXd>(vec, numberOfFreeDofs) = Feff;
+    double *reduced = new double[numberOfFreeDofs];
 
     //Adds the residual force contribution from each processor.
-    MPI_Reduce(vec, red, numberOfFreeDofs, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
+    MPI_Reduce(vector.data(), reduced, numberOfFreeDofs, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
     MPI_Barrier(MPI_COMM_WORLD);
-    
-    //Transform the pointer into Eigen-vector.
-    Eigen::Map<Eigen::VectorXd> feff(red,numberOfFreeDofs);
 
     //Computes the norm of the residual force verctor.
-    Residual = feff.norm();
+    double residual = 0.0;
+    for(unsigned int k = 0; k < numberOfFreeDofs; k++)
+        residual += reduced[k]*reduced[k];
+    Residual = sqrt(residual);
 
     //Pass the residual error to each partition.
     MPI_Bcast(&Residual, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
     MPI_Barrier(MPI_COMM_WORLD);
 
     //Erase auxiliary variables. 
-    delete[] red;
-    delete[] vec;
+    delete[] reduced;
 }
 
 //Computes convergence tests for this algorithm.
 double 
-Algorithm::ComputeConvergence(const Eigen::VectorXd &Force, double Delta, bool isFirstIteration){
+Algorithm::ComputeConvergence(const Eigen::VectorXd &Force, const Eigen::VectorXd &Delta, const Eigen::VectorXd &delta, unsigned int k){
     //Starts profiling this function.
     PROFILE_FUNCTION();
 
@@ -100,38 +128,57 @@ Algorithm::ComputeConvergence(const Eigen::VectorXd &Force, double Delta, bool i
     //Convergence tests possibilities for this algorithm.
     if(flag == 1){
         //Unbalanced Force Norm.
-        if(!isFirstIteration)
-            ReducedParallelResidual(Force, Residual);
+        ReducedParallelResidual(Force, Residual);  
     }
     else if(flag == 2){
         //Increment Displacement Norm.
-        if(isFirstIteration){
-            NormFactor = Delta;
-        }
-        else{
-            Residual = Delta - NormFactor;
-            NormFactor = Delta;
-        }
+        Residual = delta.norm();
     }
     else if(flag == 3){
+        //Energy Increment Norm
+        Eigen::VectorXd Energy = delta.cwiseProduct(Force);
+        ReducedParallelResidual(Energy, Residual);
+    }
+    else if(flag == 4){
         //Relative Unbalanced Force Norm. 
-        if(isFirstIteration){
-            ReducedParallelResidual(Force, NormFactor);
-        }
-        else{
+        if(k != 0){
             ReducedParallelResidual(Force, Residual); 
             Residual = Residual/NormFactor;
         }
+        else{
+            ReducedParallelResidual(Force, NormFactor);
+            Residual = NormFactor;
+        }
     }
-    else if(flag == 4){
-        //Relative Increment Displacement Norm.
-        if(isFirstIteration){
-            NormFactor = Delta;
+    else if(flag == 5){
+        //Relative Increment Displacement Norm
+        if(k != 0){
+            Residual = delta.norm()/NormFactor;
         }
         else{
-            Residual = (Delta - NormFactor)/Delta;
-            NormFactor = Delta;
+            NormFactor = Delta.norm();
+            Residual = delta.norm();
         }
+    }
+    else if(flag == 6){
+        //Relative Energy Increment Norm
+        Eigen::VectorXd Energy = delta.cwiseProduct(Force);
+        if(k != 0){
+            ReducedParallelResidual(Energy, Residual);
+            Residual = Residual/NormFactor;
+        }
+        else{
+            ReducedParallelResidual(Energy, NormFactor);
+            Residual = NormFactor;
+        }
+    }
+    else if(flag == 7){
+        //Total Relative Increment Displacement Norm
+        Residual = delta.norm()/Delta.norm();
+    }
+    else if(flag == 8){
+        //Maximum Number of Iterations
+        Residual = -1.00;
     }
     else{
         //TODO: Set a warning that Convergence Test is not defined.

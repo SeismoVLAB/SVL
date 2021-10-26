@@ -8,13 +8,9 @@ Material("Hertzian1DLinear", false), k1(k1), k2(k2), k3(k3), Rho(rho){
     Strain.resize(1);
     Strain << 0.0;
 
-    //Initialize material stress.
-    Stress.resize(1);
-    Stress << 0.0;
-
-    //Initialize material stiffness.
-    TangentStiffness.resize(1,1);
-    TangentStiffness << k1;
+    //Initialize commited material strain.
+    newStrain.resize(1);
+    newStrain << 0.0;
 }
 
 //Destructor.
@@ -85,6 +81,9 @@ Hertzian1DLinear::GetStrain() const{
 //Returns material stress vector.
 Eigen::VectorXd
 Hertzian1DLinear::GetStress() const{
+    Eigen::VectorXd Stress(1);
+    Stress << k1*Strain(0) + k2*Strain(0)*Strain(0) + k3*Strain(0)*Strain(0)*Strain(0);
+
     return Stress;
 }
 
@@ -93,7 +92,7 @@ Eigen::VectorXd
 Hertzian1DLinear::GetStrainRate() const{
     //Compute the strain rate.
     Eigen::VectorXd StrainRate(1);
-    StrainRate.fill(0.0); 
+    StrainRate << 0.0; 
 
     return StrainRate;
 }
@@ -101,12 +100,18 @@ Hertzian1DLinear::GetStrainRate() const{
 //Computes the material total stress.
 Eigen::VectorXd 
 Hertzian1DLinear::GetTotalStress() const{
+    Eigen::VectorXd Stress(1);
+    Stress << k1*Strain(0) + k2*Strain(0)*Strain(0) + k3*Strain(0)*Strain(0)*Strain(0);
+
     return Stress;
 }
 
 //Computes consistent material matrix.
 Eigen::MatrixXd
 Hertzian1DLinear::GetTangentStiffness() const{
+    Eigen::MatrixXd TangentStiffness(1,1);
+    TangentStiffness(0,0) = k1 + 2.0*k2*Strain(0) + 3.0*Strain(0)*Strain(0);
+    
     return TangentStiffness;
 }
 
@@ -123,19 +128,20 @@ Hertzian1DLinear::GetInitialTangentStiffness() const{
 //Perform converged material state update.
 void 
 Hertzian1DLinear::CommitState(){
+    newStrain = Strain;
 }
 
 //Reverse the material states to previous converged state.
 void 
 Hertzian1DLinear::ReverseState(){
-    //TODO: Get back to previous commited state
+    Strain = newStrain;
 }
 
 //Brings the material states to its initial state in the element.
 void 
 Hertzian1DLinear::InitialState(){
-    Strain.fill(0.0);
-    Stress.fill(0.0);
+    Strain << 0.0;
+    newStrain << 0.0;
 }
 
 //Update the material state for this iteration.
@@ -145,11 +151,5 @@ Hertzian1DLinear::UpdateState(const Eigen::VectorXd strain, const unsigned int c
     if(cond == 1){
         //Update the strain.
         Strain = strain;
-
-        //Update the stress.
-        Stress << k1*strain(0) + k2*strain(0)*strain(0) + k3*strain(0)*strain(0)*strain(0);
-
-        //Consistent Tangent Operator.
-        TangentStiffness << k1 + 2.0*k2*strain(0) + 3.0*strain(0)*strain(0);
     }
 }

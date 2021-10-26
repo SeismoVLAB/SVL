@@ -30,18 +30,25 @@
 //       of Parallel Computing, volume 32(2), 136-156, 2006.
 //
 // Description:
-///This file contains the "MumpsSolver" solver declaration; this object 
-///performs a (MU)ltifrontal (M)assively (P)arallel (S)parse direct Solver on 
-///the matrix A, assuming that such matrix is symmetric positive definite (SPD), 
-///general symmetric (SYM) or unsymmetric (USYM) matrix
+// This file contains the "MumpsSolver" solver declaration; this object 
+// performs a (MU)ltifrontal (M)assively (P)arallel (S)parse direct Solver on 
+// the matrix A, assuming that such matrix is symmetric positive definite (SPD), 
+// general symmetric (SYM) or unsymmetric (USYM) matrix
 //------------------------------------------------------------------------------
 
 #ifndef _MUMPSSOLVER_HPP_
 #define _MUMPSSOLVER_HPP_
 
+///Start the MUMPS solver instance
 #define JOB_INIT -1
+
+///Ends the MUMPS solver instance
 #define JOB_END -2
+
+///Define a communicator for the package
 #define USE_COMM_WORLD -987654
+
+///Transform the c++ (0) base index to fortran (1) base index
 #define ICNTL(I) icntl[(I)-1]
 
 #include <dmumps_c.h>
@@ -49,6 +56,8 @@
 #include <Eigen/SparseCore>
 
 #include "LinearSystem.hpp"
+
+///This file contains the "MumpsSolver" solver declaration; this object performs a (MU)ltifrontal (M)assively (P)arallel (S)parse direct Solver on the matrix A
 
 /// @author    Danilo S. Kusanovic (dkusanov@caltech.edu)
 /// @date      June 8, 2020
@@ -80,8 +89,8 @@ class MumpsSolver : public LinearSystem {
 
         ///Gets the soultion vector.
         ///@return The solution vector.
-        ///@see MumpsSolver::sol.
-        Eigen::VectorXd GetSolution();
+        ///@see MumpsSolver::x.
+        const Eigen::VectorXd& GetSolution();
 
     protected:
         ///Number of non-zero values.
@@ -99,8 +108,8 @@ class MumpsSolver : public LinearSystem {
         ///MUMPS Initialization Flag.
         bool Initialized;
 
-        ///Solution vector.
-        double *sol;
+        ///Vector of unknowns. 
+        Eigen::VectorXd x;
 
         ///MUMPS Structure of parameters.
         DMUMPS_STRUC_C id;

@@ -3,6 +3,7 @@
 
 import json
 import copy
+from Parser.GMSH import parseGMSH
 from Parser.ETABS import parseETABS
 from Parser.SAP2000 import parseSAP
 from Parser.ANSYS import parseANSYS
@@ -29,6 +30,8 @@ def parseFile(filepath=None, fileformat=None):
     """
     if fileformat.upper() == 'JSON':
         mesh = parseJSON(filepath)
+    elif fileformat.upper() == 'GMSH':
+        mesh = parseGMSH(filepath)
     elif fileformat.upper() == 'ANSYS':
         mesh = parseANSYS(filepath)
     elif fileformat.upper() == 'ETABS':

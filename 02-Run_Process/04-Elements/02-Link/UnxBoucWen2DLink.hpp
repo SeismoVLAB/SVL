@@ -237,8 +237,14 @@ class UnxBoucWen2DLink : public Element{
         ///Non-linear Bouc-Wen internal force.
         double qbw;
 
+        ///Non-linear commited Bouc-Wen internal force.
+        double qbc;
+
         ///Consistent Bouc-Wen stiffness.
         double kbw;
+
+        ///Consistent commited Bouc-Wen stiffness.
+        double kbc;
 
         ///Newton-Raphson maximum number of iterations.
         unsigned int nMax;

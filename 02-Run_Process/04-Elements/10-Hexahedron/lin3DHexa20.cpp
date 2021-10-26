@@ -7,12 +7,9 @@
 #include "Definitions.hpp"
 #include "Profiler.hpp"
 
-//Define VTK cell value for Paraview:
-const unsigned int VTKCELL = 25;
-
 //Overload constructor.
 lin3DHexa20::lin3DHexa20(const std::vector<unsigned int> nodes, std::unique_ptr<Material> &material, const std::string quadrature, const unsigned int nGauss) :
-Element("lin3DHexa20", nodes, 60, VTKCELL, GROUPHEXA){
+Element("lin3DHexa20", nodes, 60, VTK_QUADRATIC_HEXA, GROUP_ELEMENT_HEXA){
     //The element nodes.
     theNodes.resize(20);
 

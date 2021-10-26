@@ -24,9 +24,9 @@
 //   [1] https://gist.github.com/TheCherno/Instrumentor.h
 //
 // Description:
-///This file contains the "Profiler object" declarations to compute how long it 
-///takes for a program to be executed, and sequentially measures the time of 
-///Execution of each function.
+// This file contains the "Profiler object" declarations to compute how long it 
+// takes for a program to be executed, and sequentially measures the time of 
+// Execution of each function.
 //------------------------------------------------------------------------------
 
 #ifndef _PROFILER_HHP_
@@ -63,12 +63,16 @@ struct InstrumentationSession{
     std::string Name;
 };
 
+///This file contains the "Profiler object" declarations to compute how long it 
+///takes for a program to be executed, and sequentially measures the time of 
+///Execution of each function.
+
 /// @author    The Cherno (https://www.patreon.com/thecherno)
 /// @date      July 2, 2018
 /// @version   1.0
 /// @file      Profiler.hpp
 /// @class     Profiler
-/// @see       
+/// @see       main.cpp
 /// @brief     Class that creates a JSON file with the time of execution of each function, files can be open at chrome://tracing/
 class Profiler{
 

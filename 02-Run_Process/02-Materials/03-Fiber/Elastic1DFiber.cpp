@@ -5,8 +5,11 @@
 Elastic1DFiber::Elastic1DFiber(const double E, const double nu, const double rho) : 
 Material("Elastic1DFiber", false), E(E), nu(nu), Rho(rho){
     //Initialize material strain.
-    Strain.resize(1);
-    Strain << 0.0;
+    newStrain.resize(1);
+    newStrain << 0.0;
+
+    oldStrain.resize(1);
+    oldStrain << 0.0;
 }
 
 //Destructor.
@@ -53,7 +56,7 @@ Elastic1DFiber::GetElasticityModulus() const{
 //Access the material's energy at current strain.
 double 
 Elastic1DFiber::GetEnergy() const{
-    double W = 1.0/2.0*Strain(0)*E*Strain(0);
+    double W = 1.0/2.0*oldStrain(0)*E*oldStrain(0);
     return W;
 }
 
@@ -70,13 +73,13 @@ Elastic1DFiber::GetDamping() const{
 //Returns material strain vector.
 Eigen::VectorXd
 Elastic1DFiber::GetStrain() const{
-    return Strain;
+    return oldStrain;
 }
 
 //Returns material stress vector.
 Eigen::VectorXd
 Elastic1DFiber::GetStress() const{
-	Eigen::VectorXd Stress = E*Strain;
+	Eigen::VectorXd Stress = E*oldStrain;
 
     return Stress;
 }
@@ -118,23 +121,25 @@ Elastic1DFiber::GetInitialTangentStiffness() const{
 //Perform converged material state update.
 void 
 Elastic1DFiber::CommitState(){
+    newStrain = oldStrain;
 }
 
 //Reverse the material states to previous converged state.
 void 
 Elastic1DFiber::ReverseState(){
-    //TODO: Get back to previous commited state
+    oldStrain = newStrain;
 }
 
 //Brings the material states to its initial state in the element.
 void 
 Elastic1DFiber::InitialState(){
-    Strain.fill(0.0);
+    oldStrain << 0.0;
+    newStrain << 0.0;
 }
 
 //Update the material state for this iteration.
 void
 Elastic1DFiber::UpdateState(const Eigen::VectorXd strain, unsigned int UNUSED(cond)){
     //Update the strain.
-    Strain << strain(0);
+    oldStrain << strain(0);
 }

@@ -154,8 +154,8 @@ class Elastic3DLinear : public Material{
         ///Strain vector.
         Eigen::VectorXd Strain;
 
-        ///Stress vector.
-        Eigen::VectorXd Stress;
+        ///Commited Strain vector.
+        Eigen::VectorXd newStrain;
 
         ///Tangent stiffness matrix.
         Eigen::MatrixXd TangentStiffness;

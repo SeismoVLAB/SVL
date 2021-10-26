@@ -46,9 +46,9 @@ class Plastic1DGap : public Material {
     public:
         ///Creates a Plastic1DGap material to be specified at a Gauss-point in an Element.
         ///@param E The elastic moduli of this material
-        ///@param fy The elastic moduli of this material
+        ///@param fy The yield stress of this material
         ///@param gap The separation from which the material start reacting
-        ///@param eta The separation from which the material start reacting
+        ///@param eta The post-yield stiffness ratio (Ep = eta*E)
         ///@param behavior The material behavior (true: Tension, false: Compression)
         ///@see Plastic1DGap::E, Plastic1DGap::gap.
         Plastic1DGap(double E, double fy, double gap, double eta, bool behavior=false);
@@ -143,20 +143,32 @@ class Plastic1DGap : public Material {
         void UpdateState(const Eigen::VectorXd strain, const unsigned int cond=0);
 
     private:
-		//Elastic Gap properties: 
+        ///The elastic moduli
 		double E;
+
+        ///The yield stress
         double fy;
+
+        ///The separation from which the material start reacting
 		double Gap;
+
+        ///The post-yield stiffness ratio
         double Ratio;
+
+        ///The maximum positive strain
         double maxYieldStrain;
+
+        ///The minimum negative strain
         double minYieldStrain;
+
+        ///The material behavior (true: Tension, false: Compression)
 		bool Behavior;
 
-		//Elastic Gap history variables:
-        double newStrain;
+		//The strain variable
         double oldStrain;
-        double oldStress;
-        double oldTangentStiffness;
+
+		//The commited strain variable
+        double newStrain;
 };
 
 #endif

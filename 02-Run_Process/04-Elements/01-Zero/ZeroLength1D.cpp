@@ -2,12 +2,9 @@
 #include "Definitions.hpp"
 #include "Profiler.hpp"
 
-//Define VTK cell value for Paraview:
-const unsigned int VTKCELL = 3; 
-
 //Overload constructor.
 ZeroLength1D::ZeroLength1D(const std::vector<unsigned int> nodes, std::unique_ptr<Material> &material, const unsigned int dir) :
-Element("ZeroLength1D", nodes, 2*nDimensions, VTKCELL, GROUPZERO), theDirection(dir){
+Element("ZeroLength1D", nodes, 2*nDimensions, VTK_LINEAR_LINE, GROUP_ELEMENT_ZERO), theDirection(dir){
     //The element nodes.
     theNodes.resize(2);
 

@@ -1,5 +1,6 @@
 #include "Integrator.hpp"
 #include "Definitions.hpp"
+#include "Profiler.hpp"
 
 //Default constructor.
 Integrator::Integrator(const std::shared_ptr<Mesh> &mesh){

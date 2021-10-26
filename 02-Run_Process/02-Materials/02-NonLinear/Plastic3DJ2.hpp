@@ -195,23 +195,41 @@ class Plastic3DJ2 : public Material{
         ///Yield stress
         double SigmaY;
     
-        ///Internal hardening variable
+        ///Trial Internal hardening variable
         double alpha;
+
+        ///Internal hardening variable at time n.
+        double alpha_n;
     
-        ///Strain vector.
+        ///Trial Strain vector.
         Eigen::VectorXd Strain;
 
-        ///Stress vector.
+        ///Trial Stress vector.
         Eigen::VectorXd Stress;
 
-        ///Back stress.
+        ///Trial Back stress.
         Eigen::VectorXd BackStress;
 
-        ///Plastic strain.
+        ///Trial Plastic strain.
         Eigen::VectorXd PlasticStrain;
 
-        ///Consistent tangent stiffness.
+        ///Trial Consistent tangent stiffness.
         Eigen::MatrixXd TangentStiffness;
+
+        ///Back stress at time n.
+        Eigen::VectorXd BackStress_n;
+
+        ///Plastic strain at time n.
+        Eigen::VectorXd PlasticStrain_n;
+
+        ///Strain at time n
+        Eigen::VectorXd Strain_n;
+
+        ///Stress vector at time n
+        Eigen::VectorXd Stress_n;
+
+        ///Consistent tangent stiffness at time n.
+        Eigen::MatrixXd TangentStiffness_n;
 };
 
 #endif

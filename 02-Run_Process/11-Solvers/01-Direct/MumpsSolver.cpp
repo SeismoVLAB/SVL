@@ -34,8 +34,9 @@ MumpsSolver::MumpsSolver(unsigned int option, bool flag) : Option(option), Flag(
     id.ICNTL(6)  = 0;
     id.ICNTL(18) = 3;
 
-    //Dynamic Memory Allocation.
-    sol = new double[numberOfFreeDofs];
+    //Sets unknown vector sizes.
+    x.resize(numberOfFreeDofs);
+    x.fill(0.0);
 }
 
 //Destructor:
@@ -43,9 +44,6 @@ MumpsSolver::~MumpsSolver(){
     //Terminates MUMPS Instance.
     id.job = JOB_END; 
     dmumps_c(&id);
-
-    //Delete Dynamic Pointers.
-    delete[] sol;
 }
 
 //Solve the linear system.
@@ -54,18 +52,12 @@ MumpsSolver::SolveSystem(Eigen::SparseMatrix<double> &A, Eigen::VectorXd &b){
     //Starts profiling this funtion.
     PROFILE_FUNCTION();
 
-    //Transform Eigen vector to pointer.
-    double *rhs = new double[numberOfFreeDofs];
-
-    for(unsigned int k = 0; k < numberOfFreeDofs; k++)
-        rhs[k] = b(k);
-
     //Assembly Force Vector.
-    MPI_Reduce(rhs, sol, numberOfFreeDofs, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
+    MPI_Reduce(b.data(), x.data(), numberOfFreeDofs, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
     MPI_Barrier(MPI_COMM_WORLD);
 
     //Vector Coefficients.
-    id.rhs = sol;
+    id.rhs = x.data();
      
     //Number of non-zeros (Full-Matrix or Upper-Triangular).
     if(Option == 2){
@@ -166,28 +158,22 @@ MumpsSolver::SolveSystem(Eigen::SparseMatrix<double> &A, Eigen::VectorXd &b){
     }
 
     //Copy Solution to All Processors.
-    MPI_Bcast(sol, numberOfFreeDofs, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+    MPI_Bcast(x.data(), numberOfFreeDofs, MPI_DOUBLE, 0, MPI_COMM_WORLD);
 
     //Delete Dynamic Pointers.
     delete[] irn;
     delete[] jcn;
     delete[] ptrs;
-    delete[] rhs;
 
     //Return the integrator status.
     return false;
 }
 
 //Gets the soultion vector.    
-Eigen::VectorXd 
+const Eigen::VectorXd& 
 MumpsSolver::GetSolution(){
     //Starts profiling this funtion.
     PROFILE_FUNCTION();
-
-    //Transform Mumps solution into Eigen Vector.
-    Eigen::VectorXd x(numberOfFreeDofs);
-    for(unsigned int k = 0; k < numberOfFreeDofs; k++)
-        x(k) = sol[k];
 
     return x;
 }

@@ -24,7 +24,7 @@
 //   [1]
 //
 // Description:
-// This set of functions gets the command line user's inputs.
+// These set of functions gets the command line user's inputs.
 //------------------------------------------------------------------------------
 
 #ifndef _UTILITIES_HPP_
@@ -35,6 +35,9 @@
 #include <iostream>
 #include <stdlib.h>
 #include "Definitions.hpp"
+
+///Sets of functions used to parse command line information and to display 
+///SeismoVLAB information
 
 /// @author    Danilo S. Kusanovic (dkusanov@caltech.edu)
 /// @date      December 18, 2018
@@ -52,7 +55,7 @@ printHelp(bool &help){
         std::cout << "     -dir  : Location of the working directory.                  \n";
         std::cout << "     -file : Name of the SeismoVLAB file to be loaded.           \n";
         std::cout << "                                                                 \n";
-        std::cout << " \x1B[33mRun \x1B[0m: mpirun -np n ./SeismoVLAB.exe -dir '/path/to/files' -file 'model.$.json'\n";
+        std::cout << " \x1B[33mRun \x1B[0m: mpirun -np n ./SeismoVLAB.exe -dir '/path/to/files' -file 'model.#.$.json'\n\n";
     }
 }
 
@@ -91,11 +94,13 @@ printLogo(){
 
 ///Parse Command Line Inputs. 
 void
-CommandLine(int argc, char **argv, bool &parsefile){
+CommandLine(int argc, char **argv){
     //Auxiliary Variable.
-    int iter  = 0; 
+    int iter  = 0;
+    int nfile = 0; 
     int count = 0;
-    bool help = false;
+    bool help  = false;
+    driverFile = false;
 
     //Find help flag is active.
     while(iter < argc){
@@ -109,13 +114,29 @@ CommandLine(int argc, char **argv, bool &parsefile){
         iter++;
     }
 
-    //SeismoVLab analysis variables.
+    //SeismoVLAB analysis variables.
     iter = 0;
     while(iter < argc){
         //Name of the Mesh input file.
         if(strcasecmp(argv[iter],"-file") == 0){
-            fileName = std::string(argv[iter + 1]);
-            count++;        
+            while(true){
+                nfile++;
+
+                //Saves the file name in list
+                std::string jsonfile = std::string(argv[iter + nfile]);
+                fileName.push_back(jsonfile);
+
+                //Conditions to break loop
+                if((iter + nfile + 1) < argc){
+                    if(strcasecmp(argv[iter + nfile + 1], "--h"   ) == 0) break;
+                    if(strcasecmp(argv[iter + nfile + 1], "-dir"  ) == 0) break;
+                    if(strcasecmp(argv[iter + nfile + 1], "--help") == 0) break;
+                }
+                else{
+                    break;
+                }
+            }
+            count++;
         }
         //Location of the Mesh File:
         if(strcasecmp(argv[iter],"-dir") == 0){
@@ -127,12 +148,14 @@ CommandLine(int argc, char **argv, bool &parsefile){
 
     //No Enough Number of Input Arguments.
     if(count == 2){
-        parsefile = true;
+        driverFile = true;
     }
     else{
         if(!help){
-            if(rank == 0)
-                std::cout << "\x1B[31m ERROR: \x1B[0mNOT ENOUGH Command line input arguments. \n";
+            if(rank == 0){
+                printHelp(help);
+                std::cout << "\x1B[31m ERROR: \x1B[0mNOT ENOUGH Command line input arguments.\n";
+            }
         }
     }
 }

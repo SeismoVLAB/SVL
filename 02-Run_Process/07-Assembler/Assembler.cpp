@@ -149,7 +149,6 @@ Assembler::ComputeDampingMatrix(std::shared_ptr<Mesh> &mesh){
                 }
             }
         }
-        
     }
     
     //Builds the damping sparse matrix.
@@ -203,6 +202,37 @@ Assembler::ComputePMLHistoryMatrix(std::shared_ptr<Mesh> &mesh){
     HistoryMatrix.setFromTriplets(tripletList.begin(), tripletList.begin() + sum);
 
     return HistoryMatrix;
+}
+
+//Assemble the external force vector accumulated from previous analyses.
+Eigen::VectorXd 
+Assembler::ComputeProgressiveForceVector(std::shared_ptr<Mesh> &mesh){
+    //Starts profiling this function.
+    PROFILE_FUNCTION();
+
+    //Sets the total force vector. 
+    Eigen::VectorXd ForceVector(numberOfTotalDofs);
+    ForceVector.fill(0.0);
+
+    //Gets element information from the mesh.
+    std::map<unsigned int, std::shared_ptr<Node> > Nodes = mesh->GetNodes();
+
+    for(auto it : Nodes){
+        auto &Tag = it.first;
+
+        //Gets the node degree-of-freedom list.
+        std::vector<int> dofs = Nodes[Tag]->GetTotalDegreeOfFreedom();
+
+        //Gets the progressive force from previous analyses:
+        Eigen::VectorXd Fprevious = Nodes[Tag]->GetProgressiveForces();
+
+        //Assemble contribution of each node force in mesh.
+        for(unsigned int j = 0; j < dofs.size(); j++){
+            ForceVector(dofs[j]) += Fprevious(j);
+        }
+    }
+
+    return ForceVector;
 }
 
 //Assembles the internal force vector.
@@ -284,7 +314,7 @@ Assembler::ComputeExternalForceVector(std::shared_ptr<Mesh> &mesh, unsigned int 
         unsigned int Tag = IDs[it];
 
         switch (Loads[Tag]->GetClassification()){
-            case 1: 
+            case POINTLOAD_CONCENTRATED_CONSTANT: 
                 {   //Static Node Point Load.
                     std::vector<unsigned int> LoadNodes = Loads[Tag]->GetNodes();
 
@@ -301,7 +331,7 @@ Assembler::ComputeExternalForceVector(std::shared_ptr<Mesh> &mesh, unsigned int 
                     }    
                     break; 
                 }
-            case 2: 
+            case POINTLOAD_CONCENTRATED_DYNAMIC: 
                 {   //Dynamic Node Point Load.
                     std::vector<unsigned int> LoadNodes = Loads[Tag]->GetNodes();
 
@@ -318,7 +348,51 @@ Assembler::ComputeExternalForceVector(std::shared_ptr<Mesh> &mesh, unsigned int 
                     }    
                     break;
                 }
-            case 3: 
+            case POINTLOAD_BODY_CONSTANT: 
+                {   //Static Node (Body) Point Load.
+                    std::vector<unsigned int> LoadNodes = Loads[Tag]->GetNodes();
+
+                    for(unsigned int j = 0; j < LoadNodes.size(); j++){
+                        //Gets the static force vector.
+                        Eigen::VectorXd Fn = Loads[Tag]->GetLoadVector();
+
+                        //Gets the associated mass to this node.
+                        Eigen::VectorXd Mn = Nodes[LoadNodes[j]]->GetMass();
+
+                        //Assemble the force vector.
+                        if(Mn.size() != 0){
+                            //Degree-of-freedom list of the node.
+                            std::vector<int> totalDofs = Nodes[LoadNodes[j]]->GetTotalDegreeOfFreedom();
+
+                            for(unsigned int i = 0; i < Fn.size(); i++)
+                                Fext(totalDofs[i]) = Fn(i)*Mn(i);
+                        } 
+                    }
+                    break; 
+                }
+            case POINTLOAD_BODY_DYNAMIC: 
+                {   //Dynamic Node (Body) Point Load.
+                    std::vector<unsigned int> LoadNodes = Loads[Tag]->GetNodes();
+
+                    for(unsigned int j = 0; j < LoadNodes.size(); j++){
+                        //Gets the static force vector.
+                        Eigen::VectorXd Fn = Loads[Tag]->GetLoadVector(k);
+
+                        //Gets the associated mass to this node.
+                        Eigen::VectorXd Mn = Nodes[LoadNodes[j]]->GetMass();
+
+                        //Assemble the force vector.
+                        if(Mn.size() != 0){
+                            //Degree-of-freedom list of the node.
+                            std::vector<int> totalDofs = Nodes[LoadNodes[j]]->GetTotalDegreeOfFreedom();
+
+                            for(unsigned int i = 0; i < Fn.size(); i++)
+                                Fext(totalDofs[i]) = Fn(i)*Mn(i);
+                        } 
+                    }
+                    break;
+                }
+            case ELEMENTLOAD_SURFACE_CONSTANT: 
                 {   //Static Element Surface Load. 
                     std::vector<unsigned int> LoadFaces    = Loads[Tag]->GetFaces();
                     std::vector<unsigned int> LoadElements = Loads[Tag]->GetElements();
@@ -341,7 +415,7 @@ Assembler::ComputeExternalForceVector(std::shared_ptr<Mesh> &mesh, unsigned int 
                     }
                     break;
                 }
-            case 4: 
+            case ELEMENTLOAD_BODY_CONSTANT: 
                 {   //Static Element Body (volume) Load.
                     std::vector<unsigned int> LoadElements = Loads[Tag]->GetElements();
                     std::map<unsigned int, std::shared_ptr<Element> > Elements = mesh->GetElements();
@@ -362,7 +436,7 @@ Assembler::ComputeExternalForceVector(std::shared_ptr<Mesh> &mesh, unsigned int 
                     }
                     break;
                 }
-            case 5: 
+            case ELEMENTLOAD_BODY_DYNAMIC: 
                 {   //Dynamic Element Body (volume) Load. 
                     std::vector<unsigned int> LoadElements = Loads[Tag]->GetElements();
                     std::map<unsigned int, std::shared_ptr<Element> > Elements = mesh->GetElements();
@@ -383,26 +457,7 @@ Assembler::ComputeExternalForceVector(std::shared_ptr<Mesh> &mesh, unsigned int 
                     }
                     break;
                 }
-            case 6: 
-                {   //Dynamic Wave front loads.
-                    std::vector<unsigned int> elemID = Loads[Tag]->GetElements();
-                    std::map<unsigned int, std::shared_ptr<Element> > Elements = mesh->GetElements();
-
-                    //Loop over al DRM elements.
-                    for(unsigned int i = 0; i < elemID.size(); i++){
-                        //Gets the element degree-of-freedom connectivity.
-                        std::vector<unsigned int> totalDofs = Elements[elemID[i]]->GetTotalDegreeOfFreedom();
-
-                        //Gets the force vector.
-                        Eigen::VectorXd Fn = Elements[elemID[i]]->ComputeDomainReductionForces(Loads[Tag], k);
-
-                        //Assemble the force vector.
-                        for(unsigned int j = 0; j < Fn.size(); j++)
-                            Fext(totalDofs[j]) += Fn(j); 
-                    }
-                    break;
-                }
-            case 7: 
+            case ELEMENTLOAD_DOMAIN_REDUCTION: 
                 {   //Dynamic Element Domain-Reduction Forces.
                     std::vector<unsigned int> elemID = Loads[Tag]->GetElements();
                     std::map<unsigned int, std::shared_ptr<Element> > Elements = mesh->GetElements();
@@ -453,7 +508,7 @@ Assembler::ComputeSupportMotionIncrement(std::shared_ptr<Mesh> &mesh, unsigned i
         //Load identifier.
         unsigned int Tag = IDs[it];
 
-        if(Loads[Tag]->GetClassification() == 8){
+        if(Loads[Tag]->GetClassification() == POINTLOAD_SUPPORT_MOTION){
             //Static Node Point Load.
             std::vector<unsigned int> LoadNodes = Loads[Tag]->GetNodes();
 

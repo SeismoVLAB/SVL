@@ -8,12 +8,9 @@
 //Define constant tolerance value:
 const double TOL = 0.9999995;
 
-//Define VTK cell value for Paraview:
-const unsigned int VTKCELL = 3;
-
 //Overload constructor.
 lin2DFrame2::lin2DFrame2(const std::vector<unsigned int> nodes, std::unique_ptr<Section> &section, bool formulation, const std::string quadrature, unsigned int nGauss) :
-Element("lin2DFrame2", nodes, 6, VTKCELL, GROUPFRAME), Formulation(formulation), Phi(0.0){
+Element("lin2DFrame2", nodes, 6, VTK_LINEAR_LINE, GROUP_ELEMENT_FRAME), Formulation(formulation), Phi(0.0){
     //The element nodes.
     theNodes.resize(2);
 

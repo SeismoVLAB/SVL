@@ -7,12 +7,9 @@
 #include "Definitions.hpp"
 #include "Profiler.hpp"
 
-//Define VTK cell value for Paraview:
-const unsigned int VTKCELL = 12;
-
 //Overload constructor.
 kin3DHexa8::kin3DHexa8(const std::vector<unsigned int> nodes, std::unique_ptr<Material> &material, const std::string quadrature, const unsigned int nGauss) :
-Element("kin3DHexa8", nodes, 24, VTKCELL, GROUPHEXA){
+Element("kin3DHexa8", nodes, 24, VTK_LINEAR_HEXA, GROUP_ELEMENT_HEXA){
     //The element nodes.
     theNodes.resize(8);
 

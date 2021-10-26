@@ -25,6 +25,9 @@ Material("Plastic3DBA", false), K(K), G(G), Rho(rho), H0(H0), h(h), m(m), Su(Su)
     //Initialize deviatoric stress at F0.
     DeviatoricStress0.resize(6);
     DeviatoricStress0.fill(0.0);
+
+    DeviatoricStress0_n.resize(6);
+    DeviatoricStress0_n.fill(0.0);
     
     //Fourth-rank identity tensor.
     Eigen::MatrixXd D = ComputeIdentityTensor();
@@ -36,15 +39,21 @@ Material("Plastic3DBA", false), K(K), G(G), Rho(rho), H0(H0), h(h), m(m), Su(Su)
     TangentStiffness.resize(6,6); 
     TangentStiffness = K*D + 2.0*G*Id;
 
+    TangentStiffness_n.resize(6,6);
+    TangentStiffness_n = K*D + 2.0*G*Id;
+
     //Bounding surface radius
     R = sqrt(8.0/3.0)*Su;
 
     //initialize hardening internal variables
     psi = 2.0*G; kappa = 1.0E12;
+    psi_n = 2.0*G; kappa_n = 1.0E12;
 
     FirstLoadFlag = 0;
+    FirstLoadFlag_n = 0;
 
     rootFlag = 0;
+    rootFlag_n = 0;
 }
 
 //Destructor.
@@ -157,14 +166,29 @@ Plastic3DBA::GetInitialTangentStiffness() const{
 //Perform converged material state update.
 void 
 Plastic3DBA::CommitState(){
+    psi_n = psi; 
+    kappa_n = kappa;
+    rootFlag_n = rootFlag;
+    FirstLoadFlag_n = FirstLoadFlag;
+
     Stress_n = Stress;
     Strain_n = Strain;
+    TangentStiffness_n = TangentStiffness;
+    DeviatoricStress0_n = DeviatoricStress0;
 }
 
 //Reverse the material states to previous converged state.
 void 
 Plastic3DBA::ReverseState(){
-    //TODO: Get back to previous commited state
+    psi = psi_n; 
+    kappa = kappa_n;
+    rootFlag = rootFlag_n;
+    FirstLoadFlag = FirstLoadFlag_n;
+
+    Stress = Stress_n;
+    Strain = Strain_n;
+    TangentStiffness = TangentStiffness_n;
+    DeviatoricStress0 = DeviatoricStress0_n;
 }
 
 //Brings the material states to its initial state in the element.
@@ -172,19 +196,25 @@ void
 Plastic3DBA::InitialState(){
     psi = 2.0*G; 
     kappa = 1.0E12;
+    psi_n = 2.0*G; 
+    kappa_n = 1.0E12;
 
-    FirstLoadFlag = 0;
     rootFlag = 0;
+    rootFlag_n = 0;
+    FirstLoadFlag = 0;
+    FirstLoadFlag_n = 0;
 
     Strain.fill(0.0);
     Strain_n.fill(0.0);
     Stress.fill(0.0);
     Stress_n.fill(0.0);
     DeviatoricStress0.fill(0.0);
+    DeviatoricStress0_n.fill(0.0);
 
     Eigen::MatrixXd D = ComputeIdentityTensor();
     Eigen::MatrixXd Id = ComputeDeviatoricTensor();
     TangentStiffness = K*D + 2.0*G*Id;
+    TangentStiffness_n = K*D + 2.0*G*Id;
 }
 
 //Update the material state for this iteration.

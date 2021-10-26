@@ -7,12 +7,9 @@
 #include "Definitions.hpp"
 #include "Profiler.hpp"
 
-//Define VTK cell value for Paraview:
-const unsigned int VTKCELL = 5;
-
 //Overload constructor.
 lin2DTria3::lin2DTria3(const std::vector<unsigned int> nodes, std::unique_ptr<Material> &material, const double th, const std::string quadrature, const unsigned int nGauss) :
-Element("lin2DTria3", nodes, 6, VTKCELL, GROUPTRIA), t(th){
+Element("lin2DTria3", nodes, 6, VTK_LINEAR_TRIA, GROUP_ELEMENT_TRIA), t(th){
     //The element nodes.
     theNodes.resize(3);
 

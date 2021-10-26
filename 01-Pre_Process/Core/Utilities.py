@@ -4,10 +4,18 @@
 import os
 import sys
 import copy
+import atexit
 import inspect
 import numpy as np
 from datetime import date
 from Core.Definitions import Entities, Options, ConvergeTest, SolverOption
+
+@atexit.register
+def ExitProgram():
+    #Prints SVL Run-Analysis execution
+    if len(Options['execfiles']) != 0 and Options['nWarnings'] == 0:
+        print('\n \x1B[32mExecute the Run-Analysis writing in a terminal the line bellow:\x1B[0m')
+        print(ExecuteRunAnalysis())
 
 def clc():
     """
@@ -52,10 +60,23 @@ def cleanAll():
     Options['description'] = '\n'
     Options['allocation' ] = 'NO'
     Options['numbering'  ] = 'Plain'
-    Options['massform'   ] = 'consistent'
-    Options['solution'   ] = 'Sequential'
+    Options['massform'   ] = 'Consistent'
+    Options['updatemode' ] = 'Restartable'
     Options['nparts'     ] =  1
-    Options['wasChecked' ] = False
+    Options['execfiles'  ] = []
+    Options['dimension'  ] =  0
+    Options['nfree'      ] =  0
+    Options['ntotal'     ] =  0
+    Options['nconstraint'] =  0
+    Options['nlumped'    ] =  0
+    Options['nconsistent'] =  0
+    Options['nparaview'  ] =  0
+    Options['nfeatures'  ] =  0
+    Options['nwarnings'  ] =  0
+    Options['d_nz'       ] = []
+    Options['o_nz'       ] = []
+    Options['partition'  ] = []
+    Options['clustermap' ] = []
     Options['preanalysis'] = preanalysis
     Options['runanalysis'] = runanalysis
     setFilePath()
@@ -247,6 +268,28 @@ def setFileExtension(filename='', extension=''):
             else:
                 filename += extension
     return filename
+
+def ExecuteRunAnalysis():
+    """
+    This function generates a string containing the command line to be run in terminal\n
+    @visit  https://github.com/SeismoVLAB/SVL\n
+    @author Danilo S. Kusanovic 2021
+
+    return
+    -------
+    str
+        The Run-Analysis terminal command line to be executed
+    """
+    #The generated partition file name (generic) path
+    execpath =  Options['path'] + '/Partition'
+    execfile = '\' \''.join(Options['execfiles'])
+
+    #SeismoVLAB execution command line
+    CommandLine = ' ' + Options['runanalysis'] + '/SeismoVLAB.exe -dir \'' + execpath + '\' -file \'' + execfile + '\'\n'
+    if Options['nparts'] > 1:
+        CommandLine = ' mpirun -np ' + str(Options['nparts']) + CommandLine
+
+    return CommandLine
 
 def saveAs(filename='output'):
     """

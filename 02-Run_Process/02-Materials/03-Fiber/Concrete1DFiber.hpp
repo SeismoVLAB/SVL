@@ -162,13 +162,14 @@ class Concrete1DFiber : public Material {
         double Rho;
 		double lambda;
 
-		//Concrete history variables:
+		//Concrete Commited history variables:
 		double newStrain;
 		double newStress;
 		double newTangentStiffness;
 		double newMinStrain;
 		double newMaxStrain;
 
+		//Concrete Updated history variables:
 		double oldStrain;
 		double oldStress;
 		double oldTangentStiffness;

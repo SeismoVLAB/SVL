@@ -11,8 +11,7 @@ EigenSolver::EigenSolver(bool flag) : Flag(flag), Factored(false), Initialized(f
 
 //Destructor:
 EigenSolver::~EigenSolver(){
-    //Clears full vectors.    
-    x.resize(0);
+    //Does nothing
 }
 
 //Solve the linear system.
@@ -60,7 +59,7 @@ EigenSolver::SolveSystem(Eigen::SparseMatrix<double> &A, Eigen::VectorXd &b){
 }
 
 //Gets the soultion vector.    
-Eigen::VectorXd 
+const Eigen::VectorXd& 
 EigenSolver::GetSolution(){
     //Starts profiling this funtion.
     PROFILE_FUNCTION();

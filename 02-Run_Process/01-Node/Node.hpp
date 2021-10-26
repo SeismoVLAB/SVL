@@ -71,11 +71,22 @@ class Node{
         ///@see Node::Mass.
         void SetMass(Eigen::VectorXd &mass);
 
+        ///Set the node's restrain condition.
+        ///@param isFixed whether the node is fixed or free.
+        ///@return Nothing.
+        ///@see Node::Fixed.
+        void SetAsFixed(bool isFixed);
+
         ///Sets the current reaction force of this node.
         ///@param mass Vector of masses.
         ///@return Nothing.
         ///@see Node::Reaction.
         void SetReaction(Eigen::VectorXd &reaction);
+
+        ///Sets the external force from previous analysis.
+        ///@param force Vector of forces.
+        ///@see Node::Force.
+        void SetProgressiveForces(Eigen::VectorXd &force);
 
         ///Set the node's position in a finite element Mesh.
         ///@param coordinates Vector of coordinates or position.
@@ -132,6 +143,10 @@ class Node{
         ///@see Node::SupportMotion.
         void SetSupportMotion(unsigned int k, std::vector<double> &Uo);
 
+        ///Remove the displacements support motion associated with this Node.
+        ///@see Node::SupportMotion.
+        void DelSupportMotion();
+
         ///Gets the node's mass as a vector.
         ///@return Vector with the mass at each degree-of-freedom.
         ///@note More details can be found at @ref linkNode, and @ref linkMass.
@@ -147,37 +162,42 @@ class Node{
         ///@return Vector with the coordinates or position of this node.
         ///@note More details can be found at @ref linkNode.
         ///@see Node::Coordinates.
-        Eigen::VectorXd GetCoordinates() const;
+        const Eigen::VectorXd& GetCoordinates() const;
 
         ///Gets the current displacement state of this node.
         ///@return Vector with the displacements for each degree-of-freedom.
         ///@see Node::Displacements.
-        Eigen::VectorXd GetDisplacements() const;
+        const Eigen::VectorXd& GetDisplacements() const;
 
         ///Gets the current velocity state of this node.
         ///@return Vector with the velocities for each degree-of-freedom.
         ///@see Node::Velocities.
-        Eigen::VectorXd GetVelocities() const;
+        const Eigen::VectorXd& GetVelocities() const;
 
         ///Gets the current acceleration state of this node.
         ///@return Vector with the accelerations for each degree-of-freedom.
         ///@see Node::Accelerations.
-        Eigen::VectorXd GetAccelerations() const;
+        const Eigen::VectorXd& GetAccelerations() const;
 
         ///Returns the inertial forces associated to this node.
         ///@return Vector with the inertial forces for each degree-of-freedom.
         ///@see Node::Mass.
         Eigen::VectorXd GetInertialForces() const;
 
+        ///Returns the external force from previous analysis.
+        ///@return Vector with the external forces for each degree-of-freedom.
+        ///@see Node::Force.
+        const Eigen::VectorXd& GetProgressiveForces() const;
+
         ///Gets the current PML history vector of this node.
         ///@return Vector with the integrated PML states at each degree-of-freedom.
         ///@see Node::PMLIntegratedVector Node::SetPMLVector.
-        Eigen::VectorXd GetPMLVector() const;
+        const Eigen::VectorXd& GetPMLVector() const;
 
         ///Gets the current incremental displacement of this node.
         ///@return Vector with the incremental displacements for each degree-of-freedom.
         ///@see Node::IncrementalDisplacements.
-        Eigen::VectorXd GetIncrementalDisplacements() const;
+        const Eigen::VectorXd& GetIncrementalDisplacements() const;
 
         ///Gets the current domain reduction displacements, velocities and accelerations.
         ///@param k Time step at which the domain reduction information is retrieved.
@@ -192,6 +212,11 @@ class Node{
         ///@see Node::SupportMotion.
         Eigen::VectorXd GetSupportMotion(unsigned int k);
 
+        ///Gets the number of degree-of-freedom with support motion in this node.
+        ///@return Integer that represents the number of support motion applied to this node.
+        ///@see Node::SupportMotion.
+        unsigned int GetNumberOfSupportMotion();
+
         ///Gets the number of degree-of-freedom of this node.
         ///@return Integer that represents the number of degree-of-freedom.
         ///@see Node::TotalDegreeOfFreedom.
@@ -201,13 +226,13 @@ class Node{
         ///@return Array of integers with the free degree-of-freedom numbering.
         ///@note More details can be found at @ref linkNode.
         ///@see Node::FreeDegreeOfFreedom.
-        std::vector<int> GetFreeDegreeOfFreedom() const;
+        const std::vector<int>& GetFreeDegreeOfFreedom() const;
 
         ///Gets the node's total degree of freedom as a vector.
         ///@return Array of integers with the total degree-of-freedom numbering.
         ///@note More details can be found at @ref linkNode.
         ///@see Node::TotalDegreeOfFreedom.
-        std::vector<int> GetTotalDegreeOfFreedom() const;
+        const std::vector<int>& GetTotalDegreeOfFreedom() const;
 
     private:
         //The node condition.
@@ -240,7 +265,10 @@ class Node{
         ///The reaction forces of this node.
         Eigen::VectorXd Reaction;
 
-        ///The 3D perfectly-matched history verctor.
+        ///The external force from previous analysis.
+        Eigen::VectorXd CumulatedForce;
+
+        ///The 3D perfectly-matched history vector.
         Eigen::VectorXd PMLIntegratedVector;
 
         ///The free-degree-of-freedom list.

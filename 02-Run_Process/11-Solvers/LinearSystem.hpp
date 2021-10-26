@@ -48,11 +48,11 @@ class LinearSystem {
         LinearSystem();
 
         ///Destroys this LinearSystem object.
-        virtual ~LinearSystem() = 0;    
+        virtual ~LinearSystem() = 0;
 
         ///Gets the solution vector.
         ///@return The solution vector.
-        virtual Eigen::VectorXd GetSolution() = 0;
+        virtual const Eigen::VectorXd& GetSolution() = 0;
 
         ///Solve the linear system.
         ///@param A The matrix with the left-hand side.

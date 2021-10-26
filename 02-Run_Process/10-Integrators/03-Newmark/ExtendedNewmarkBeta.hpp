@@ -83,22 +83,22 @@ class ExtendedNewmarkBeta : public Integrator{
         ///Gets the displacement vector.
         ///@return Vector with the displacement states at current time step.
         ///@note More details can be found at @ref linkNewmarkBeta.
-        Eigen::VectorXd& GetDisplacements();   
+        const Eigen::VectorXd& GetDisplacements();   
 
         ///Gets the velocity vector.
         ///@return Vector with the velocity states at current time step.
         ///@note More details can be found at @ref linkNewmarkBeta.
-        Eigen::VectorXd& GetVelocities();
+        const Eigen::VectorXd& GetVelocities();
 
         ///Gets the acceleration vector.
         ///@return Vector with the acceleration states at current time step.
         ///@note More details can be found at @ref linkNewmarkBeta.
-        Eigen::VectorXd& GetAccelerations();
+        const Eigen::VectorXd& GetAccelerations();
 
         ///Gets the PML history vector.
         ///@return Vector with the displacement states at current time step.
         ///@note More details can be found at @ref linkExtendedNewmarkBeta.
-        Eigen::VectorXd& GetPMLHistoryVector();  
+        const Eigen::VectorXd& GetPMLHistoryVector();  
 
         ///Computes a new time step.
         ///@param mesh The finite element Mesh object.
@@ -113,6 +113,12 @@ class ExtendedNewmarkBeta : public Integrator{
         ///@note More details can be found at @ref linkReaction.
         ///@see Node::GetReaction(), Assembler::ComputeDynamicInternalForceVector().
         Eigen::VectorXd ComputeReactionForce(std::shared_ptr<Mesh> &mesh, unsigned int k=0);
+
+        ///Gets the external force vector from previous analysis.
+        ///@param mesh Pointer to the Mesh object where Node and Element are stored.
+        ///@param k The time step number to be solved.
+        ///@see Assembler::ComputeExternalForceVector().
+        Eigen::VectorXd ComputeProgressiveForce(std::shared_ptr<Mesh> &mesh, unsigned int k=0);
 
         ///Gets the incremental nodal support motion vector.
         ///@param mesh Pointer to the Mesh object where Node are stored.
@@ -154,6 +160,9 @@ class ExtendedNewmarkBeta : public Integrator{
 
         ///Total previous pml history values.
         Eigen::VectorXd Ubar;
+
+        ///The previous stage Force vector.
+        Eigen::VectorXd Fbar;
 
         ///Model mass matrix.
         Eigen::SparseMatrix<double> M; 

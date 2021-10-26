@@ -2,9 +2,16 @@
 # -*- coding: Utf-8 -*-
 
 import os
+import time
 import numpy as np
 from scipy import signal
 import concurrent.futures
+
+from scipy import interpolate
+
+import scipy.sparse as sps
+from scipy.sparse import linalg as sla
+
 from scipy import integrate
 from Core.Utilities import *
 from Core.Definitions import *
@@ -75,7 +82,7 @@ def GenerateTimeSeries(disp, vels, accel, dt, option):
 
     Returns
     -------
-    None
+    Disp, Vels, Accel the time series
     """
     if  option.upper() == 'DISP':
         Disp  = disp
@@ -89,6 +96,7 @@ def GenerateTimeSeries(disp, vels, accel, dt, option):
         Vels  = GetIntegration(accel, dt)
         Disp  = GetIntegration(Vels, dt)
         Accel = accel
+
     return Disp, Vels, Accel
 
 def ParseDRMFile(Function):
@@ -309,120 +317,882 @@ def WriteDRMFile(filepath, filename, fTag, Disp, Vels, Accel, nt, nc, n, option)
             DRMfile.write("%E %E %E %E %E %E %E %E %E\n" % (Disp[k,0], Disp[k,1], Disp[k,2], Vels[k,0], Vels[k,1], Vels[k,2], Accel[k,0], Accel[k,1], Accel[k,2]))
     DRMfile.close()
 
-def SVbackground2Dfield(Values, t, X, X0, Xmin, nt, fTag):
+def GetKofLayer(k,p,s,h,mu,aSP):
     """
-    This function generates the 2D DRM field to be specified at a particular node. The 
-    displacement,, velocity and acceleration fields are computed assuming homogenous
-    half-space.\n
-    @visit  https://github.com/SeismoVLAB/SVL\n
-    @author Danilo S. Kusanovic 2021
-    """
-    #Soil properties
-    mTag = Entities['Functions'][fTag]['attributes']['material']
-    Es  = Entities['Materials'][mTag]['attributes']['E']
-    nu  = Entities['Materials'][mTag]['attributes']['nu']
-    rho = Entities['Materials'][mTag]['attributes']['rho']
-    Vs  = np.sqrt(Es/2.0/rho/(1.0 + nu)) 
-    Vp  = Vs*np.sqrt(2.0*(1.0 - nu)/(1.0 - 2.0*nu))
-
-    #Signal properties
-    angle   = Entities['Functions'][fTag]['attributes']['theta']
-    theta_s = angle*np.pi/180.0
-    theta_p = np.arcsin(Vp/Vs*np.sin(theta_s))
-
-    #Reference time and coordinates for signal
-    x_rela =  X[0] - X0[0]
-    y_rela =  X[1] - X0[1]
-    t_init = (X0[0] - Xmin[0])/Vs*np.sin(theta_s) + (X0[1] - Xmin[1])/Vs*np.cos(theta_s)
-
-    #Time shift according to reference point X0.
-    t1 = -x_rela/Vs*np.sin(theta_s) - y_rela/Vs*np.cos(theta_s) + t - t_init
-    t2 = -x_rela/Vs*np.sin(theta_s) + y_rela/Vs*np.cos(theta_s) + t - t_init
-    t3 = -x_rela/Vp*np.sin(theta_p) + y_rela/Vp*np.cos(theta_p) + t - t_init
-
-    #Incident and Reflected amplitudes.
-    k = Vp/Vs
-    U_si = 1.000
-    U_pr = U_si*(-2*k*np.sin(2*theta_s)*np.cos(2*theta_s))/(np.sin(2*theta_s)*np.sin(2*theta_p) + k**2*np.cos(2*theta_s)**2)
-    U_sr = U_si*(np.sin(2*theta_s)*np.sin(2*theta_p) - k**2*np.cos(2*theta_s)**2)/(np.sin(2*theta_s)*np.sin(2*theta_p) + k**2*np.cos(2*theta_s)**2)
-
-    #Compute the 2D Field Components.
-    U = np.zeros(nt)
-    V = np.zeros(nt)
-
-    U += U_si*np.cos(theta_s)*np.interp(t1, t, Values, left=0.0, right=0.0)
-    V -= U_si*np.sin(theta_s)*np.interp(t1, t, Values, left=0.0, right=0.0)
-
-    U -= U_sr*np.cos(theta_s)*np.interp(t2, t, Values, left=0.0, right=0.0)
-    V -= U_sr*np.sin(theta_s)*np.interp(t2, t, Values, left=0.0, right=0.0)
-
-    U -= U_pr*np.sin(theta_p)*np.interp(t3, t, Values, left=0.0, right=0.0)
-    V += U_pr*np.cos(theta_p)*np.interp(t3, t, Values, left=0.0, right=0.0)
-
-    Z = np.stack([U,V], axis=1)
-
-    return Z
-
-def SVbackground2DfieldCritical(Values, SP, SS, Vp, Vs, cj, sj, p, w, xp, xmin):
-    """
-    The script is to calculate the displacement, velocity or acceleration components 
-    of a 2D rayleigh wave by using real FFT and inverse real FFT, accounting for both 
-    amplitude and phase or the incident angle larger than critical one.
-    @visit  https://github.com/SeismoVLAB/SVL\n
-    @author Kien T. Nguyen 2021
-    """
-    #TODO: This is not working and needs to be corrected
-    x     = xp[0]
-    y     = xp[1]
-    x0    = xmin[0]
-    y0    = xmin[1]
-    xrel  = x - x0
-    yrel  = y0 - y 
-    FSVin = np.fft.rfft(Values)
+    This function calculates the K00 and K01 components of the stiffness matrix
+    of a layer with finite thickness.\n
     
-    #Horizontal U1, U2, U3 due to upgoing SV, downgoing P, downgoing SV
-    U1 = cj*FSVin*np.exp(-1j*(p*xrel-cj/Vs*yrel)*w)
-    U2 = Vp*p*SP*np.exp(np.sqrt(p*p-1.0/Vp/Vp)*y*w)*FSVin*np.exp(-1j*(p*xrel-cj/Vs*y0)*w)
-    U3 = cj*SS*FSVin*np.exp(-1j*(p*xrel-cj/Vs*(y+y0))*w)
+    @visit  https://github.com/SeismoVLAB/SVL\n
+    @author Kien T. Nguyen 2021, ORCID: 0000-0001-5761-3156
     
-    #Vertical V1, V2, V3 due to upgoing SV, downgoing P, downgoing SV
-    V1 = -sj*FSVin*np.exp(-1j*(p*xrel-cj/Vs*yrel)*w)
-    V2 = -1j*np.sqrt(Vp*Vp*p*p-1.0)*SP*np.exp(np.sqrt(p*p-1.0/Vp/Vp)*y*w)*FSVin*np.exp(-1j*(p*xrel-cj/Vs*y0)*w)
-    V3 = sj*SS*FSVin*np.exp(-1j*(p*xrel-cj/Vs*(y+y0))*w)
+    Parameters
+    ----------
+    k  : float
+        The horizontal wavenumber (along x-axis)
+    p, s  : complex
+        Complex coefficients
+    h  : float
+        The thickness of soil layer
+    mu  : float
+        The shear modulus of soil
+    aSP  : float
+        The ratio between shear wave velocity and dilatational wave velocity
+
+    Returns
+    -------
+    K00  : array
+        2x2 matrix, block component of stiffness matrix of a layer 
+    K01  : array
+        2x2 matrix, block component of stiffness matrix of a layer 
+    """
+    K00 = np.zeros((2,2), dtype=complex)
+    K01 = np.zeros((2,2), dtype=complex)
+    
+    a = np.real(k*p*h)
+    b = np.imag(k*p*h)
+    c = np.real(k*s*h)
+    d = np.imag(k*s*h)
+    
+    cb = np.cos(b)
+    sb = np.sin(b)
+    
+    plusA  = 1.0/2.0*(1.0+np.exp(-2.0*a))
+    minusA = 1.0/2.0*(1.0-np.exp(-2.0*a))
+    
+    C1 = plusA*cb + 1j*minusA*sb
+    S1 = minusA*cb + 1j*plusA*sb
+    
+    cd = np.cos(d)
+    sd = np.sin(d)
+    
+    plusC  = 1.0/2.0*(1.0+np.exp(-2.0*c))
+    minusC = 1.0/2.0*(1.0-np.exp(-2.0*c))
+    
+    C2 = plusC*cd + 1j*minusC*sd
+    S2 = minusC*cd + 1j*plusC*sd
+    
+    D0 = 2.0*(np.exp(-a-c)-C1*C2)+(1.0/p/s+p*s)*S1*S2
+    
+    K00[0,0] = (1.0-s*s)/2.0/s*(C1*S2-p*s*C2*S1)/D0
+    K00[0,1] = (1.0-s*s)/2.0*(np.exp(-a-c)-C1*C2+p*s*S1*S2)/D0 + (1.0+s*s)/2.0
+    K00[1,0] = K00[0,1]
+    K00[1,1] = (1.0-s*s)/2.0/p*(C2*S1-p*s*C1*S2)/D0
+    K00 *= 2.0*k*mu
+    
+    K01[0,0] = 1.0/s*(p*s*S1*np.exp(-c) - S2*np.exp(-a))/D0
+    K01[0,1] = (C1*np.exp(-c) - C2*np.exp(-a))/D0
+    K01[1,0] = -K01[0,1]
+    K01[1,1] = 1.0/p*(p*s*S2*np.exp(-a) - S1*np.exp(-c))/D0
+    K01 *= 2.0*k*mu*(1.0-s*s)/2.0
+    
+    return K00, K01
+
+def GetKofHalfSpace(k,p,s,mu):
+    """
+    This function calculates the stiffness matrix of half space.\n
+    
+    @visit  https://github.com/SeismoVLAB/SVL\n
+    @author Kien T. Nguyen 2021, ORCID: 0000-0001-5761-3156
+    
+    Parameters
+    ----------
+    k  : float
+        The horizontal wavenumber (along x-axis)
+   p, s  : complex
+        Complex coefficients
+    mu  : float
+        The shear modulus of soil
+
+    Returns
+    -------
+    K  : array
+        2x2 matrix, stiffness matrix of half space
+    """
+   
+    K = np.zeros((2,2), dtype=complex)
+    coef = (1.0-s*s)/2.0/(1.0-p*s)
+    K[0,0] = coef*p
+    K[0,1] = -coef + 1.0
+    K[1,0] = K[0,1]
+    K[1,1] = coef*s
+    K *= 2.0*k*mu
+    
+    return K
+
+def GetKofFullSpace(k,p,s,mu):
+    """
+    This function calculates the stiffness matrix of full space.\n
+    
+    @visit  https://github.com/SeismoVLAB/SVL\n
+    @author Kien T. Nguyen 2021, ORCID: 0000-0001-5761-3156
+    
+    Parameters
+    ----------
+    k  : float
+        The horizontal wavenumber (along x-axis)
+    p, s  : complex
+        Complex coefficients
+    mu  : float
+        The shear modulus of soil
+
+    Returns
+    -------
+    K  : array
+        2x2 matrix, stiffness matrix of full space
+    """
+    K = np.zeros((2,2), dtype=complex)
+    coef = 2.0*k*mu*(1.0-s*s)/(1.0-p*s)
+    K[0,0] = coef*p
+    K[1,1] = coef*s
+    
+    return K
+
+def GetDisplacementAtInteriorLayer(y,yTop,yBot,uTop,uBot,k,p,s,mu,aSP):
+    """
+    This function calculates the displacement at interior points of a layer.\n
+    
+    @visit  https://github.com/SeismoVLAB/SVL\n
+    @author Kien T. Nguyen 2021, ORCID: 0000-0001-5761-3156
+    
+    Parameters
+    ----------
+    y  : float
+        The y-coordinate of the query point
+    yTop, yBot  : float
+        The y-coordinate of the top and bottom of the parent layer containing query point
+    uTop, uBot  : complex
+        The displacement at the top and bottom of the parent layer containing query point 
+    k  : float
+        The horizontal wavenumber (along x-axis)
+    p, s  : complex
+        Complex coefficients
+    h  : float
+        The thickness of parent layer
+    mu  : float
+        The shear modulus of parent layer
+    aSP  : float
+        The ratio between shear wave velocity and dilatational wave velocity of parent layer
         
-    U_fft = U1 + U2 + U3
-    V_fft = V1 + V2 + V3
+    Returns
+    -------
+    uz  : array
+        displacement at the specific query point
+    """
+    xi = yTop - y
+    eta = y - yBot
+    [K00xi, K01xi]   = GetKofLayer(k,p,s,xi,mu,aSP) 
+    [K00eta, K01eta] = GetKofLayer(k,p,s,eta,mu,aSP) 
+    A = K00eta + K00xi*np.array([[1.0,-1.0],[-1.0,1.0]])
+    b = -(np.dot(K01xi.T,uTop) + np.dot(K01eta,uBot))
+    uz = np.linalg.solve(A, b)
     
-    U = np.real(np.fft.irfftn(U_fft))
-    V = np.real(np.fft.irfftn(V_fft))
+    return uz
+
+def DataPreprocessing(Disp, Vels, Accel, Layers, beta, rho, nu, angle, yDRMmin, nt, dt, fun):
+    """
+    This function performs the data pre-processing for the wave propagation
+    problem, such as adding an imaginary layer at the bottom of DRM nodes 
+    (if necessary), zero padding, transform wave signal into frequency domain.
+    Particularly, it also calculates the motion at the position of half-space surface, 
+    assuming that wave is propagating in the full space having same properties 
+    as the half space. This full-space motion is subsequently used to 
+    generate the force vector while calculating the response of soil interface 
+    based on substructure technique.\n
+    
+    @visit  https://github.com/SeismoVLAB/SVL\n
+    @author Kien T. Nguyen 2021, ORCID: 0000-0001-5761-3156
+    
+    Parameters
+    ----------
+    Disp, Vels, Accel  : array
+        Displacement, Velocity, and Acceleration time series of incoming wave
+    Layers  : array
+        The y-coordinate of soil layer interfaces, from free ground surface to half-space surface 
+    beta, rho, nu  : array
+        Shear wave velocity, Mass density, and Poisson's ratio of soil layers, from top layer to half space 
+    angle  : float
+        Angle of incoming wave, with respect to vertical axis (y-axis), from 0 to 90 degrees
+    yDRMmin  : float
+        The minimum of y-coordinates among DRM nodes
+    nt  : int
+        The original number of time step of the wave signal
+    dt  : float
+        The time step increment 
+    fun  : dict
+        The dictionary that contains the information of DRM
+        
+    Returns
+    -------
+    ufull, vfull, afull  : array
+        Displacement, Velocity, and Acceleration at the position of half-space surface
+        Note that the vertical components are multiplied with -1j
+    Layers, beta, rho, nu: array
+        Similar as above explaination
+    wVec  : array
+        Angular frequency spectrum 
+    p, s  : array
+        Complex coefficients
+    h  : array
+        The thickness of soil layers
+    mu  : array
+        The shear modulus of soil layers
+    aSP  : array
+        The ratio between shear wave velocity and dilatational wave velocity of soil layers
+    phaseVelIn  : float
+        The phase velocity of incoming wave in the half space underneath
+    sinTheta  : float
+        Sine of the incoming angle
+    N  : int
+        Number of soil layers, including imaginary layer and half space
+    Nt  : int
+        Length of the Disp, Vels, Accel after zero padding
+    """
+    CutOffFrequency = fun['CutOffFrequency']
+    waveType = fun['option']
+    df = fun['df']
+
+    #DEALING WITH ANGLE = 0, 90
+    if np.isclose(angle, 0.0, rtol=1e-05):
+        angle += 0.0001
+    elif np.isclose(angle, 90.0, rtol=1e-05):
+        angle -= 0.0001
+
+    #ADDING IMAGINARY LAYER AT yDRMmin IF NECESSARY
+    if yDRMmin < Layers[-1]:
+        Layers = np.append(Layers, np.array([yDRMmin]))
+        beta = np.append(beta, [beta[-1]])
+        rho = np.append(rho, [rho[-1]])
+        nu = np.append(nu, [nu[-1]])
+
+    N = len(Layers)
+
+    #PADDING ZERO TO HAVE DESIRED DISCRETIZED FREQUENCY STEP
+    stepsNeeded = max(nt,1.0/dt/df)
+    nextPowerOfTwo = int(np.ceil(np.log2(stepsNeeded)))
+
+    Nt = 2**nextPowerOfTwo
+
+    Disp = np.concatenate([Disp, np.zeros(Nt-nt)])
+    Vels = np.concatenate([Vels, np.zeros(Nt-nt)])
+    Accel = np.concatenate([Accel, np.zeros(Nt-nt)])
+
+    n = np.arange(1,Nt/2+1)
+    wVec = 2.0*np.pi/dt/Nt*n
+    wVec = wVec[wVec<=2.0*np.pi*CutOffFrequency]
+
+    FdispIn = np.fft.rfft(Disp)
+    FdispIn = FdispIn[1:len(wVec)+1]
+
+    FvelIn = np.fft.rfft(Vels)
+    FvelIn = FvelIn[1:len(wVec)+1]
+
+    FaccelIn = np.fft.rfft(Accel)
+    FaccelIn = FaccelIn[1:len(wVec)+1]
+
+    sinTheta = np.sin(angle/180.0*np.pi)
+    cosTheta = np.cos(angle/180.0*np.pi)
+
+    alpha = beta*np.sqrt(2.0*(1.0 - nu)/(1.0 - 2.0*nu))
+    aSP = beta/alpha
+    mu = rho*beta*beta
+
+    #Polarization angle for P or SV wave
+    if waveType=="SV":
+        phaseVelIn = beta[-1]
+        polarization = np.array([cosTheta, -sinTheta])
+    elif waveType=="P":
+        phaseVelIn = alpha[-1]
+        polarization = np.array([sinTheta, cosTheta])
+
+    p = np.lib.scimath.sqrt(1.0-np.square(phaseVelIn/alpha/sinTheta))
+    s = np.lib.scimath.sqrt(1.0-np.square(phaseVelIn/beta/sinTheta))
+    h = -np.diff(Layers)
+
+    zrelHalfSpace = Layers[-1] - yDRMmin
+
+    #FULL SPACE PROPAGATION OF SV WAVE IN FREQUENCY DOMAIN, RESULT AT HALF-SPACE INTERFACE y=yN
+    ufullx = FdispIn*polarization[0]*np.exp(-1j*wVec*cosTheta/phaseVelIn*zrelHalfSpace)
+    ufullz = FdispIn*polarization[1]*np.exp(-1j*wVec*cosTheta/phaseVelIn*zrelHalfSpace)
+    ufull = np.vstack((ufullx, -1j*ufullz))
+
+    vfullx = FvelIn*polarization[0]*np.exp(-1j*wVec*cosTheta/phaseVelIn*zrelHalfSpace)
+    vfullz = FvelIn*polarization[1]*np.exp(-1j*wVec*cosTheta/phaseVelIn*zrelHalfSpace)
+    vfull = np.vstack((vfullx, -1j*vfullz)) 
+
+    afullx = FaccelIn*polarization[0]*np.exp(-1j*wVec*cosTheta/phaseVelIn*zrelHalfSpace)
+    afullz = FaccelIn*polarization[1]*np.exp(-1j*wVec*cosTheta/phaseVelIn*zrelHalfSpace)
+    afull = np.vstack((afullx, -1j*afullz)) 
+
+    return ufull, vfull, afull, Layers, beta, rho, nu, wVec, p, s, h, mu, aSP, phaseVelIn, sinTheta, N, Nt
+
+def SoilInterfaceResponse(ufull, wVec, p, s, h, mu, aSP, phaseVelIn, sinTheta, N):
+    """
+    This function calculates the displacement time series at soil interface positions
+    in wave propagation problem, in which the SV or P wave incoming from the half space
+    underneath under arbitrary incident angle from 0 to 90 degrees and propagating 
+    through stratified soil domain. 
+    Note: 
+    [1] The coordinate system and displacement positive axes:
+
+        y(V) ^
+             |
+             |
+             o-----> x(U)
+             
+    [2] At each frequency, the horizontal and vertical displacements are calculated 
+        based on Eduardo Kausel's Stiffness Matrix Method, in "Fundamental 
+        Solutions in Elastodynamics, A Compendium", chap. 10, pp. 140--159 
+
+    @visit  https://github.com/SeismoVLAB/SVL\n
+    @author Kien T. Nguyen 2021, ORCID: 0000-0001-5761-3156
+    
+    Parameters
+    ----------
+    ufull  : array
+        Displacement of full-space problem at the position of half-space surface 
+        Note that the vertical components are multiplied with -1j
+    wVec  : array
+        Angular frequency spectrum 
+    p, s  : array
+        Complex coefficients
+    h  : array
+        The thickness of soil layers
+    mu  : array
+        The shear modulus of soil layers
+    aSP  : array
+        The ratio between shear wave velocity and dilatational wave velocity of soil layers
+    phaseVelIn  : float
+        The phase velocity of incoming wave in the half space underneath
+    sinTheta  : float
+        Sine of the incoming angle
+    N  : int
+        Number of soil layers, including imaginary layer and half space
+        
+    Returns
+    -------
+    uInterface  : array
+        Displacements at the soil layer interface positions, in frequency domain
+    """
+    nfi = len(wVec)
+    uInterface = np.zeros((2*N,2*N,nfi), dtype=complex)
+
+    for fi in range(nfi):
+        w = wVec[fi]
+        k = w*sinTheta/phaseVelIn
+        Kglobal = np.zeros((2*N,2*N), dtype=complex)
+
+        #Assemble each layer
+        for i in range(N-1):
+            [K00, K01] = GetKofLayer(k, p[i], s[i], h[i], mu[i], aSP[i])
+            Kglobal[2*i:2*i+2,2*i:2*i+2]     += K00
+            Kglobal[2*i:2*i+2,2*i+2:2*i+4]   += K01
+            Kglobal[2*i+2:2*i+4,2*i:2*i+2]   += K01.T
+            Kglobal[2*i+2:2*i+4,2*i+2:2*i+4] += K00*np.array([[1.0,-1.0],[-1.0,1.0]])
+
+        #Assemble each layer 
+        Khalfspace = GetKofHalfSpace(k, p[-1], s[-1], mu[-1])
+        Kglobal[2*N-2:2*N,2*N-2:2*N]  += Khalfspace
+    
+        #Assembel force vector
+        forceVec = np.zeros((2*N,1), dtype=complex)
+        Kfull = GetKofFullSpace(k, p[-1], s[-1], mu[-1])
+        forceVec[2*N-2:2*N,:] = (Kfull.dot(ufull[:,fi])).reshape(2,1) 
+    
+        #Displacement at interface
+        uInterface[:,:,fi] = np.linalg.solve(Kglobal, forceVec)
+
+    return uInterface
+
+def GetRayleighFFTfields(Disp, Vels, Accel, endFrequency, dt, df, nt):
+    '''
+    '''
+    stepsNeeded    = max(nt, 1.0/dt/df)
+    nextPowerOfTwo = int(np.ceil(np.log2(stepsNeeded)))
+    Nt = 2**nextPowerOfTwo
+
+    Disp  = np.concatenate([Disp, np.zeros(Nt-nt)])
+    Vels  = np.concatenate([Vels, np.zeros(Nt-nt)])
+    Accel  = np.concatenate([Accel, np.zeros(Nt-nt)])
+
+    n       = np.arange(1, Nt/2+1)
+    wVec    = 2.0*np.pi/dt/Nt*n
+    wVec    = wVec[wVec <= 2.0*np.pi*endFrequency]
+
+    FFTdisp = np.fft.rfft(Disp)
+    FFTdisp = FFTdisp[1:len(wVec)+1]
+
+    FFTvels = np.fft.rfft(Vels)
+    FFTvels = FFTvels[1:len(wVec)+1]
+
+    FFTaccel = np.fft.rfft(Accel)
+    FFTaccel = FFTaccel[1:len(wVec)+1]
+
+    df = 1.0/dt/Nt
+    startFrequency = df
+    endFrequency  += 0.001*df #to include the endFre if there is a multiple of df, fDispersion = np.arange(startFre,endFre,df)
+
+    return wVec, FFTdisp, FFTvels, FFTaccel, df, Nt, startFrequency, endFrequency
+
+def Assemble(a,b,k):
+    """
+    This function appends b to the end of a with k elements overlapped.
+    If k<0, abs(k) zeros will be added to the end of a before appending b.\n
+    
+    @visit  https://github.com/SeismoVLAB/SVL\n
+    @author Kien T. Nguyen 2021, ORCID: 0000-0001-5761-3156
+    
+    Parameters
+    ----------
+    a, b  : ndarray
+        ndarray with shape (1,*)
+    k  : int
+        Number of overlapped elements, k<0 means abs(k) zeros are added to the end of a
+
+    Returns
+    -------
+    c  : ndarray
+        The concatenated ndarray with shape (1,a.size+b.size)
+    """
+    if a.size==0:
+        c = b
+    else:
+        la = a.size
+        lb = b.size
+        if k<0:
+            c = np.concatenate((a,np.zeros((1,-k)),b),1)
+        elif k==0:
+            c = np.concatenate((a,b),1)
+        else:
+            c = np.concatenate((a[:,0:la-k],a[:,la-k:la] + b[:,0:k],b[:,k:lb]),1)
+    
+    return c
+    
+def GetRayleighDispersionAndModeShape(mode, intY, beta, rho, nu, dy1, yDRMmin, nepw, startFre, endFre, df, depthFactor):
+    """
+    This function calculates the dispersion curves and mode shapes of Rayleigh
+    wave in stratified soil.\n
+    
+    @visit  https://github.com/SeismoVLAB/SVL\n
+    @author Kien T. Nguyen 2021, ORCID: 0000-0001-5761-3156
+    
+    Parameters
+    ----------
+    mode  : int
+        The chosen Rayleigh mode shape. Currently, only mode=0 for fundamental mode is available
+    intY  : array
+        The y-coordinate of soil layer interfaces, from free ground surface downwards 
+    beta, rho, nu  : array
+        Shear wave velocity, Mass density, and Poisson's ratio of soil layers, from top layer to half space 
+    dy1  : float
+        y-grid spacing of points used to interpolate the mode shape, from ground surface to yDRMmin
+    yDRMmin  : float
+        Minimum of y-coordinates among DRM nodes
+    nepw  : int
+        Number of element per wavelength in the extended region below yDRMmin
+    startFre, endFre, df  : float
+        Start, end, and increment of frequency
+    depthFactor  :float
+        Soil domain is extended up to depthFactor*wavelength to mimic the clamp condition
+        
+    Returns
+    -------
+    fDispersion, phaseVelDispersion  : array
+        The frequency and phase velocity of the dispersion curve of chosen Rayleigh mode
+    yGridModeShape  : array
+        The y-coordinate grid points which is subsequently used to interpolate mode shape at DRM nodes
+    uModeShape, vModeShape  : ndarray
+        The mode shapes of horizontal and vertical displacements of chosen Rayleigh mode at yGridModeShape, 
+        at each frequency fDispersion
+    """
+    Vr = np.zeros(len(intY))
+    for jj in range(len(intY)):
+        Vr[jj] = GetRayleighVelocity(beta[jj],nu[jj])
+    
+    Vlower = Vr.min()
+    Vupper = beta[-1]
+    
+    fDispersion = np.arange(startFre, endFre, df)
+    phaseVelDispersion = np.zeros(len(fDispersion))
+    modeShape = []
+    
+    for indexFre, f in enumerate(fDispersion):
+        A0 = np.array([[]])
+        A2 = np.array([[]])
+        B1 = np.array([[]])
+        B3 = np.array([[]])
+        G0 = np.array([[]])
+        G2 = np.array([[]])
+        M0 = np.array([[]])
+        M2 = np.array([[]])
+        
+        #Calculate wavelength and element size in the extended region
+        wavelengthMax = Vupper/f
+        wavelengthMin = Vlower/f
+        dy2 = wavelengthMin/nepw
+        
+        #Add imaginary layer at yDRMmin and at depth depthFactor*wavelength
+        depth = min(intY[-1],yDRMmin,intY[0]-depthFactor*wavelengthMax)
+        intAux = np.unique(np.concatenate([intY,[yDRMmin,depth]]))
+        intYNew = intAux[::-1]
+
+        indices = np.where(np.in1d(intYNew, intY))[0]
+        repeats = np.hstack((np.diff(indices),[np.size(intYNew)-indices[-1]]))
+        betaNew = np.repeat(beta,repeats)
+        rhoNew = np.repeat(rho,repeats)
+        nuNew = np.repeat(nu,repeats)
+    
+        muNew = rhoNew*betaNew*betaNew
+        Lame1New = 2.0*muNew*nuNew/(1.0-2.0*nuNew)
+        
+        N = len(intYNew) #number of interfaces (including imaginary interface at yDRMmin and at depthFactor*wavelength)
+        h = -np.diff(intYNew) #thickness of each soil layer
+        
+        #Mesh density in 2 region, from 0 to yDRMmin and yDRMmin to depthFactor*wavelength
+        idx = np.where(intYNew == yDRMmin)[0][0]
+        dy = np.concatenate([dy1*np.ones(idx),dy2*np.ones(N-idx-1)])
+        ns = np.ceil(h/dy).astype(int) #number of sublayer in each soil layer
+        dy = h/ns
+        
+        for ii in range(N-1):
+            [A0e, A2e, B1e, B3e, G0e, G2e, M0e, M2e] = GetLayerStiffnessComponents(ns[ii],dy[ii],Lame1New[ii],muNew[ii],rhoNew[ii])     
+            A0 = Assemble(A0,A0e,2)
+            A2 = Assemble(A2,A2e,0)
+            B1 = Assemble(B1,B1e,1)
+            B3 = Assemble(B3,B3e,-1)
+            G0 = Assemble(G0,G0e,2)
+            G2 = Assemble(G2,G2e,0)
+            M0 = Assemble(M0,M0e,2)
+            M2 = Assemble(M2,M2e,0)
+            
+        #Add last 2x2 block for last interface
+        A0 = Assemble(A0,A0e[0:1,0:2],2);
+        B1 = Assemble(B1,B1e[0:1,0:1],1);
+        G0 = Assemble(G0,G0e[0:1,0:2],2);
+        M0 = Assemble(M0,M0e[0:1,0:2],2);
+    
+        Ns = np.sum(ns) #total number of sub layers
+        noDoF = 2*Ns+2 #total number of degree of freedom
+        A = sps.spdiags(np.vstack((np.concatenate((A2,[[0.0,0.0]]),1),A0,np.concatenate(([[0.0,0.0]],A2),1))),np.array([-2,0,2]),noDoF,noDoF)
+        B = sps.spdiags(np.vstack((np.concatenate((B3,[[0.0,0.0,0.0]]),1),np.concatenate((B1,[[0.0]]),1),np.concatenate(([[0.0]],B1),1),np.concatenate(([[0.0,0.0,0.0]],B3),1))),np.array([-3,-1,1,3]),noDoF,noDoF)
+        G = sps.spdiags(np.vstack((np.concatenate((G2,[[0.0,0.0]]),1),G0,np.concatenate(([[0.0,0.0]],G2),1))),np.array([-2,0,2]),noDoF,noDoF)
+        M = sps.spdiags(np.vstack((np.concatenate((M2,[[0.0,0.0]]),1),M0,np.concatenate(([[0.0,0.0]],M2),1))),np.array([-2,0,2]),noDoF,noDoF)
+        
+        #Solve for eigenvalues and eigenvectors
+        Ngrid = 2*(np.sum(ns[0:idx])+1) #number of degrees of freedom of the predefined grid used for DRM nodes interpolation
+        w = 2.0*np.pi*f
+        
+        Ain = sps.vstack([sps.hstack([sps.csr_matrix((noDoF, noDoF), dtype = np.float), sps.identity(noDoF,dtype=np.float)]), sps.hstack([w*w*M-G, -B])])
+        Min = sps.vstack([sps.hstack([sps.identity(noDoF,dtype=np.float),sps.csr_matrix((noDoF, noDoF), dtype = np.float)]), sps.hstack([sps.csr_matrix((noDoF, noDoF), dtype = np.float),A])])
+        
+        eigk, eigShape = sla.eigs(Ain, k=mode+1, M = Min, sigma=w/Vlower) #note that k is the number of modes desired
+        
+        wavenumber = np.real(eigk[mode])
+        phaseVelDispersion[indexFre] = w/wavenumber
+        modeShape.append(eigShape[0:Ngrid,mode])
+    
+    modeShapeReshape = np.transpose(np.vstack(modeShape)) #reshape the matrix, column is indexFre, row is interlacing of u and v of each point     
+    uModeShape = modeShapeReshape[0::2,:]
+    vModeShape = modeShapeReshape[1::2,:]
+    
+    yGridModeShape = [intYNew[0]]
+    for nn in range(idx):
+        yGridModeShape.append(np.linspace(intYNew[nn]-dy[nn],intYNew[nn+1],ns[nn]))
+    yGridModeShape = np.hstack(yGridModeShape)
+    
+    return fDispersion, phaseVelDispersion, yGridModeShape, uModeShape, vModeShape
+
+def GetLayerStiffnessComponents(ns,h,Lame1,mu,rho):
+    """
+    This function calculates the diagonal components of the stiffness matrices
+    A, B, G, M for 1 soil layer with multiple soil sublayers in Thin Layer Method.\n
+    
+    @visit  https://github.com/SeismoVLAB/SVL\n
+    @author Kien T. Nguyen 2021, ORCID: 0000-0001-5761-3156
+    
+    Parameters
+    ----------
+    ns  : int
+        Number of soil sublayers in the currently-considered soil layer
+    h  : float
+        Uniform thickness of the sublayer
+    Lame1, mu, rho  : float
+        The first Lame parameter, shear modulus, and mass density of the soil layer
+
+    Returns
+    -------
+    A0, A2, B1, B3, G0, G2, M0, M2  : ndarray
+        The diagonal components of stiffness matrices A, B, G, M 
+        0, 1, and 2 mean main, 1st, and 2nd diagonal 
+    """
+    
+    coef1 = Lame1 + 2.0*mu
+    coef2 = Lame1 + mu
+    coef3 = Lame1 - mu
+    
+    A0 = h/6.0*np.concatenate(([[2.0*coef1,2.0*mu]],4.0*np.tile([[coef1,mu]],(1,ns-1)),[[2.0*coef1,2.0*mu]]),1)
+    A2 = h/6.0*np.tile([[coef1,mu]],(1,ns))
+    
+    B1 = 1.0/2.0*np.concatenate(([[coef3,coef2]],np.tile([[0.0,coef2]],(1,ns-1)),[[-coef3]]),1)
+    B3 = 1.0/2.0*np.concatenate((np.tile([[-coef2,0.0]],(1,ns-1)),[[-coef2]]),1)
+    
+    G0 = 1.0/h*np.concatenate(([[mu,coef1]],2.0*np.tile([[mu,coef1]],(1,ns-1)),[[mu,coef1]]),1)
+    G2 = 1.0/h*np.tile([[-mu,-coef1]],(1,ns))
+
+    M0 = rho*h/6.0*np.concatenate(([[2.0,2.0]],4.0*np.ones((1,2*ns-2)),[[2.0,2.0]]),1)
+    M2 = rho*h/6.0*np.ones((1,2*ns))
+    
+    return A0, A2, B1, B3, G0, G2, M0, M2
+
+def PSVbackground2Dfield(us, Layers, wVec, p, s, h, mu, aSP, phaseVelIn, sinTheta, N, Nt, x0, x, y):
+    """
+    This function calculates the displacement time series in 2D wave propagation
+    problem, in which the SV or P wave incoming from the half space
+    underneath under arbitrary incident angle from 0 to 90 degrees and propagating 
+    through stratified soil domain. 
+    Note: 
+    [1] The coordinate system and displacement positive axes:
+
+        y(V) ^
+             |
+             |
+             o-----> x(U)
+             
+    [2] At each frequency, the horizontal and vertical displacements are calculated 
+        based on Eduardo Kausel's Stiffness Matrix Method, in "Fundamental 
+        Solutions in Elastodynamics, A Compendium", chap. 10, pp. 140--159 
+
+    @visit  https://github.com/SeismoVLAB/SVL\n
+    @author Kien T. Nguyen 2021, ORCID: 0000-0001-5761-3156
+    
+    Parameters
+    ----------
+    us  : array
+        Displacement at the layer interfaces in frequency domain
+    Layers  : array
+        The y-coordinate of soil layer interfaces, including imaginary and half-space interfaces
+    wVec  : array
+        Angular frequency spectrum 
+    p, s  : array
+        Complex coefficients
+    h  : array
+        The thickness of soil layers
+    mu  : array
+        The shear modulus of soil layers
+    aSP  : array
+        The ratio between shear wave velocity and dilatational wave velocity of soil layers
+    phaseVelIn  : float
+        The phase velocity of incoming wave in the half space underneath
+    sinTheta  : float
+        Sine of the incoming angle
+    N  : int
+        Number of soil layers, including imaginary layer and half space
+    Nt  : int
+        Length of the Disp, Vels, Accel after zero padding
+    x0  :float
+        x-coordinate of the reference point (where the incoming signal time series is prescribed)
+    x, y :float
+        x- and y-coordinate of the query point
+        
+    Returns
+    -------
+    Z  : array
+        Displacement time series at the query point
+    """
+    nfi = len(wVec)
+    U_fft = np.zeros(nfi, dtype=complex)
+    V_fft = np.zeros(nfi, dtype=complex) 
+
+    for fi in range(nfi):
+        w = wVec[fi]
+        k = w*sinTheta/phaseVelIn
+   
+        #Displacement at interface
+        uInterface = us[:,:, fi]
+
+        #find parent layer where yTopLayer>=y>yBotLayer
+        parentLayer = N - 1 - np.searchsorted(Layers[::-1], y, side = "left") 
+            
+        if parentLayer == (N-1):
+            if y==Layers[-1]:
+                uz = uInterface[2*N-2:2*N,:]
+        elif parentLayer < (N-1):
+            yTop = Layers[parentLayer]
+            yBot = Layers[parentLayer+1]
+            uTop = uInterface[2*parentLayer:2*parentLayer+2,:]
+            uBot = uInterface[2*parentLayer+2:2*parentLayer+4,:]
+            if y < yTop:
+                uz = GetDisplacementAtInteriorLayer(y,yTop,yBot,uTop,uBot,k,p[parentLayer],s[parentLayer],mu[parentLayer],aSP[parentLayer])
+            elif np.isclose(y, yTop, rtol=1e-05):
+                uz = uTop
+                    
+        U_fft[fi] = uz[0,0]*np.exp(-1j*k*(x-x0))
+        V_fft[fi] = 1j*uz[1,0]*np.exp(-1j*k*(x-x0))
+
+    #Add 0 for zero frequency and frequency larger than cutOffFrequency
+    U_fft = np.concatenate((np.zeros(1, dtype=complex), U_fft, np.zeros(int(Nt/2)-nfi, dtype=complex)), axis=0)
+    V_fft = np.concatenate((np.zeros(1), V_fft, np.zeros(int(Nt/2)-nfi)), axis=0)
+
+    U = np.real(np.fft.irfft(U_fft, Nt, axis=0))
+    V = np.real(np.fft.irfft(V_fft, Nt, axis=0))
 
     #Gathers the field components
     Z = np.stack([U,V], axis=1)
 
     return Z
 
-def RHbackground2Dfield(Values, t, Vp, Vs, Vr, w, kR, qR, sR, x0, xmin, x1, x2):
+def RHbackground2Dfield(FdispIn,wVec,interpDispersion,interpuMmodeShape,interpvMmodeShape,x,y,Nt,x0,y0):
     """
-    The script is to calculate the displacement, velocity or acceleration components 
-    of a 2D rayleigh wave by using real FFT and inverse real FFT, accounting for both 
-    amplitude and phase
-    @visit  https://github.com/SeismoVLAB/SVL\n
-    @author Kien T. Nguyen 2021
-    """
-    x = x1
-    y = x0[1] - x2
-    Bn = np.fft.rfft(Values)
-    An = 2.0*(Vs/Vr)**2*Bn # scale factor An = A*kR in I.9 Viktorov
-
-    #Compute the 2D Field Components.
-    U_fft = An*(np.exp(-qR*y)-(1.0-Vr**2.0/2.0/Vs**2)*np.exp(-sR*y))*np.exp(-1j*x/Vr*w)
-    V_fft = np.exp(1j*(-np.pi/2.0))*An*np.sqrt(1.0-Vr**2.0/Vp**2.0)*(np.exp(-qR*y)-1.0/(1.0-Vr**2/2.0/Vs**2.0)*np.exp(-sR*y))*np.exp(-1j*x/Vr*w)
+    This function calculates the displacements at a specific point in time domain for Rayleigh
+    wave in stratified soil.\n
     
-    U =  np.real(np.fft.irfftn(U_fft))
-    V = -np.real(np.fft.irfftn(V_fft))
+    @visit  https://github.com/SeismoVLAB/SVL\n
+    @author Kien T. Nguyen 2021, ORCID: 0000-0001-5761-3156
+    
+    Parameters
+    ----------
+    wVec  : array
+        The angular frequency
+    interpDispersion  : object of class scipy.interpolate.interp1d
+        The 1d interpolation function to interpolate the phase velocity at chosen angular frequency 
+    interpuMmodeShape, interpvMmodeShape  : objects of class scipy.interpolate.RectBivariateSpline
+        The 2d interpolation function to interpolate the horizontal and vertical displacement mode shape
+        at the query point. Functions of y and angular frequency 
+    x, y  : float
+        x- and y-coordinate of the query point
+    Nt  : int
+        Length of the Disp, Vels, Accel after zero padding
+    FdispIn  : array
+        FFT of the input displacement
+    x0, y0  : float
+        x- and y-coordinate of the reference point (where the incoming signal time series is prescribed)
+        
+    Returns
+    -------
+    U, V  : array
+        The horizontal and vertical displacements at the query point
+    """
+    U_fft = np.zeros(int(Nt/2), dtype=complex)
+    V_fft = np.zeros(int(Nt/2), dtype=complex)
+    
+    for indexFre, w in enumerate(wVec):
+        vr = interpDispersion(w)
+        k = w/vr
+        uRef = interpuMmodeShape(y0,w)
+        Ufi = interpuMmodeShape(y,w)/uRef*FdispIn[indexFre]
+        Vfi = interpvMmodeShape(y,w)/uRef*FdispIn[indexFre]
+        
+        U_fft[indexFre+1] = Ufi[0,0]*np.exp(-1j*k*(x-x0)) #since zero frequency is not accounted for, so it start from index [1]
+        V_fft[indexFre+1] = -1j*Vfi[0,0]*np.exp(-1j*k*(x-x0))
+        
+    U = np.real(np.fft.irfft(U_fft, Nt, axis=0))
+    V = np.real(np.fft.irfft(V_fft, Nt, axis=0))
 
     #Gathers the field components
     Z = np.stack([U,V], axis=1)
+    
+    return Z
+
+def PSVbackground3Dfield(us, Layers, wVec, p, s, h, mu, aSP, phaseVelIn, di, sinTheta, N, Nt, x0, x1, x2, x3):
+    """
+    This function calculates the displacement time series in 3D wave propagation
+    problem, in which the SV or P wave incoming from the half space
+    underneath under arbitrary incident angle from 0 to 90 degrees and propagating 
+    through stratified soil domain.
+
+    Note: 
+    [1] The coordinate system and displacement positive axes:
+
+        z(W) ^  y(V)
+             | /
+             |/
+             o-----> x(U)
+
+    [2] At each frequency, the displacement components are calculated 
+        based on Eduardo Kausel's Stiffness Matrix Method, in "Fundamental 
+        Solutions in Elastodynamics, A Compendium", chap. 10, pp. 140--159 
+
+    @visit  https://github.com/SeismoVLAB/SVL\n
+    @author Kien T. Nguyen 2021, ORCID: 0000-0001-5761-3156
+    
+    Parameters
+    ----------
+    us  : array
+        Displacement at the layer interfaces in frequency domain
+    Layers  : array
+        The y-coordinate of soil layer interfaces, including imaginary and half-space interfaces
+    wVec  : array
+        Angular frequency spectrum 
+    p, s  : array
+        Complex coefficients
+    h  : array
+        The thickness of soil layers
+    mu  : array
+        The shear modulus of soil layers
+    aSP  : array
+        The ratio between shear wave velocity and dilatational wave velocity of soil layers
+    phaseVelIn  : float
+        The phase velocity of incoming wave in the half space underneath
+    di  : array
+        Polarization of the propagation direction with respect to horizontal axis (x-axis)
+    sinTheta  : float
+        Sine of the incoming angle
+    N  : int
+        Number of soil layers, including imaginary layer and half space
+    Nt  : int
+        Length of the Disp, Vels, Accel after zero padding
+    x0  :float
+        x-coordinate of the reference point (where the incoming signal time series is prescribed)
+    x1, x2, x3 :float
+        Cartesian coordinates of the query point
+        
+    Returns
+    -------
+    Z  : array
+        Displacement time series at the query point
+    """
+    nfi = len(wVec)
+    U_fft = np.zeros(nfi, dtype=complex)
+    V_fft = np.zeros(nfi, dtype=complex) 
+
+    x = x1*di[0] + x2*di[1]
+    y = x3
+
+    for fi in range(nfi):
+        w = wVec[fi]
+        k = w*sinTheta/phaseVelIn
+
+        #Displacement at interface
+        uInterface = us[:, :, fi]
+
+        #find parent layer where yTopLayer>=y>yBotLayer
+        parentLayer = N - 1 - np.searchsorted(Layers[::-1], y, side = "left") 
+            
+        if parentLayer == (N-1):
+            if y==Layers[-1]:
+                uz = uInterface[2*N-2:2*N,:]
+        elif parentLayer < (N-1):
+            yTop = Layers[parentLayer]
+            yBot = Layers[parentLayer+1]
+            uTop = uInterface[2*parentLayer:2*parentLayer+2,:]
+            uBot = uInterface[2*parentLayer+2:2*parentLayer+4,:]
+            if y < yTop:
+                uz = GetDisplacementAtInteriorLayer(y,yTop,yBot,uTop,uBot,k,p[parentLayer],s[parentLayer],mu[parentLayer],aSP[parentLayer])
+            elif np.isclose(y, yTop, rtol=1e-06):
+                uz = uTop
+                    
+        U_fft[fi] = uz[0,0]*np.exp(-1j*k*(x-x0))
+        V_fft[fi] = 1j*uz[1,0]*np.exp(-1j*k*(x-x0))
+
+    #Add 0 for zero frequency and frequency larger than cutOffFrequency
+    U_fft = np.concatenate((np.zeros(1, dtype=complex), U_fft, np.zeros(int(Nt/2)-nfi, dtype=complex)), axis=0)
+    V_fft = np.concatenate((np.zeros(1), V_fft, np.zeros(int(Nt/2)-nfi)), axis=0)
+
+    U = di[0]*np.real(np.fft.irfft(U_fft, Nt, axis=0))
+    V = di[1]*np.real(np.fft.irfft(U_fft, Nt, axis=0))
+    W = np.real(np.fft.irfft(V_fft, Nt, axis=0))
+
+    #Gathers the field components
+    Z = np.stack([U,V,W], axis=1)
 
     return Z
 
@@ -440,141 +1210,90 @@ def SHbackground3Dfield(Values, t, X, X0, Xmin, di, nt, fTag):
 
     return Z
 
-def SVbackground3Dfield(Values, t, X, X0, Xmin, di, nt, fTag):
+def RHbackground3Dfield(FdispIn, wVec, interpDispersion, interpuMmodeShape, interpvMmodeShape, di, x1, y1, z1, Nt, xmin, ymin, zmin):
     """
-    This function generates the 3D DRM field to be specified at a particular node. The 
-    displacement,, velocity and acceleration fields are computed assuming homogenous
-    half-space.\n
+    This function calculates the displacements at a specific point in time domain for Rayleigh
+    wave in stratified soil.\n
+    
     @visit  https://github.com/SeismoVLAB/SVL\n
-    @author Danilo S. Kusanovic 2021
+    @author Kien T. Nguyen 2021, ORCID: 0000-0001-5761-3156
+    
+    Parameters
+    ----------
+    wVec  : array
+        The angular frequency
+    interpDispersion  : object of class scipy.interpolate.interp1d
+        The 1d interpolation function to interpolate the phase velocity at chosen angular frequency 
+    interpuMmodeShape, interpvMmodeShape  : objects of class scipy.interpolate.RectBivariateSpline
+        The 2d interpolation function to interpolate the horizontal and vertical displacement mode shape
+        at the query point. Functions of y and angular frequency 
+    x, y  : float
+        x- and y-coordinate of the query point
+    Nt  : int
+        Length of the Disp, Vels, Accel after zero padding
+    FdispIn  : array
+        FFT of the input displacement
+    x0, y0  : float
+        x- and y-coordinate of the reference point (where the incoming signal time series is prescribed)
+        
+    Returns
+    -------
+    U, V  : array
+        The horizontal and vertical displacements at the query point
     """
-    #Soil properties
-    mTag = Entities['Functions'][fTag]['attributes']['material']
-    Es  = Entities['Materials'][mTag]['attributes']['E']
-    nu  = Entities['Materials'][mTag]['attributes']['nu']
-    rho = Entities['Materials'][mTag]['attributes']['rho']
-    Vs  = np.sqrt(Es/2.0/rho/(1.0 + nu)) 
-    Vp  = Vs*np.sqrt(2.0*(1.0 - nu)/(1.0 - 2.0*nu))
+    x = x1*di[0] + y1*di[1]
+    y = z1
 
-    #Signal properties
-    angle   = Entities['Functions'][fTag]['attributes']['theta']
-    theta_s = angle*np.pi/180.0
-    theta_p = np.arcsin(Vp/Vs*np.sin(theta_s))
+    x0 = xmin*di[0] + ymin*di[1]
+    y0 = zmin
 
-    #Reference time and coordinates for signal
-    x_rela =  X[0] - X0[0]
-    y_rela =  X[1] - X0[1]
-    z_rela =  X[2] - X0[2]
-    t_init = (X0[0] - Xmin[0])/Vs*np.sin(theta_s)*di[0] + (X0[1] - Xmin[1])/Vs*np.sin(theta_s)*di[1] + (X0[2] - Xmin[2])/Vs*np.cos(theta_s)
-
-    #Time shift according to reference point X0.
-    t1 = -x_rela/Vs*np.sin(theta_s)*di[0] - y_rela/Vs*np.sin(theta_s)*di[1] - z_rela/Vs*np.cos(theta_s) + t - t_init
-    t2 = -x_rela/Vs*np.sin(theta_s)*di[0] - y_rela/Vs*np.sin(theta_s)*di[1] + z_rela/Vs*np.cos(theta_s) + t - t_init
-    t3 = -x_rela/Vp*np.sin(theta_p)*di[0] - y_rela/Vp*np.sin(theta_p)*di[1] + z_rela/Vp*np.cos(theta_p) + t - t_init
-
-    #Incident and Reflected amplitudes.
-    k = Vp/Vs
-    U_si = 1.000
-    U_pr = U_si*(-2*k*np.sin(2*theta_s)*np.cos(2*theta_s))/(np.sin(2*theta_s)*np.sin(2*theta_p) + k**2*np.cos(2*theta_s)**2)
-    U_sr = U_si*(np.sin(2*theta_s)*np.sin(2*theta_p) - k**2*np.cos(2*theta_s)**2)/(np.sin(2*theta_s)*np.sin(2*theta_p) + k**2*np.cos(2*theta_s)**2)
-
-    #Compute the 3D Field Components.
-    U = np.zeros(nt)
-    V = np.zeros(nt)
-    W = np.zeros(nt)
-
-    A  = np.interp(t1, t, Values, left=0.0, right=0.0)
-    U += U_si*di[0]*np.cos(theta_s)*A
-    V += U_si*di[1]*np.cos(theta_s)*A
-    W -= U_si*np.sin(theta_s)*A
-
-    A  = np.interp(t2, t, Values, left=0.0, right=0.0)
-    U -= U_sr*di[0]*np.cos(theta_s)*A
-    V -= U_sr*di[1]*np.cos(theta_s)*A
-    W -= U_sr*np.sin(theta_s)*A
-
-    A  = np.interp(t3, t, Values, left=0.0, right=0.0)
-    U -= U_pr*di[0]*np.sin(theta_p)*A
-    V -= U_pr*di[1]*np.sin(theta_p)*A
-    W += U_pr*np.cos(theta_p)*A
+    U_fft = np.zeros(int(Nt/2), dtype=complex)
+    V_fft = np.zeros(int(Nt/2), dtype=complex)
+    
+    for indexFre, w in enumerate(wVec):
+        vr = interpDispersion(w)
+        k = w/vr
+        uRef = interpuMmodeShape(y0,w)
+        Ufi = interpuMmodeShape(y,w)/uRef*FdispIn[indexFre]
+        Vfi = interpvMmodeShape(y,w)/uRef*FdispIn[indexFre]
+        
+        U_fft[indexFre+1] = Ufi[0,0]*np.exp(-1j*k*(x-x0)) #since zero frequency is not accounted for, so it start from index [1]
+        V_fft[indexFre+1] = -1j*Vfi[0,0]*np.exp(-1j*k*(x-x0))
+        
+    U = di[0]*np.real(np.fft.irfft(U_fft, Nt, axis=0))
+    V = di[1]*np.real(np.fft.irfft(U_fft, Nt, axis=0))
+    W = np.real(np.fft.irfft(V_fft, Nt, axis=0))
 
     #Gathers the field components
     Z = np.stack([U,V,W], axis=1)
 
     return Z
-
-def SVbackground3DfieldCritical(Values, SP, SS, Vp, Vs, cj, sj, p, w, di, xp, xmin, nt):
-    """
-    The script is to calculate the displacement, velocity or acceleration components 
-    of a 3D rayleigh wave by using real FFT and inverse real FFT, accounting for both 
-    amplitude and phase or the incident angle larger than critical one.
-    @visit  https://github.com/SeismoVLAB/SVL\n
-    @author Kien T. Nguyen 2021
-    """
-    #TODO: This is not working and needs to be corrected
-    #Compute the 3D Field Components.
-    U = np.zeros(nt)
-    V = np.zeros(nt)
-    W = np.zeros(nt)
-
-    #Gathers the field components
-    Z = np.stack([U,V,W], axis=1)
-
-    return Z
-
-def RHbackground3Dfield(Values, Vp, Vs, Vr, w, kR, qR, sR, x0, xmin, di, x1, x2, x3):
-    """
-    The script is to calculate the displacement, velocity or acceleration components 
-    of a 3D rayleigh wave by using real FFT and inverse real FFT, accounting for both 
-    amplitude and phase
-    @visit  https://github.com/SeismoVLAB/SVL\n
-    @author Kien T. Nguyen 2021
-    """
-    x = x1*di[0] + x2*di[1]
-    y = x0[2] - x3
-    Bn = np.fft.rfft(Values)
-    An = 2.0*(Vs/Vr)**2*Bn # scale factor An = A*kR in I.9 Viktorov
-
-    #Compute the 2D Field Components.
-    U_fft = An*(np.exp(-qR*y)-(1.0-Vr**2.0/2.0/Vs**2)*np.exp(-sR*y))*np.exp(-1j*x/Vr*w)
-    V_fft = np.exp(1j*(-np.pi/2.0))*An*np.sqrt(1.0-Vr**2.0/Vp**2.0)*(np.exp(-qR*y)-1.0/(1.0-Vr**2/2.0/Vs**2.0)*np.exp(-sR*y))*np.exp(-1j*x/Vr*w)
-
-    #Compute the 3D Field Components.
-    U = di[0]*np.real(np.fft.irfftn(U_fft))
-    V = di[1]*np.real(np.fft.irfftn(U_fft))
-    W = -np.real(np.fft.irfftn(V_fft))
-
-    #Gathers the field components
-    Z = np.stack([U,V,W], axis=1)
-
-    return Z
-
-def ComputeSVCriticalAngle(fTag):
-    """
-    @visit  https://github.com/SeismoVLAB/SVL\n
-    @author Kien T. Nguyen 2021
-    """
-    mTag = Entities['Functions'][fTag]['attributes']['material']
-    Es  = Entities['Materials'][mTag]['attributes']['E']
-    nu  = Entities['Materials'][mTag]['attributes']['nu']
-    rho = Entities['Materials'][mTag]['attributes']['rho']
-    Vs  = np.sqrt(Es/2.0/rho/(1.0 + nu)) 
-    Vp  = Vs*np.sqrt(2.0*(1.0 - nu)/(1.0 - 2.0*nu))
-    Angle = Entities['Functions'][fTag]['attributes']['theta']*np.pi/180.0
-    Theta = Vp/Vs*np.sin(Angle)
-
-    return Theta, Vs, Vp
 
 def GetRayleighVelocity(Vs, nu):
     """
+    This function calculates the Rayleigh wave phase velocity in homogeneous
+    elastic domain.
+    
     @visit  https://github.com/SeismoVLAB/SVL\n
-    @author Kien T. Nguyen 2021
+    @author Kien T. Nguyen 2021, ORCID: 0000-0001-5761-3156
+    
+    Parameters
+    ----------
+    Vs  : float
+        Shear wave velocity of the homogeneous soil domain 
+    nu  : float
+        The Poisson's ratio of soil
+        
+    Returns
+    -------
+    ratio*Vs  : float
+        Rayleigh wave phase velocity
     """
     #Compute the Rayleigh wave velocity.
-    lambda0 = 2.0*1.0*nu/(1.0-2.0*nu)
-    hk = np.sqrt(1.0/(lambda0+2.0*1.0))
+    lambda0 = 2.0*1.0*nu/(1.0 - 2.0*nu)
+    hk = np.sqrt(1.0/(lambda0 + 2.0*1.0))
     
-    p =[-16.0*(1.0-hk**2), 24.0-16.0*hk**2, -8.0, 1.0]
+    p = [-16.0*(1.0 - hk**2), 24.0 - 16.0*hk**2, -8.0, 1.0]
     x = np.sort(np.roots(p))
     ratio = 1.0/np.sqrt(np.real(x[2]))
     
@@ -594,6 +1313,9 @@ def GenerateDRMFiles():
         if 'fun' in Entities['Loads'][lTag]['attributes']:
             fTag = Entities['Loads'][lTag]['attributes']['fun']
             if Entities['Loads'][lTag]['attributes']['type'].upper() == 'PLANEWAVE':
+                print(" Generating DRM files. This may take a few minutes...")
+                start_time = time.time()
+
                 #Gets the Domain Reduction Method Information.
                 nodes, conditions, t, Disp, Vels, Accel, dt, option = ParseDRMFile(Entities['Functions'][fTag])
 
@@ -610,79 +1332,91 @@ def GenerateDRMFiles():
                 xmin = Entities['Functions'][fTag]['attributes']['xmin']
                 funName = Entities['Functions'][fTag]['name']
                 funOption = Entities['Functions'][fTag]['attributes']['option']
+                waveType = funOption.upper()
+
+                #Layer material information
+                nmat = len(Entities['Functions'][fTag]['attributes']['material'])
+                beta = np.zeros((nmat,))
+                rho = np.zeros((nmat,))
+                nu = np.zeros((nmat,))
+                for k, mTag in enumerate(Entities['Functions'][fTag]['attributes']['material']):
+                    material = Entities['Materials'][mTag]['attributes']
+                    beta[k] = np.sqrt(material['E']/2.0/material['rho']/(1.0 + material['nu']))
+                    rho[k] = material['rho']
+                    nu[k] = material['nu']
 
                 nt = len(t)
-                nd = Options['dimension']
-
-                #Tapper fucntion
-                shift = 0 if (nt % 2) == 0 else 1
-                window = signal.tukey(nt, alpha = 0.15)
-                Disp *= window
-                Vels *= window
-                Accel *= window
                 
-                if nd == 2:
-                    if funOption.upper() == 'SV':
-                        if 'theta' not in Entities['Functions'][fTag]['attributes']:
-                            Entities['Functions'][fTag]['attributes']['theta'] = 0.0
-                        thetacr, Vs, Vp = ComputeSVCriticalAngle(fTag)
+                #Computes the DRM field depending on the option name (P,SV,SH,RH)
+                if Options['dimension'] == 2:
+                    if waveType == 'P' or waveType == 'SV':
+                        fun = Entities['Functions'][fTag]['attributes']
+                        if 'theta' not in fun:
+                            fun['theta'] = 0.0
+                        if 'CutOffFrequency' not in fun:
+                            fun['CutOffFrequency'] = 30.0
+                        if 'df' not in fun:
+                            fun['df'] = 0.2
 
-                        if thetacr < 1.0:
-                            with concurrent.futures.ProcessPoolExecutor() as executor: 
-                                for k, n in enumerate(nodes):
-                                    x = Entities['Nodes'][n]['coords']
-                                    U = SVbackground2Dfield(Disp, t, x, x0, xmin, nt, fTag)
-                                    V = SVbackground2Dfield(Vels, t, x, x0, xmin, nt, fTag)
-                                    A = SVbackground2Dfield(Accel, t, x, x0, xmin, nt, fTag)        
-                                    executor.submit(WriteDRMFile, dirName, funName, fTag, U, V, A, nt, 6, n, conditions[k])
-                        else:
-                            angle = Entities['Functions'][fTag]['attributes']['theta']
-                            sj = np.sin(angle/180.0*np.pi)
-                            cj = np.cos(angle/180.0*np.pi)
-                            p  = sj/Vs
-                            ci = 1j*np.sqrt(Vp**2*p**2-1.0)
+                        #Unpack Layer information
+                        angle = fun['theta']
+                        layers = fun['layer']
+                        df = fun['df']
+                        CutOffFrequency = fun['CutOffFrequency']
 
-                            cons1 = 1.0/Vs/Vs-2.0*p*p
-                            cons2 = 4.0*p*p*ci*cj/Vs/Vp
+                        ufull, vfull, afull, layers, beta, rho, nu, wVec, p, s, h, mu, aSP, phaseVelIn, sinTheta, N, Nt = DataPreprocessing(Disp, Vels, Accel, layers, beta, rho, nu, angle, xmin[1], nt, dt, fun)
 
-                            SP = 4.0*Vs/Vp*p*cj/Vs*cons1/(cons1*cons1 + cons2)
-                            SS = (cons1*cons1-cons2)/(cons1*cons1 + cons2)
-                            nn = np.arange(np.floor_divide(nt,2) + shift)
-                            w  = 2*np.pi/t[-1]*nn
+                        #Compute Interface responses
+                        uInterface = SoilInterfaceResponse(ufull, wVec, p, s, h, mu, aSP, phaseVelIn, sinTheta, N)
+                        vInterface = SoilInterfaceResponse(vfull, wVec, p, s, h, mu, aSP, phaseVelIn, sinTheta, N)
+                        aInterface = SoilInterfaceResponse(afull, wVec, p, s, h, mu, aSP, phaseVelIn, sinTheta, N)
 
-                            with concurrent.futures.ProcessPoolExecutor() as executor: 
-                                for k, n in enumerate(nodes):
-                                    x = Entities['Nodes'][n]['coords']
-                                    U = SVbackground2DfieldCritical(Disp, SP, SS, Vp, Vs, cj, sj, p, w, x, xmin)
-                                    V = SVbackground2DfieldCritical(Vels, SP, SS, Vp, Vs, cj, sj, p, w, x, xmin)
-                                    A = SVbackground2DfieldCritical(Accel,SP, SS, Vp, Vs, cj, sj, p, w, x, xmin)        
-                                    executor.submit(WriteDRMFile, dirName, funName, fTag, U, V, A, nt, 6, n, conditions[k])
-                    elif funOption.upper() == 'RAYLEIGH':
-                        mTag = Entities['Functions'][fTag]['attributes']['material']
-                        Es  = Entities['Materials'][mTag]['attributes']['E']
-                        nu  = Entities['Materials'][mTag]['attributes']['nu']
-                        rho = Entities['Materials'][mTag]['attributes']['rho']
-                        Vs  = np.sqrt(Es/2.0/rho/(1.0 + nu)) 
+                        x0 = xmin[0]
+                        with concurrent.futures.ProcessPoolExecutor() as executor:
+                            for k, n in enumerate(nodes):
+                                x = Entities['Nodes'][n]['coords']
+                                U = PSVbackground2Dfield(uInterface, layers, wVec, p, s, h, mu, aSP, phaseVelIn, sinTheta, N, Nt, x0, x[0], x[1])
+                                V = PSVbackground2Dfield(vInterface, layers, wVec, p, s, h, mu, aSP, phaseVelIn, sinTheta, N, Nt, x0, x[0], x[1])
+                                A = PSVbackground2Dfield(aInterface, layers, wVec, p, s, h, mu, aSP, phaseVelIn, sinTheta, N, Nt, x0, x[0], x[1])
+                                executor.submit(WriteDRMFile, dirName, funName, fTag, U, V, A, nt, 6, n, conditions[k])
+                    elif waveType == 'RH':
+                        #Unpack Layer information
+                        fun    = Entities['Functions'][fTag]['attributes']
+                        layers = fun['layer']
+                        df     = fun['df']
+                        endFrequency = fun['CutOffFrequency'] # energy of frequency larger than this is zero
 
-                        Vp = Vs*np.sqrt(2.0*(1.0 - nu)/(1.0 - 2.0*nu))
-                        Vr = GetRayleighVelocity(Vs,nu)
+                        depthFactor = 3.0 # consider until depth = depthFactor*wavelength to ensure fix end approximation
+                        dy1  = 1.0        # y-grid spacing of points used to interpolate the mode shape, from ground surface to yDRMmin
+                        nepw = 40         # number of element per wavelength in the extended region, from yDRMmin to depth
+                        mode = 0          # currently only work with mode = 0: fundamental mode of Rayleigh wave
 
-                        nn = np.arange(np.floor_divide(nt,2) + shift)
-                        w  = 2*np.pi/t[-1]*nn
-                        kR = 1.0/Vr*w
-                        qR = np.sqrt(1.0-(Vr/Vp)**2)*kR
-                        sR = np.sqrt(1.0-(Vr/Vs)**2)*kR
+                        #Compute the FFT for displacement, velocity and acceleration fields
+                        wVec, FFTdisp, FFTvels, FFTaccel, df, Nt, startFrequency, endFrequency = GetRayleighFFTfields(Disp, Vels, Accel, endFrequency, dt, df, nt)
+
+                        #
+                        fDispersion, phaseVelDispersion, yGridModeShape, uModeShape, vModeShape = GetRayleighDispersionAndModeShape(mode, layers, beta, rho, nu, dy1, xmin[1], nepw, startFrequency, endFrequency, df, depthFactor)
+
+                        #
+                        yGridModeShape = np.flipud(yGridModeShape)
+                        uModeShape = np.flipud(np.real(uModeShape))
+                        vModeShape = np.flipud(np.real(vModeShape))
+
+                        #
+                        interpDispersion = interpolate.interp1d(2.0*np.pi*fDispersion, phaseVelDispersion,kind='linear', fill_value='extrapolate')
+                        interpuMmodeShape = interpolate.RectBivariateSpline(yGridModeShape,2.0*np.pi*fDispersion, uModeShape)
+                        interpvMmodeShape = interpolate.RectBivariateSpline(yGridModeShape,2.0*np.pi*fDispersion, vModeShape)
 
                         with concurrent.futures.ProcessPoolExecutor() as executor:
                             for k, n in enumerate(nodes):
                                 x = Entities['Nodes'][n]['coords']  
-                                U = RHbackground2Dfield(Disp, t, Vp, Vs, Vr, w, kR, qR, sR, x0, xmin, x[0], x[1])
-                                V = RHbackground2Dfield(Vels, t, Vp, Vs, Vr, w, kR, qR, sR, x0, xmin, x[0], x[1])
-                                A = RHbackground2Dfield(Accel, t, Vp, Vs, Vr, w, kR, qR, sR, x0, xmin, x[0], x[1])
-                                executor.submit(WriteDRMFile, dirName, funName, fTag, U, V, A, nt, 6, n, conditions[k])
+                                U = RHbackground2Dfield(FFTdisp, wVec, interpDispersion, interpuMmodeShape, interpvMmodeShape, x[0], x[1], Nt, xmin[0], x0[1])
+                                V = RHbackground2Dfield(FFTvels, wVec, interpDispersion, interpuMmodeShape, interpvMmodeShape, x[0], x[1], Nt, xmin[0], x0[1])
+                                A = RHbackground2Dfield(FFTaccel, wVec, interpDispersion, interpuMmodeShape, interpvMmodeShape, x[0], x[1], Nt, xmin[0], x0[1])
+                                executor.submit(WriteDRMFile, dirName, funName, fTag, U, V, A, Nt, 6, n, conditions[k])
                     else:
                         print('\x1B[31m ERROR \x1B[0m: The specified PLANEWAVE (2D) option (=%s) is not recognized' % funOption)
-                elif nd == 3:
+                elif Options['dimension'] == 3:
                     if 'phi' not in Entities['Functions'][fTag]['attributes']:
                         Entities['Functions'][fTag]['attributes']['phi'] = 0.0
 
@@ -691,7 +1425,38 @@ def GenerateDRMFiles():
                     phi     = azimut*np.pi/180.0
                     di      = np.array([np.cos(phi), np.sin(phi)]) 
 
-                    if funOption.upper() == 'SH':
+                    if waveType == 'P' or waveType == 'SV':
+                        fun = Entities['Functions'][fTag]['attributes']
+                        if 'theta' not in fun:
+                            fun['theta'] = 0.0
+                        if 'CutOffFrequency' not in fun:
+                            fun['CutOffFrequency'] = 30.0
+                        if 'df' not in fun:
+                            fun['df'] = 0.2
+
+                        #Unpack Layer information
+                        angle = fun['theta']
+                        layers = fun['layer']
+                        df = fun['df']
+                        CutOffFrequency = fun['CutOffFrequency']
+
+                        ufull, vfull, afull, layers, beta, rho, nu, wVec, p, s, h, mu, aSP, phaseVelIn, sinTheta, N, Nt = DataPreprocessing(Disp, Vels, Accel, layers, beta, rho, nu, angle, xmin[2], nt, dt, fun)
+
+                        #Compute Interface responses
+                        uInterface = SoilInterfaceResponse(ufull, wVec, p, s, h, mu, aSP, phaseVelIn, sinTheta, N)
+                        vInterface = SoilInterfaceResponse(vfull, wVec, p, s, h, mu, aSP, phaseVelIn, sinTheta, N)
+                        aInterface = SoilInterfaceResponse(afull, wVec, p, s, h, mu, aSP, phaseVelIn, sinTheta, N)
+
+                        x0 = xmin[0]*di[0] + xmin[0]*di[1]
+                        with concurrent.futures.ProcessPoolExecutor() as executor:
+                            for k, n in enumerate(nodes):
+                                x = Entities['Nodes'][n]['coords']  
+                                U = PSVbackground3Dfield(uInterface, layers, wVec, p, s, h, mu, aSP, phaseVelIn, di, sinTheta, N, Nt, x0, x[0], x[1], x[2])
+                                V = PSVbackground3Dfield(vInterface, layers, wVec, p, s, h, mu, aSP, phaseVelIn, di, sinTheta, N, Nt, x0, x[0], x[1], x[2])
+                                A = PSVbackground3Dfield(aInterface, layers, wVec, p, s, h, mu, aSP, phaseVelIn, di, sinTheta, N, Nt, x0, x[0], x[1], x[2])
+                                executor.submit(WriteDRMFile, dirName, funName, fTag, U, V, A, nt, 9, n, conditions[k])
+                    elif waveType == 'SH':
+                        #TODO: Complete SH case in 3D
                         with concurrent.futures.ProcessPoolExecutor() as executor: 
                             for k, n in enumerate(nodes):
                                 x = Entities['Nodes'][n]['coords']
@@ -699,65 +1464,41 @@ def GenerateDRMFiles():
                                 V = SHbackground3Dfield(Vels, t, x, x0, xmin, di, nt, fTag)
                                 A = SHbackground3Dfield(Accel, t, x, x0, xmin, di, nt, fTag)
                                 executor.submit(WriteDRMFile, dirName, funName, fTag, U, V, A, nt, 9, n, conditions[k])
-                    elif funOption.upper() == 'SV':
-                        if 'theta' not in Entities['Functions'][fTag]['attributes']:
-                            Entities['Functions'][fTag]['attributes']['theta'] = 0.0
-                        if 'phi' not in Entities['Functions'][fTag]['attributes']:
-                            Entities['Functions'][fTag]['attributes']['phi'] = 0.0
-                        thetacr, Vs, Vp = ComputeSVCriticalAngle(fTag)
+                    elif waveType == 'RH':
+                        #Unpack Layer information
+                        fun    = Entities['Functions'][fTag]['attributes']
+                        layers = fun['layer']
+                        df     = fun['df']
+                        endFrequency = fun['CutOffFrequency'] # energy of frequency larger than this is zero
 
-                        if thetacr < 1.0:
-                            with concurrent.futures.ProcessPoolExecutor() as executor: 
-                                for k, n in enumerate(nodes):
-                                    x = Entities['Nodes'][n]['coords']
-                                    U = SVbackground3Dfield(Disp, t, x, x0, xmin, di, nt, fTag)
-                                    V = SVbackground3Dfield(Vels, t, x, x0, xmin, di, nt, fTag)
-                                    A = SVbackground3Dfield(Accel, t, x, x0, xmin, di, nt, fTag)        
-                                    executor.submit(WriteDRMFile, dirName, funName, fTag, U, V, A, nt, 9, n, conditions[k])
-                        else:
-                            angle = Entities['Functions'][fTag]['attributes']['theta']
-                            sj = np.sin(angle/180.0*np.pi)
-                            cj = np.cos(angle/180.0*np.pi)
-                            p  = sj/Vs
-                            ci = 1j*np.sqrt(Vp**2*p**2-1.0)
+                        depthFactor = 3.0 # consider until depth = depthFactor*wavelength to ensure fix end approximation
+                        dy1  = 1.0        # y-grid spacing of points used to interpolate the mode shape, from ground surface to yDRMmin
+                        nepw = 40         # number of element per wavelength in the extended region, from yDRMmin to depth
+                        mode = 0          # currently only work with mode = 0: fundamental mode of Rayleigh wave
 
-                            cons1 = 1.0/Vs/Vs-2.0*p*p
-                            cons2 = 4.0*p*p*ci*cj/Vs/Vp
+                        #Compute the FFT for displacement, velocity and acceleration fields
+                        wVec, FFTdisp, FFTvels, FFTaccel, df, Nt, startFrequency, endFrequency = GetRayleighFFTfields(Disp, Vels, Accel, endFrequency, dt, df, nt)
 
-                            SP = 4.0*Vs/Vp*p*cj/Vs*cons1/(cons1*cons1 + cons2)
-                            SS = (cons1*cons1-cons2)/(cons1*cons1 + cons2)
-                            nn = np.arange(np.floor_divide(nt,2) + shift)
-                            w  = 2*np.pi/t[-1]*nn
+                        #
+                        
+                        fDispersion, phaseVelDispersion, yGridModeShape, uModeShape, vModeShape = GetRayleighDispersionAndModeShape(mode, layers, beta, rho, nu, dy1, xmin[2], nepw, startFrequency, endFrequency, df, depthFactor)
 
-                            with concurrent.futures.ProcessPoolExecutor() as executor: 
-                                for k, n in enumerate(nodes):
-                                    x = Entities['Nodes'][n]['coords']
-                                    U = SVbackground3DfieldCritical(Disp, SP, SS, Vp, Vs, cj, sj, p, w, di, x, xmin, nt)
-                                    V = SVbackground3DfieldCritical(Vels, SP, SS, Vp, Vs, cj, sj, p, w, di, x, xmin, nt)
-                                    A = SVbackground3DfieldCritical(Accel,SP, SS, Vp, Vs, cj, sj, p, w, di, x, xmin, nt)        
-                                    executor.submit(WriteDRMFile, dirName, funName, fTag, U, V, A, nt, 9, n, conditions[k])
-                    elif funOption.upper() == 'RAYLEIGH':
-                        mTag = Entities['Functions'][fTag]['attributes']['material']
-                        Es  = Entities['Materials'][mTag]['attributes']['E']
-                        nu  = Entities['Materials'][mTag]['attributes']['nu']
-                        rho = Entities['Materials'][mTag]['attributes']['rho']
-                        Vs  = np.sqrt(Es/2.0/rho/(1.0 + nu)) 
+                        #
+                        yGridModeShape = np.flipud(yGridModeShape)
+                        uModeShape = np.flipud(np.real(uModeShape))
+                        vModeShape = np.flipud(np.real(vModeShape))
 
-                        Vp = Vs*np.sqrt(2.0*(1.0 - nu)/(1.0 - 2.0*nu))
-                        Vr = GetRayleighVelocity(Vs,nu)
-
-                        nn = np.arange(np.floor_divide(nt,2) + shift)
-                        w  = 2*np.pi/t[-1]*nn
-                        kR = 1.0/Vr*w
-                        qR = np.sqrt(1.0-(Vr/Vp)**2)*kR
-                        sR = np.sqrt(1.0-(Vr/Vs)**2)*kR
+                        #
+                        interpDispersion = interpolate.interp1d(2.0*np.pi*fDispersion, phaseVelDispersion,kind='linear', fill_value='extrapolate')
+                        interpuMmodeShape = interpolate.RectBivariateSpline(yGridModeShape,2.0*np.pi*fDispersion, uModeShape)
+                        interpvMmodeShape = interpolate.RectBivariateSpline(yGridModeShape,2.0*np.pi*fDispersion, vModeShape)
 
                         with concurrent.futures.ProcessPoolExecutor() as executor:
                             for k, n in enumerate(nodes):
                                 x = Entities['Nodes'][n]['coords']
-                                U = RHbackground3Dfield(Disp, Vp, Vs, Vr, w, kR, qR, sR, x0, xmin, di, x[0], x[1], x[2])
-                                V = RHbackground3Dfield(Vels, Vp, Vs, Vr, w, kR, qR, sR, x0, xmin, di, x[0], x[1], x[2])
-                                A = RHbackground3Dfield(Accel, Vp, Vs, Vr, w, kR, qR, sR, x0, xmin, di, x[0], x[1], x[2])
+                                U = RHbackground3Dfield(FFTdisp, wVec, interpDispersion, interpuMmodeShape, interpvMmodeShape, di, x[0], x[1], x[2], Nt, xmin[0], xmin[1], x0[2])
+                                V = RHbackground3Dfield(FFTvels, wVec, interpDispersion, interpuMmodeShape, interpvMmodeShape, di, x[0], x[1], x[2], Nt, xmin[0], xmin[1], x0[2])
+                                A = RHbackground3Dfield(FFTaccel, wVec, interpDispersion, interpuMmodeShape, interpvMmodeShape, di, x[0], x[1], x[2], Nt, xmin[0], xmin[1], x0[2])
                                 executor.submit(WriteDRMFile, dirName, funName, fTag, U, V, A, nt, 9, n, conditions[k])
                     else:
                         print('\x1B[31m ERROR \x1B[0m: The specified PLANEWAVE (3D) option (=%s) is not recognized' % funOption)
@@ -769,3 +1510,6 @@ def GenerateDRMFiles():
 
                 #Update the domain reduction time series path where files are located.
                 Entities['Functions'][fTag]['attributes']['file'] = dirName + "/" + funName + "-" + str(fTag) + ".$.drm"
+
+                end_time = time.time()
+                print(" DRM files (",len(nodes),") were created in ", end_time - start_time, "s\n")

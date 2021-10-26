@@ -8,9 +8,9 @@ Material("Elastic1DLinear", false), E(E), nu(nu), Rho(rho){
     Strain.resize(1);
     Strain << 0.0;
 
-    //Initialize material stress.
-    Stress.resize(1);
-    Stress << 0.0;
+    //Initialize material commited strain.
+    newStrain.resize(1);
+    newStrain << 0.0;
 
     //Initialize material stiffness.
     TangentStiffness.resize(1,1);
@@ -84,6 +84,7 @@ Elastic1DLinear::GetStrain() const{
 //Returns material stress vector.
 Eigen::VectorXd
 Elastic1DLinear::GetStress() const{
+    Eigen::VectorXd Stress = TangentStiffness*Strain;
     return Stress;
 }
 
@@ -100,6 +101,7 @@ Elastic1DLinear::GetStrainRate()  const{
 //Computes the material total stress.
 Eigen::VectorXd 
 Elastic1DLinear::GetTotalStress() const{
+    Eigen::VectorXd Stress = TangentStiffness*Strain;
     return Stress;
 }
 
@@ -118,19 +120,20 @@ Elastic1DLinear::GetInitialTangentStiffness() const{
 //Perform converged material state update.
 void 
 Elastic1DLinear::CommitState(){
+    newStrain = Strain;
 }
 
 //Reverse the material states to previous converged state.
 void 
 Elastic1DLinear::ReverseState(){
-    //TODO: Get back to previous commited state
+    Strain = newStrain;
 }
 
 //Brings the material states to its initial state in the element.
 void 
 Elastic1DLinear::InitialState(){
-    Strain.fill(0.0);
-    Stress.fill(0.0);
+    Strain << 0.0;
+    newStrain << 0.0;
 }
 
 //Update the material state for this iteration.
@@ -140,8 +143,5 @@ Elastic1DLinear::UpdateState(const Eigen::VectorXd strain, const unsigned int co
     if(cond == 1){
         //Update the strain.
         Strain = strain;
-
-        //Update the stress.
-        Stress = TangentStiffness*strain;
     }
 }

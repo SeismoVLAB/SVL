@@ -32,6 +32,7 @@
 #ifndef _LIN3DUSERDEFINED_HPP_
 #define _LIN3DUSERDEFINED_HPP_
 
+#include <vector>
 #include <string>
 #include <memory>
 #include <Eigen/Dense>

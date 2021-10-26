@@ -7,12 +7,9 @@
 #include "Definitions.hpp"
 #include "Profiler.hpp"
 
-//Define VTK cell value for Paraview:
-const unsigned int VTKCELL = 23;
-
 //Overload constructor.
 PML2DQuad8::PML2DQuad8(const std::vector<unsigned int> nodes, std::unique_ptr<Material> &material, const std::vector<double> parameters, const std::string quadrature, const unsigned int nGauss) :
-Element("PML2DQuad8", nodes, 40, VTKCELL, GROUPPML), t(parameters[0]), m_pml(parameters[1]), L_pml(parameters[2]), R_pml(parameters[3]), x0_pml(parameters[4]), y0_pml(parameters[5]), nx_pml(parameters[6]), ny_pml(parameters[7]) {
+Element("PML2DQuad8", nodes, 40, VTK_QUADRATIC_QUAD, GROUP_ELEMENT_PML), t(parameters[0]), m_pml(parameters[1]), L_pml(parameters[2]), R_pml(parameters[3]), x0_pml(parameters[4]), y0_pml(parameters[5]), nx_pml(parameters[6]), ny_pml(parameters[7]) {
     //The element nodes.
     theNodes.resize(8);
 

@@ -70,7 +70,7 @@ class Algorithm{
 
         ///Gets the displacement increment.
         ///@return The incremental displacement vector.	
-        virtual Eigen::VectorXd GetDisplacementIncrement() = 0;
+        virtual const Eigen::VectorXd& GetDisplacementIncrement() = 0;
 
         ///Sets the integrator for this algorithm.
         ///@param integrator Pointer to the Integrator to obtain the effective stiffness and force.
@@ -80,11 +80,17 @@ class Algorithm{
         ///@param factor The incremental load factor.
         virtual void SetLoadFactor(double factor) = 0;
 
+        ///Reverse the incremental state variables to its pervious converged one in the mesh.
+        ///@param mesh Pointer to the Mesh container to extract Node and Element.
+        ///note This function zeroes out incremental displacements at each Node in Mesh.
+        ///@see Node::SetIncrementalDisplacements(), Element::ReverseState().
+        void ReverseStatesIncrements(std::shared_ptr<Mesh> &mesh);
+
         ///Update the incremental state variables in the mesh.
         ///@param mesh Pointer to the Mesh container to extract Node and Element.
         ///@param dU Vector with the converged incremental displacements.
         ///note This function sets incremental displacements at each Node in Mesh.
-        ///@see Node::SetIncrementalDisplacements().
+        ///@see Node::SetIncrementalDisplacements() Element::UpdateState().
         void UpdateStatesIncrements(std::shared_ptr<Mesh> &mesh, const Eigen::VectorXd &dU);
 
         ///Construct the residual vector force from each processor.
@@ -95,13 +101,18 @@ class Algorithm{
 
         ///Computes convergence tests for this algorithm.
         ///@param Force The residual force vector.
-        ///@param Delta The incremental displacement norm.
+        ///@param Delta The accumulated incremental displacement vector.
+        ///@param delta The incremental displacement vector .
         ///@param isFirstIteration Whether this step in Algorithm is the first iteration.
         ///@note If Algorithm::flag = 1: Unbalanced Force Norm. 
         ///@note If Algorithm::flag = 2: Increment Displacement Norm. 
-        ///@note If Algorithm::flag = 3: Relative Unbalanced Force Norm. 
-        ///@note If Algorithm::flag = 4: Relative Increment Displacement Norm.
-        double ComputeConvergence(const Eigen::VectorXd &Force, double Delta, bool isFirstIteration);
+        ///@note If Algorithm::flag = 3: Energy Incremental Norm. 
+        ///@note If Algorithm::flag = 4: Relative Unbalanced Force Norm.
+        ///@note If Algorithm::flag = 5: Relative Incremental Displacement Norm. 
+        ///@note If Algorithm::flag = 6: Relative Energy Incremental Norm. 
+        ///@note If Algorithm::flag = 7: Total Relative Increment Displacement Norm. 
+        ///@note If Algorithm::flag = 8: Maximum Number of Iterations.
+        double ComputeConvergence(const Eigen::VectorXd &Force, const Eigen::VectorXd &Delta, const Eigen::VectorXd &delta, unsigned int k);
 
     protected:
         ///Operator that enforced restrain/constraint. 

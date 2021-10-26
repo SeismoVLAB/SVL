@@ -65,24 +65,24 @@ class Element{
         virtual ~Element() = 0;
 
         ///Save the material/section states in the element.
-        ///@note This funtion sets the trial states as converged ones in Material/Section.
+        ///@note This function sets the trial states as converged ones in Material/Section.
         virtual void CommitState() = 0;
 
         ///Update the material/section states in the element.
-        ///@note This funtion update the trial states at the Material/Section level.
+        ///@note This function update the trial states at the Material/Section level.
         virtual void UpdateState() = 0;
 
         ///Reverse the material/section states to previous converged state in this element.
-        ///@note This funtion returns the trial states to previous converged states at the Material/Section level.
+        ///@note This function returns the trial states to previous converged states at the Material/Section level.
         virtual void ReverseState() = 0;
 
         ///Brings the material/section state to its initial state in this element.
-        ///@note This funtion returns the meterial states to the beginning.
+        ///@note This function returns the meterial states to the beginning.
         virtual void InitialState() = 0;
 
         ///Sets the finite element dependance among objects.
         ///@param nodes The Node list of the Mesh object.
-        ///@note This funtion sets the relation between Node and Element objects.
+        ///@note This function sets the relation between Node and Element objects.
         ///@see Element::Nodes.
         virtual void SetDomain(std::map<unsigned int, std::shared_ptr<Node> > &nodes) = 0;
 
@@ -222,7 +222,7 @@ class Element{
         ///Returns the Node Connectivity Indexes.
         ///@return The Node connectivity array in this Element.
         ///@see Element::Nodes.
-        std::vector<unsigned int> GetNodes() const;
+        const std::vector<unsigned int>& GetNodes() const;
 
         ///Returns if the element has fixed nodes.
         ///@see Node::IsFixed.

@@ -9,8 +9,8 @@ const double TOL = 1.0E-06;
 Plastic1DGap::Plastic1DGap(double E, double Sy, double gap, double eta, bool behavior) : 
 Material("Plastic1DGap", false), E(E), Ratio(eta), Behavior(behavior){
     //Sets the proper signs according to behavior.
-    fy = fabs(Sy)*(1.0*(Behavior == true) - 1.0*(Behavior == false));
-    Gap = fabs(gap)*(1.0*(Behavior == true) - 1.0*(Behavior == false));
+    fy  = 1.0*(Behavior)*fabs(Sy)  - 1.0*(!Behavior)*fabs(Sy);
+    Gap = 1.0*(Behavior)*fabs(gap) - 1.0*(!Behavior)*fabs(gap);
 
     //Initialize Plastic internal variables.
     minYieldStrain = Gap;
@@ -19,8 +19,6 @@ Material("Plastic1DGap", false), E(E), Ratio(eta), Behavior(behavior){
 	//Elastic Gap history variables:
     newStrain = 0.0;
     oldStrain = 0.0;
-    oldStress = 0.0;
-    oldTangentStiffness = E;
 }
 
 //Destructor.
@@ -87,14 +85,27 @@ Eigen::VectorXd
 Plastic1DGap::GetStrain() const{
     Eigen::VectorXd Strain(1);
     Strain << oldStrain;
+
     return Strain;
 }
 
 //Returns material stress vector.
 Eigen::VectorXd
 Plastic1DGap::GetStress() const{
+    //Elastic and Plastic Stresses
+    double Se = E*(oldStrain - minYieldStrain);
+    double Sp = fy + (oldStrain - Gap - fy/E)*Ratio*E;
+
+    //Material stress vector
 	Eigen::VectorXd Stress(1);
-    Stress << oldStress;
+
+    if(Behavior){
+        Stress << Se*(oldStrain <= maxYieldStrain)*(minYieldStrain < oldStrain) + Sp*(oldStrain > maxYieldStrain);
+    }
+    else{
+        Stress << Se*(oldStrain < minYieldStrain)*(maxYieldStrain <= oldStrain) + Sp*(oldStrain < maxYieldStrain);
+    }
+
     return Stress;
 }
 
@@ -117,8 +128,18 @@ Plastic1DGap::GetTotalStress() const{
 //Computes consistent material matrix.
 Eigen::MatrixXd
 Plastic1DGap::GetTangentStiffness() const{
-	Eigen::MatrixXd TangentStiffness(1,1);
-    TangentStiffness << oldTangentStiffness;
+    double Ee = E;
+    double Ep = Ratio*E;
+
+    //Consistent material stiffness
+    Eigen::MatrixXd TangentStiffness(1,1);
+
+    if(Behavior){
+        TangentStiffness << Ee*(oldStrain <= maxYieldStrain)*(minYieldStrain < oldStrain) + Ep*(oldStrain > maxYieldStrain);
+    }
+    else{
+        TangentStiffness << Ee*(oldStrain < minYieldStrain)*(maxYieldStrain <= oldStrain) + Ep*(oldStrain < maxYieldStrain);
+    }
 
     return TangentStiffness;
 }
@@ -135,11 +156,13 @@ Plastic1DGap::GetInitialTangentStiffness() const{
 //Perform converged material state update.
 void 
 Plastic1DGap::CommitState(){
-    //Computes the trial stress and tangent
+    //Computes the associated stress
+    Eigen::VectorXd oldStress = GetStress();
+
     if(Behavior){
         if(oldStrain > maxYieldStrain){
             maxYieldStrain = oldStrain;
-            minYieldStrain = oldStrain - oldStress/E; 
+            minYieldStrain = oldStrain - oldStress(0)/E; 
         }
         else if(oldStrain < minYieldStrain && Gap < oldStrain){
             maxYieldStrain = fy/E + (oldStrain - Ratio*Gap)/(1.0 - Ratio);
@@ -149,7 +172,7 @@ Plastic1DGap::CommitState(){
     else{
         if(oldStrain < maxYieldStrain){
             maxYieldStrain = oldStrain;
-            minYieldStrain = oldStrain - oldStress/E; 
+            minYieldStrain = oldStrain - oldStress(0)/E; 
         }
         else if(minYieldStrain < oldStrain  && oldStrain < Gap){
             maxYieldStrain = fy/E + (oldStrain - Ratio*Gap)/(1.0 - Ratio);
@@ -176,8 +199,6 @@ Plastic1DGap::InitialState(){
 	//Elastic Gap history variables:
     newStrain = 0.0;
     oldStrain = 0.0;
-    oldStress = 0.0;
-    oldTangentStiffness = E*(fabs(Gap) < TOL);
 }
 
 //Update the material state for this iteration.
@@ -185,34 +206,4 @@ void
 Plastic1DGap::UpdateState(const Eigen::VectorXd strain, unsigned int UNUSED(cond)){
     //Update the strain and internal variables.
 	oldStrain = strain(0);
-
-    //Computes the trial stress and tangent
-    if(Behavior){
-        if(oldStrain > maxYieldStrain){
-            oldStress = fy + (oldStrain - Gap - fy/E)*Ratio*E;
-            oldTangentStiffness = Ratio*E; 
-        }
-        else if(oldStrain < minYieldStrain){
-            oldStress = 0.0;
-            oldTangentStiffness = 0.0; 
-        }
-        else{
-            oldStress = E*(oldStrain - minYieldStrain);
-            oldTangentStiffness = E; 
-        }
-    }
-    else{
-        if(oldStrain < maxYieldStrain){
-            oldStress = fy + (oldStrain - Gap - fy/E)*Ratio*E;
-            oldTangentStiffness = Ratio*E; 
-        }
-        else if(oldStrain > minYieldStrain){
-            oldStress = 0.0;
-            oldTangentStiffness = 0.0; 
-        }
-        else{
-            oldStress = E*(oldStrain - minYieldStrain);
-            oldTangentStiffness = E;
-        }
-    }
 }

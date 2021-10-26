@@ -31,24 +31,22 @@
 //                file using the pre-process module, and it runs the analysis. 
 //
 // Example of Usage:
-//  *SERIAL VERSION
-//   ./SeismoVLAB.exe -dir /file/path/ -file file.$.json 
-//  *PARALLEL VERSION
-//   mpirun -np n ./SeismoVLAB.exe -dir /file/path/ -file file.$.json
+//  *SERIAL EXECUTION
+//   ./SeismoVLAB.exe -dir '/file/path/' -file 'file.#.$.json'
+//  *PARALLEL EXECUTION
+//   mpirun -np n ./SeismoVLAB.exe -dir '/file/path/' -file 'file.#.$.json'
 //------------------------------------------------------------------------------
 
 #include <memory>
 #include <stdexcept> 
 #include <petscsys.h>
 
-#include "Parser.hpp"
+#include "Driver.hpp"
 #include "Utilities.hpp"
 #include "Definitions.hpp"
 #include "Profiler.hpp"
 
-int main(int argc, char **argv){ 
-    bool parsefile = false;
-                                           
+int main(int argc, char **argv){                                         
     //Initialize MPI instance.
     PetscInitialize(&argc, &argv, NULL, NULL);
     MPI_Comm_rank(PETSC_COMM_WORLD, &rank);
@@ -58,7 +56,7 @@ int main(int argc, char **argv){
     printLogo();
 
     //Parse command line arguments.    
-    CommandLine(argc, argv, parsefile);
+    CommandLine(argc, argv);
 
     //Initialize the profiler.
     #if PROFILING
@@ -66,7 +64,7 @@ int main(int argc, char **argv){
     #endif
 
     //Performs the simulation using JSON input file.
-    RunFromJSON(parsefile);
+    RunDriverFile();
 
     //Finalize the profiler.
     #if PROFILING

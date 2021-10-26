@@ -12,14 +12,17 @@ Fixed(isFixed), NumberOfDegreeOfFreedom(numberDofs), Coordinates(coordinates){
     Accelerations.resize(numberDofs);
     IncrementalDisplacements.resize(numberDofs);
 
+    CumulatedForce.resize(numberDofs);
+    PMLIntegratedVector.resize(numberDofs);
+
     //Assign zero initial conditions.
     Displacements.fill(0.0);
     Velocities.fill(0.0);
     Accelerations.fill(0.0);
     IncrementalDisplacements.fill(0.0);
+    CumulatedForce.fill(0.0);
 
     //The node's history vector for PML 3D.
-    PMLIntegratedVector.resize(numberDofs);
     PMLIntegratedVector.fill(0.0);
 }
 
@@ -50,10 +53,22 @@ Node::SetMass(Eigen::VectorXd &mass){
     Mass = mass;
 }
 
+//Set whether the node is fixed/free.
+void 
+Node::SetAsFixed(bool isFixed){
+    Fixed = isFixed;
+}
+
 //Set the node's reaction.
 void 
 Node::SetReaction(Eigen::VectorXd &reaction){
     Reaction = reaction;
+}
+
+//Set the node's external force from previous analysis.
+void 
+Node::SetProgressiveForces(Eigen::VectorXd &force){
+    CumulatedForce = force;
 }
 
 //Set the reduced degree of freedom list.
@@ -106,7 +121,7 @@ Node::SetDomainReductionMotion(Eigen::MatrixXd &Uo){
     DomainReductionMotion = Uo;
 }
 
-//Sets the nodel absorbent integrated history values.
+//Sets the nodal absorbent integrated history values.
 void 
 Node::SetPMLVector(Eigen::VectorXd &Ub){
     PMLIntegratedVector = Ub;
@@ -118,6 +133,12 @@ Node::SetSupportMotion(unsigned int k, std::vector<double> &Uo){
     SupportMotion[k] = Uo;
 }
 
+//Remove the displacements support motion associated with this Node.
+void 
+Node::DelSupportMotion(){
+    SupportMotion.clear();
+}
+
 //Return the node's mass as a vector.
 Eigen::VectorXd 
 Node::GetMass() const{
@@ -127,7 +148,8 @@ Node::GetMass() const{
 //Gets the node reaction force
 Eigen::VectorXd 
 Node::GetReaction() const{
-    if(!Fixed){
+    //if(!Fixed){
+    if(Reaction.size() == 0){
         Eigen::VectorXd ZeroReaction(NumberOfDegreeOfFreedom);
         ZeroReaction.fill(0.0);
 
@@ -137,25 +159,25 @@ Node::GetReaction() const{
 }
 
 //Return the node's coordinate as a vector.
-Eigen::VectorXd
+const Eigen::VectorXd&
 Node::GetCoordinates() const{
     return Coordinates;
 }
 
 //Returns the current displacement state of this node.
-Eigen::VectorXd 
+const Eigen::VectorXd&
 Node::GetDisplacements() const{
     return Displacements;
 }
 
 //Returns the current velocity state of this node.
-Eigen::VectorXd 
+const Eigen::VectorXd&
 Node::GetVelocities() const{
     return Velocities;
 }
 
 //Returns the current acceleration state of this node.
-Eigen::VectorXd 
+const Eigen::VectorXd&
 Node::GetAccelerations() const{
     return Accelerations;
 }
@@ -177,20 +199,26 @@ Node::GetInertialForces() const{
     return Mass;
 }
 
+//Returns the external force from previous analysis.
+const Eigen::VectorXd&
+Node::GetProgressiveForces() const{
+    return CumulatedForce;
+}
+
 //Gets the current PML history vector of this node.
-Eigen::VectorXd 
+const Eigen::VectorXd&
 Node::GetPMLVector() const{
     return PMLIntegratedVector;
 }
 
 //Returns the current incremental displacement of this node.
-Eigen::VectorXd
+const Eigen::VectorXd&
 Node::GetIncrementalDisplacements() const{
     return IncrementalDisplacements;
 }
 
 //Returns the current incremental displacement of this node.
-Eigen::VectorXd 
+Eigen::VectorXd
 Node::GetDomainReductionMotion(unsigned int k) const{
     return DomainReductionMotion.row(k);
 }
@@ -218,6 +246,12 @@ Node::GetSupportMotion(unsigned int k){
     return Lg;
 }
 
+//Gets the number of degree-of-freedom with support motion in this node.
+unsigned int 
+Node::GetNumberOfSupportMotion(){
+    return SupportMotion.size();
+}
+
 //Return the index of this node in the mesh.
 unsigned int 
 Node::GetNumberOfDegreeOfFreedom() const{
@@ -225,13 +259,13 @@ Node::GetNumberOfDegreeOfFreedom() const{
 }
 
 //Return the node's restrained degree of freedom as a vector.
-std::vector<int> 
+const std::vector<int>& 
 Node::GetFreeDegreeOfFreedom() const{
     return FreeDegreeOfFreedom;
 }
 
 //Return the node's total degree of freedom as a vector.
-std::vector<int>
+const std::vector<int>&
 Node::GetTotalDegreeOfFreedom() const{
     return TotalDegreeOfFreedom;
 }

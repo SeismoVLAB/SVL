@@ -64,6 +64,16 @@ class Damping{
         ///@note More details can be found at @ref linkDamping.
         std::vector<double> GetParameters();
 
+		///Set the name of the damping model.
+        ///@param name The name of damping model.
+        ///@note More details can be found at @ref linkDamping.
+        void SetName(std::string name);
+
+        ///Set the damping parameters.
+        ///@param param The vector of parameters.
+        ///@note More details can be found at @ref linkDamping.
+        void SetParameters(std::vector<double> param);
+
     private:
         ///Damping model name.
         std::string Name;

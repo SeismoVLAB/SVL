@@ -65,10 +65,6 @@ class Mesh{
         ///Initialize the Mesh and compute memory storage.
         void Initialize();
 
-        ///Update internal variables according to form of simulation.
-        ///@see Mesh::Nodes Mesh::Elements.
-        void NextSimulation();
-
         ///Add a Node object to the Mesh.
         ///@param tag the Node identifier.
         ///@param node the Node object to be added.
@@ -79,7 +75,7 @@ class Mesh{
         ///@param tag the Constraint identifier.
         ///@param constraint the Constraint object to be added.
         ///@see Constraint.
-        void AddConstraint(unsigned int tag, std::unique_ptr<Constraint> &constraint);
+        void AddConstraint(unsigned int tag, std::shared_ptr<Constraint> &constraint);
 
         ///Add a Material to the Mesh.
         ///@param tag the Material identifier.
@@ -123,25 +119,70 @@ class Mesh{
         ///@see Node::SetMass(), Node::GetMass(), Node::Mass.
         void AddMass(unsigned int tag, Eigen::VectorXd& mass);
 
-        ///Add a Constraint to the Mesh.
-        ///@param tag the Constraint identifier.
-        ///@param constraint the Constraint object to be added.
+        ///Remove a Node from Mesh.
+        ///@param tag the Node identifier to be removed.
+        ///@see Node.
+        void DelNode(unsigned int tag);
+
+        ///Remove a Point Mass from Mesh.
+        ///@param tag the Node identifier where the mass is removed.
+        ///@see Node.
+        void DelMass(unsigned int tag);
+
+        ///Remove the support motions associated to Node in from Mesh.
+        ///@param tag the Node identifier where the mass is removed.
+        ///@see Node.
+        void DelSupportMotion(unsigned int tag);
+
+        ///Remove a Constraint from Mesh.
+        ///@param tag the Constraint identifier to be removed.
+        ///@see Constraint.
+        void DelConstraint(int tag);
+
+        ///Remove a Material from Mesh.
+        ///@param tag the Material identifier to be removed.
+        ///@see Material.
+        void DelMaterial(unsigned int tag);
+
+        ///Remove a Section from Mesh.
+        ///@param tag the Section identifier to be removed.
+        ///@see Section.
+        void DelSection(unsigned int tag);
+
+        ///Remove an Element from Mesh.
+        ///@param tag the Element identifier to be removed.
+        ///@see Element.
+        void DelElement(unsigned int tag);
+
+        //Remove a Damping from Mesh.
+        ///@param tag the Damping identifier to be removed.
+        ///@see Damping.
+        void DelDamping(unsigned int tag);
+
+        ///Remove a Load from Mesh.
+        ///@param tag the Load identifier to be removed.
+        ///@see Load.
+        void DelLoad(unsigned int tag);
+
+        ///Add a Damping model to the Mesh.
+        ///@param tag the Damping identifier.
+        ///@param group the Element object that shares this damping model.
         ///@see Damping.
         void SetDamping(unsigned int tag, std::vector<unsigned int> &group);
 
         ///Specifies the Node initial condition.
-        ///@param Tag The Node identifier.
+        ///@param tag The Node identifier.
         ///@param cond Option to identify displacement, velocity or acceleration.
         ///@param Xo The vector of initial conditions.
         ///@see Node::SetDisplacements, Node::SetVelocities, Node::SetAccelerations.
-        void SetInitialCondition(unsigned int Tag, int cond, Eigen::VectorXd& Xo);
+        void SetInitialCondition(unsigned int tag, int cond, Eigen::VectorXd& Xo);
 
         ///Specifies the support motion for a certain Node object.
-        ///@param Tag The Node identifier.
+        ///@param tag The Node identifier.
         ///@param dof The degree-of-freedom where the support motion is imposed.
         ///@param Xo The vector of support motion displacement.
         ///@see Node::SetSupportMotion, Node::GetSupportMotion, Node::SupportMotion.
-        void SetSupportMotion(unsigned int Tag, unsigned int dof, std::vector<double>& Xo);
+        void SetSupportMotion(unsigned int tag, unsigned int dof, std::vector<double>& Xo);
 
         ///Gets a material from the mesh.
         ///@param tag The material tag to be obtained.
@@ -156,7 +197,7 @@ class Mesh{
         ///@note More details can be found at @ref linkMesh.
         ///@see Section.
         std::unique_ptr<Section>& GetSection(unsigned int tag);
-    
+
         ///Gets damping from the mesh.
         ///@param tag The damping tag to be obtained.
         ///@return A Damping pointer.
@@ -170,17 +211,34 @@ class Mesh{
         ///@see Node.
         std::map<unsigned int, std::shared_ptr<Node> >& GetNodes();
 
+        ///Gets constraint from the mesh.
+        ///@return A map with all Constraint in the Mesh object.
+        ///@note More details can be found at @ref linkMesh.
+        ///@see Constraint.
+        std::map<int, std::shared_ptr<Constraint> >& GetConstraints();
+    
         ///Gets elements from the mesh.
         ///@return A map with all Element in the Mesh object.
         ///@note More details can be found at @ref linkMesh.
         ///@see Element.
         std::map<unsigned int, std::shared_ptr<Element> >& GetElements();
 
+        ///Gets all damping from the mesh.
+        ///@return A map with all Damping in the Mesh object.
+        ///@note More details can be found at @ref linkMesh.
+        ///@see Damping.
+        std::map<unsigned int, std::shared_ptr<Damping> >& GetDampings();
+
         ///Gets loads from the mesh.
         ///@return A map with all Load in the Mesh object.
         ///@note More details can be found at @ref linkMesh.
         ///@see Load.
         std::map<unsigned int, std::shared_ptr<Load> >& GetLoads();
+
+        ///Returns a vector with identifier of the property requested
+        ///@param Name The entity to get the identifiers or tags.
+        ///@return A vector with the identifiers
+        template<typename T> std::vector<T> GetVectorIDs(std::string Name);
 
         ///Gets operator that impose restrains/constraints on the model. 
         ///@return A matrix that enforce the linear kinematic constraints.
@@ -193,7 +251,7 @@ class Mesh{
         std::map<unsigned int, std::shared_ptr<Node> > Nodes;
 
         ///Container/map of constraints for this partition.
-        std::map<int, std::unique_ptr<Constraint> > Constraints;
+        std::map<int, std::shared_ptr<Constraint> > Constraints;
 
         ///Container/map of materials for this partition.
         std::map<unsigned int, std::unique_ptr<Material> > Materials;

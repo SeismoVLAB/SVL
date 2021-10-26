@@ -7,6 +7,8 @@ QuasiStatic::QuasiStatic(std::shared_ptr<Mesh> &mesh, double mtol, double ktol, 
 Integrator(mesh), TimeStep(0.0){
     //Allocate memory for total state vector. 
     U.resize(numberOfTotalDofs); U.fill(0.0);
+    V.resize(numberOfTotalDofs); V.fill(0.0);
+    A.resize(numberOfTotalDofs); A.fill(0.0);
 
     //Allocate memory for total model matrices. 
     K.resize(numberOfTotalDofs, numberOfTotalDofs);
@@ -16,6 +18,9 @@ Integrator(mesh), TimeStep(0.0){
     theAssembler->SetMassTolerance(mtol);
     theAssembler->SetForceTolerance(ftol);
     theAssembler->SetStiffnessTolerance(ktol);
+
+    //Assemble the external force vector from previous analysis.
+    Fbar = theAssembler->ComputeProgressiveForceVector(mesh);
 }
 
 //Default destructor.
@@ -61,7 +66,7 @@ QuasiStatic::SetAlgorithm(std::shared_ptr<Algorithm> &algorithm){
 }
 
 //Gets the displacement vector.
-Eigen::VectorXd& 
+const Eigen::VectorXd& 
 QuasiStatic::GetDisplacements(){
     //Starts profiling this function.
     PROFILE_FUNCTION();
@@ -70,27 +75,27 @@ QuasiStatic::GetDisplacements(){
 }    
 
 //Gets the velocity vector.
-Eigen::VectorXd&
+const Eigen::VectorXd&
 QuasiStatic::GetVelocities(){
     //Starts profiling this function.
     PROFILE_FUNCTION();
 
     //Velocity vector is no used.
-    return U;
+    return V;
 }
 
 //Gets the acceleration vector.
-Eigen::VectorXd& 
+const Eigen::VectorXd& 
 QuasiStatic::GetAccelerations(){
     //Starts profiling this function.
     PROFILE_FUNCTION();
 
     //Acceleration vector is no used.
-    return U;
+    return A;
 }
 
 //Gets the perfectly-matched layer history vector.
-Eigen::VectorXd& 
+const Eigen::VectorXd& 
 QuasiStatic::GetPMLHistoryVector(){
     //Starts profiling this function.
     PROFILE_FUNCTION();
@@ -128,15 +133,30 @@ QuasiStatic::ComputeNewStep(std::shared_ptr<Mesh> &mesh, unsigned int k){
 Eigen::VectorXd 
 QuasiStatic::ComputeReactionForce(std::shared_ptr<Mesh> &mesh, unsigned int k){
     //Assemble the total external force vector.
-    Eigen::VectorXd Fint = theAssembler->ComputeDynamicInternalForceVector(mesh);
+    Eigen::VectorXd Fint = theAssembler->ComputeInternalForceVector(mesh);
 
     //Assemble the total external force vector.
     Eigen::VectorXd Fext = theAssembler->ComputeExternalForceVector(mesh, k);
 
     //Computes the reaction forces.
-    Eigen::VectorXd Reaction = Fint - Fext;
+    Eigen::VectorXd Reaction = Fint - Fext - Fbar;
 
     return Reaction;
+}
+
+//Gets the external force vector for next phase analysis.
+Eigen::VectorXd 
+QuasiStatic::ComputeProgressiveForce(std::shared_ptr<Mesh> &mesh, unsigned int k){
+//Starts profiling this function.
+    PROFILE_FUNCTION();
+
+    //Assemble the total internal force vector.
+    Eigen::VectorXd Fext = theAssembler->ComputeExternalForceVector(mesh, k);
+
+    //Update the stage force vector.
+    Eigen::VectorXd Force = Fext + Fbar;
+
+    return Force;
 }
 
 //Gets the incremental nodal support motion vector.
@@ -169,8 +189,8 @@ QuasiStatic::ComputeEffectiveForce(std::shared_ptr<Mesh> &mesh, Eigen::VectorXd 
     Eigen::VectorXd Fext = theAssembler->ComputeExternalForceVector(mesh, k);
 
     //Computes the effective-right-hand-side force vector.
-    Fext = (1.00 + k)*factor*Fext - Fint;
-
+    Fext = (1.00 + k)*factor*Fext + Fbar - Fint;
+    
     //Impose boundary conditions on effective force vector.
     Feff = Total2FreeMatrix.transpose()*Fext;
 }

@@ -9,12 +9,9 @@
 //Define constant tolerance value:
 const double TOL = 0.9999995;
 
-//Define VTK cell value for Paraview:
-const unsigned int VTKCELL = 9;
-
 //Overload constructor.
 lin3DShell4::lin3DShell4(const std::vector<unsigned int> nodes, std::unique_ptr<Section> &section, const std::string quadrature, const unsigned int nGauss) :
-Element("lin3DShell4", nodes, 24, VTKCELL, GROUPSHELL){
+Element("lin3DShell4", nodes, 24, VTK_LINEAR_QUAD, GROUP_ELEMENT_SHELL){
     //The element nodes.
     theNodes.resize(4);
 

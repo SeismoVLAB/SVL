@@ -78,7 +78,7 @@ class NewtonRaphson : public Algorithm {
         ///Gets the displacement increment.
         ///@return The incremental displacement vector.
         ///@note More details can be found at @ref linkNewtonRaphson.
-        Eigen::VectorXd GetDisplacementIncrement();    
+        const Eigen::VectorXd& GetDisplacementIncrement();    
 
         ///Set the load factor.
         ///@param factor The incremental load factor.

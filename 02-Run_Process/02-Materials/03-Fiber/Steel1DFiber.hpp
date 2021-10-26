@@ -169,7 +169,7 @@ class Steel1DFiber : public Material {
 		double a4;
         double Rho;
 
-		//Steel history variables:
+		//Steel Commited history variables:
 		double newStrain;
 		double newStress;
 		double newTangentStiffness;
@@ -182,6 +182,7 @@ class Steel1DFiber : public Material {
 		double newStressLastInversion;
 		int newLoadUnloadIndex;
 
+		//Steel Updated history variables:
 		double oldStrain;
 		double oldStress;
 		double oldTangentStiffness;

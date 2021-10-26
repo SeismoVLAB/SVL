@@ -3,12 +3,9 @@
 #include "Definitions.hpp"
 #include "Profiler.hpp"
 
-//Define VTK cell value for Paraview:
-const unsigned int VTKCELL = 3; 
-
 //Overload constructor.
 UnxBoucWen2DLink::UnxBoucWen2DLink(const std::vector<unsigned int> nodes, std::vector<double> params, std::vector<double> vars, const unsigned int dim, const unsigned int dir, double tol, unsigned int nmax) :
-Element("UnxBoucWen2DLink", nodes, 2*dim, VTKCELL, GROUPBWEN), Tol(tol), nMax(nmax), Dimension(dim), Direction(dir){
+Element("UnxBoucWen2DLink", nodes, 2*dim, VTK_LINEAR_LINE, GROUP_ELEMENT_BWEN), Tol(tol), nMax(nmax), Dimension(dim), Direction(dir){
     //The element nodes.
     theNodes.resize(2);
 
@@ -31,6 +28,8 @@ Element("UnxBoucWen2DLink", nodes, 2*dim, VTKCELL, GROUPBWEN), Tol(tol), nMax(nm
     //Initialize stiffness and internal force.
     qbw = 0.0;
     kbw = Ko;
+    qbc = 0.0;
+    kbc = Ko;
 }
 
 //Destructor:
@@ -43,12 +42,15 @@ void
 UnxBoucWen2DLink::CommitState(){
     zn = z;
     Un = U;
+    qbc = qbw;
+    kbc = kbw;
 }
 
 //Reverse the internal variables to previous converged state.
 void 
 UnxBoucWen2DLink::ReverseState(){
-    //Nothing to do here
+    qbw = qbc;
+    kbw = kbc;
 }
 
 //Brings the internal variables to its initial state in this element.
@@ -63,6 +65,8 @@ UnxBoucWen2DLink::InitialState(){
     //Initialize stiffness and internal force.
     qbw = 0.0;
     kbw = Ko;
+    qbc = 0.0;
+    kbc = Ko;
 }
 
 //Update the material states in the element.

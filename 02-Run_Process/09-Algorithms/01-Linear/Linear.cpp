@@ -56,7 +56,7 @@ Linear::ComputeNewIncrement(std::shared_ptr<Mesh> &mesh, unsigned int i){
 }
 
 //Gets the displacement increment.
-Eigen::VectorXd 
+const Eigen::VectorXd& 
 Linear::GetDisplacementIncrement(){
     //Starts profiling this function.
     PROFILE_FUNCTION();

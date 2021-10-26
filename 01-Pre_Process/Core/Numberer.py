@@ -344,7 +344,7 @@ def FindDefectiveNodes():
     nConsistentStorage = 0
 
     #Identifies Nodes which don't belong to Element.
-    Condition = dict()
+    Condition = dict.fromkeys(Entities['Nodes'].keys(), True)
     for eTag in Entities['Elements']:
         nDOFelem   = 0
         connection = Entities['Elements'][eTag]['conn']
@@ -365,8 +365,9 @@ def FindDefectiveNodes():
     for nTag in Condition:
         if Condition[nTag]:
             ndof = Entities['Nodes'][nTag]['ndof']
-            Entities['Nodes'][nTag]['FREE'] = np.full(ndof, -1, dtype=int)
-            print('\x1B[33m ALERT \x1B[0m: The Node[' + str(nTag) + '] does not belong to an element. Node will be fixed.')
+            if np.sum(Entities['Nodes'][nTag]['freedof']) != -ndof:
+                Entities['Nodes'][nTag]['freedof'] = np.full(ndof, -1, dtype=int)
+                print('\x1B[33m ALERT \x1B[0m: The Node[' + str(nTag) + '] does not belong to an element. Node will be fixed.')
 
     #Saves in Options the Matrix Memory Storage 
     Options['nlumped'] = nLumpedStorage

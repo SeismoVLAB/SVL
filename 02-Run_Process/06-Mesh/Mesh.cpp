@@ -41,29 +41,10 @@ Mesh::Initialize(){
     }
 
     //Computes the number of constraints components.
-    for(std::map<int, std::unique_ptr<Constraint> >::iterator it = Constraints.begin(); it != Constraints.end(); ++it){
+    for(std::map<int, std::shared_ptr<Constraint> >::iterator it = Constraints.begin(); it != Constraints.end(); ++it){
         //Gets the node identifier.
         int Tag = it->first;
         numberOfConstrainedDofs += Constraints[Tag]->GetNumberOfConstraints();
-    }
-}
-
-//Update internal variables according to simulation.
-void 
-Mesh::NextSimulation(){
-    //The simulation requires independent execution
-    if(FormOfExecution){
-        //Nodes internal variables are set to initial state
-        for(auto it : Nodes){
-            auto &Tag = it.first;
-            Nodes[Tag]->InitialState();
-        }
-
-        //Elements internal variables are set to initial state
-        for(auto it : Elements){
-            auto &Tag = it.first;
-            Elements[Tag]->InitialState();
-        }
     }
 }
 
@@ -75,7 +56,7 @@ Mesh::AddNode(unsigned int tag, std::shared_ptr<Node> &node){
 
 //Add constraint to the mesh.
 void 
-Mesh::AddConstraint(unsigned int tag, std::unique_ptr<Constraint> &constraint){
+Mesh::AddConstraint(unsigned int tag, std::shared_ptr<Constraint> &constraint){
     Constraints[tag] = std::move(constraint);
 }
 
@@ -121,6 +102,78 @@ Mesh::AddMass(unsigned int tag, Eigen::VectorXd& mass){
     Nodes[tag]->SetMass(mass);
 }
 
+//Remove a Node from Mesh if it exists.
+void 
+Mesh::DelNode(unsigned int tag){
+    if(Nodes.find(tag) != Nodes.end()){
+       Nodes.erase(tag); 
+    }
+}
+
+//Remove a Point Mass from Mesh (This function does not remove mass).
+void 
+Mesh::DelMass(unsigned int tag){
+    unsigned int nDof = Nodes[tag]->GetNumberOfDegreeOfFreedom();
+    Eigen::VectorXd mass(nDof);
+    mass.fill(0.0);
+
+    Nodes[tag]->SetMass(mass);
+}
+
+//Remove the support motions associated to Node in from Mesh.
+void 
+Mesh::DelSupportMotion(unsigned int tag){
+    Nodes[tag]->DelSupportMotion();
+}
+
+//Remove a Constraint from Mesh if it exists.
+void 
+Mesh::DelConstraint(int tag){
+    if(Constraints.find(tag) != Constraints.end()){
+        Constraints.erase(tag);
+    }
+}
+
+//Remove a Material from Mesh if it exists.
+void 
+Mesh::DelMaterial(unsigned int tag){
+    if(Materials.find(tag) != Materials.end()){
+        Materials.erase(tag);
+    }
+}
+
+//Remove a Section from Mesh if it exists.
+void 
+Mesh::DelSection(unsigned int tag){
+    if(Sections.find(tag) != Sections.end()){
+        Sections.erase(tag);
+    }
+}
+
+//Remove an Element from Mesh if it exists.
+void 
+Mesh::DelElement(unsigned int tag){
+    if(Elements.find(tag) != Elements.end()){
+        Elements.erase(tag);
+    }
+}
+
+//Remove an Damping from Mesh if it exists.
+void 
+Mesh::DelDamping(unsigned int tag){
+    if(Dampings.find(tag) != Dampings.end()){
+        Dampings.erase(tag);
+    }
+}
+
+//Remove a Load from Mesh if it exists.
+void 
+Mesh::DelLoad(unsigned int tag){
+    if(Loads.find(tag) != Loads.end()){
+        Loads.erase(tag);
+    }
+}
+
 //Sets damping to elements.
 void 
 Mesh::SetDamping(unsigned int tag, std::vector<unsigned int> &group){
@@ -161,7 +214,7 @@ Mesh::GetSection(unsigned int tag){
 }
 
 //Gets classic damping from the mesh.
-std::shared_ptr<Damping>&
+std::shared_ptr<Damping>& 
 Mesh::GetDamping(unsigned int tag){
     return Dampings[tag];
 }
@@ -172,16 +225,102 @@ Mesh::GetNodes(){
     return Nodes;
 }
 
+//Gets the nodes from the mesh.
+std::map<int, std::shared_ptr<Constraint> >&
+Mesh::GetConstraints(){
+    return Constraints;
+}
+
 //Gets the elements from the mesh.
 std::map<unsigned int, std::shared_ptr<Element> >&
 Mesh::GetElements(){
     return Elements;
 }
 
+//Gets classic damping from the mesh.
+std::map<unsigned int, std::shared_ptr<Damping> >&
+Mesh::GetDampings(){
+    return Dampings;
+}
+
 //Gets the loads from the mesh.
 std::map<unsigned int, std::shared_ptr<Load> >& 
 Mesh::GetLoads(){
     return Loads;
+}
+
+//Returns a vector with identifier of the property requested
+template<typename T> std::vector<T> 
+Mesh::GetVectorIDs(std::string Name){
+    //The vector with the Identifiers/Tags
+    std::vector<T> Tags;
+
+    unsigned int k = 0;
+    if(strcasecmp(Name.c_str(),"NODES") == 0){
+        Tags.resize( Nodes.size() );
+        for(auto it : Nodes){
+            Tags[k] = it.first;
+            k++;
+        }
+    }
+    else if(strcasecmp(Name.c_str(),"CONSTRAINTS") == 0){
+        Tags.resize( Constraints.size() );
+        for(const auto& it : Constraints){
+            Tags[k] = it.first;
+            k++;
+        }
+    }
+    else if(strcasecmp(Name.c_str(),"MATERIALS") == 0){
+        Tags.resize( Materials.size() );
+        for(const auto& it : Materials){
+            Tags[k] = it.first;
+            k++;
+        }
+    }
+    else if(strcasecmp(Name.c_str(),"SECTIONS") == 0){
+        Tags.resize( Sections.size() );
+        for(const auto& it : Sections){
+            Tags[k] = it.first;
+            k++;
+        }
+    }
+    else if(strcasecmp(Name.c_str(),"ELEMENTS") == 0){
+        Tags.resize( Elements.size() );
+        for(auto it : Elements){
+            Tags[k] = it.first;
+            k++;
+        }
+    }
+    else if(strcasecmp(Name.c_str(),"LOADS") == 0){
+        Tags.resize( Loads.size() );
+        for(auto it : Loads){
+            Tags[k] = it.first;
+            k++;
+        }
+    }
+    else if(strcasecmp(Name.c_str(),"DAMPINGS") == 0){
+        Tags.resize( Dampings.size() );
+        for(auto it : Dampings){
+            Tags[k] = it.first;
+            k++;
+        }
+    }
+    else if(strcasecmp(Name.c_str(),"MASSES") == 0){
+        for(auto it : Nodes){
+            Eigen::VectorXd mass = it.second->GetMass();
+            if( mass.size() > 0 )
+                Tags.push_back(it.first);
+        }
+    }
+    else if(strcasecmp(Name.c_str(),"SUPPORTS") == 0){
+        for(auto it : Nodes){
+            unsigned int num = it.second->GetNumberOfSupportMotion();
+            if( num > 0 )
+                Tags.push_back(it.first);
+        }
+    }
+
+    return Tags;
 }
 
 //Gets operator that impose restrain/constrain on the model. 
@@ -242,3 +381,7 @@ Mesh::GetTotalToFreeMatrix(){
 
     return Free2TotalMatrix;
 }
+
+//Declares the possible template member functions
+template std::vector<int> Mesh::GetVectorIDs<int>(std::string);
+template std::vector<unsigned int> Mesh::GetVectorIDs<unsigned int>(std::string);

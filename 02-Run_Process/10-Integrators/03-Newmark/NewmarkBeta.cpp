@@ -20,6 +20,9 @@ Integrator(mesh), dt(TimeStep){
     theAssembler->SetMassTolerance(mtol);
     theAssembler->SetForceTolerance(ftol);
     theAssembler->SetStiffnessTolerance(ktol);
+
+    //Assemble the external force vector from previous analysis.
+    Fbar = theAssembler->ComputeProgressiveForceVector(mesh);
 }
 
 //Default destructor.
@@ -73,7 +76,7 @@ NewmarkBeta::SetAlgorithm(std::shared_ptr<Algorithm> &algorithm){
 }
 
 //Gets the displacement vector.
-Eigen::VectorXd& 
+const Eigen::VectorXd& 
 NewmarkBeta::GetDisplacements(){
     //Starts profiling this function.
     PROFILE_FUNCTION();
@@ -82,7 +85,7 @@ NewmarkBeta::GetDisplacements(){
 }    
 
 //Gets the velocity vector.
-Eigen::VectorXd& 
+const Eigen::VectorXd& 
 NewmarkBeta::GetVelocities(){
     //Starts profiling this function.
     PROFILE_FUNCTION();
@@ -91,7 +94,7 @@ NewmarkBeta::GetVelocities(){
 }
 
 //Gets the acceleration vector.
-Eigen::VectorXd& 
+const Eigen::VectorXd& 
 NewmarkBeta::GetAccelerations(){
     //Starts profiling this function.
     PROFILE_FUNCTION();
@@ -100,7 +103,7 @@ NewmarkBeta::GetAccelerations(){
 }
 
 //Gets the perfectly-matched layer history vector.
-Eigen::VectorXd& 
+const Eigen::VectorXd& 
 NewmarkBeta::GetPMLHistoryVector(){
     //Starts profiling this function.
     PROFILE_FUNCTION();
@@ -153,9 +156,24 @@ NewmarkBeta::ComputeReactionForce(std::shared_ptr<Mesh> &mesh, unsigned int k){
     Eigen::VectorXd Fext = theAssembler->ComputeExternalForceVector(mesh, k);
 
     //Computes the reaction forces.
-    Eigen::VectorXd Reaction = Fint - Fext;
+    Eigen::VectorXd Reaction = Fint - Fext - Fbar;
 
     return Reaction;
+}
+
+//Gets the external force vector for next phase analysis.
+Eigen::VectorXd 
+NewmarkBeta::ComputeProgressiveForce(std::shared_ptr<Mesh> &mesh, unsigned int k){
+//Starts profiling this function.
+    PROFILE_FUNCTION();
+
+    //Assemble the total internal force vector.
+    Eigen::VectorXd Fext = theAssembler->ComputeExternalForceVector(mesh, k);
+
+    //Update the stage force vector.
+    Eigen::VectorXd Force = Fext + Fbar;
+
+    return Force;
 }
 
 //Gets the incremental nodal support motion vector.
@@ -194,7 +212,7 @@ NewmarkBeta::ComputeEffectiveForce(std::shared_ptr<Mesh> &mesh, Eigen::VectorXd 
     Eigen::VectorXd Fext = theAssembler->ComputeExternalForceVector(mesh, k);
 
     //Computes the effective force vector.
-    Fext = Fext - Fint + M*(4.0/dt*V + A - 4.0/dt/dt*dU) + C*(V - 2.0/dt*dU);
+    Fext = Fext + Fbar - Fint + M*(4.0/dt*V + A - 4.0/dt/dt*dU) + C*(V - 2.0/dt*dU);
 
     //Impose boundary conditions on effective force vector.
     Feff = Total2FreeMatrix.transpose()*Fext;

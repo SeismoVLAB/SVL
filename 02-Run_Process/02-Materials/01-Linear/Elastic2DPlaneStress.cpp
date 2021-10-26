@@ -8,9 +8,9 @@ Material("Elastic2DPlaneStress", false), E(E), nu(nu), Rho(rho){
     Strain.resize(3);
     Strain.fill(0.0);
 
-    //Initialize material stress.
-    Stress.resize(3);
-    Stress.fill(0.0);
+    //Initialize material commited strain.
+    newStrain.resize(3);
+    newStrain.fill(0.0);
 
     //Material model coefficients:
     double c1 = E/(1.0 - nu*nu);
@@ -90,6 +90,7 @@ Elastic2DPlaneStress::GetStrain() const{
 //Returns the material stress.
 Eigen::VectorXd
 Elastic2DPlaneStress::GetStress() const{
+    Eigen::VectorXd Stress = TangentStiffness*Strain;
     return Stress;
 }
 
@@ -106,6 +107,7 @@ Elastic2DPlaneStress::GetStrainRate() const{
 //Computes the material total stress.
 Eigen::VectorXd 
 Elastic2DPlaneStress::GetTotalStress() const{
+    Eigen::VectorXd Stress = TangentStiffness*Strain;
     return Stress;
 }
 
@@ -124,19 +126,20 @@ Elastic2DPlaneStress::GetInitialTangentStiffness() const{
 //Perform converged material state update.
 void 
 Elastic2DPlaneStress::CommitState(){
+    newStrain = Strain;
 }
 
 //Reverse the material states to previous converged state.
 void 
 Elastic2DPlaneStress::ReverseState(){
-    //TODO: Get back to previous commited state
+    Strain = newStrain;
 }
 
 //Brings the material states to its initial state in the element.
 void 
 Elastic2DPlaneStress::InitialState(){
     Strain.fill(0.0);
-    Stress.fill(0.0);
+    newStrain.fill(0.0);
 }
 
 //Update the material state for this iteration.
@@ -146,8 +149,5 @@ Elastic2DPlaneStress::UpdateState(const Eigen::VectorXd strain, const unsigned i
     if(cond == 1){
         //Update the strain.
         Strain = strain;
-
-        //Update the stress.
-        Stress = TangentStiffness*strain;
     }
 }

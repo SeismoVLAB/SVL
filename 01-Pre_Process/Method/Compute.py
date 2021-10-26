@@ -5,6 +5,63 @@ import numpy as np
 from Core.Definitions import Entities, Options
 from Core.Utilities import *
 
+def GetDRMInformation(x0, xl):
+    """
+    This function finds the DRM elements provided with a rectangular box. The 
+    x0 is the coordinate of center of the box, and xl the half-length side in 
+    each direction of the box. These sides (planes) should be inside the DRM 
+    elements to be identified.\n
+    @visit  https://github.com/SeismoVLAB/SVL\n
+    @author Danilo S. Kusanovic 2021
+
+    Parameters
+    ----------
+    x0: array
+        The coordinate of center of the box
+    xl: array
+        The side half-length in each direction
+
+    Returns
+    -------
+    Elements  : list
+        List with the DRM element Tags 
+    Interior  : list
+        List with the DRM internal node Tags 
+    Exterior  : list
+        List with the DRM external node Tags 
+    """
+    #Identify the DRM elements
+    elemDRM = set()
+    for eTag in Entities['Elements']:
+        count = 0
+        nodes = Entities['Elements'][eTag]['conn']
+        for nTag in nodes:
+            xn = Entities['Nodes'][nTag]['coords']
+            cn = np.abs(xn - x0) <= xl
+            if cn.all():
+                count += 1
+        if 0 < count and count < len(nodes):
+            elemDRM.add(eTag)
+
+    #Interior/Exterior DRM node lists
+    intDRM = set()
+    extDRM = set()
+    for eTag in elemDRM:
+        nodes = Entities['Elements'][eTag]['conn']
+        for nTag in nodes:
+            xn = Entities['Nodes'][nTag]['coords']
+            cn = np.abs(xn - x0) <= xl
+            if cn.all():
+                intDRM.add(nTag)
+            else:
+                extDRM.add(nTag)
+    #Provides the DRM information in Mesh
+    intDRM = list(intDRM)
+    extDRM = list(extDRM)
+    elemDRM = list(elemDRM)    
+
+    return intDRM, extDRM, elemDRM
+
 def SurfaceFace(name, surf, conn):
     """
     This function associate the face (surface) number to an element depending

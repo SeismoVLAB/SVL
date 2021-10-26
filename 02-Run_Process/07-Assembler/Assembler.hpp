@@ -101,6 +101,13 @@ class Assembler{
         ///@see Element::ComputeDampingMatrix(), Integrator::ComputeEffectiveStiffness().
         Eigen::SparseMatrix<double> ComputePMLHistoryMatrix(std::shared_ptr<Mesh> &mesh);
 
+        ///Assemble the external force vector accumulated from previous analyses.
+        ///@param mesh The finite element Mesh object.
+        ///@return A vector with the total accumulated external force.
+        ///@note More details can be found at @ref linkAssembler.
+        ///@see Integrator::ComputeEffectiveForce().
+        Eigen::VectorXd ComputeProgressiveForceVector(std::shared_ptr<Mesh> &mesh);
+
         ///Assemble the internal force vector.
         ///@param mesh The finite element Mesh object.
         ///return A vector with the model total internal force.

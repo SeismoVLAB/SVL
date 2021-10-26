@@ -24,8 +24,8 @@
 //   [1]
 //
 // Description:
-///This file contains the "Integrator object" declarations, and defines how the 
-///dynamic solution between two steps is going to be performed.
+//This file contains the "Integrator object" declarations, and defines how the 
+//dynamic solution between two steps is going to be performed.
 //------------------------------------------------------------------------------
 
 #ifndef _INTEGRATOR_HPP_
@@ -39,6 +39,9 @@
 #include "LoadCombo.hpp"
 
 class Algorithm;
+
+///This file contains the "Integrator object" declarations, and defines how the
+///dynamic solution between two steps is going to be performed
 
 /// @author    Danilo S. Kusanovic (dkusanov@caltech.edu)
 /// @date      March 17, 2018
@@ -72,19 +75,19 @@ class Integrator{
 
         ///Gets the displacement vector.
         ///@return Vector with the displacement states at current time step.
-        virtual Eigen::VectorXd& GetDisplacements() = 0;    
+        virtual const Eigen::VectorXd& GetDisplacements() = 0;    
 
         ///Gets the velocity vector.
         ///@return Vector with the velocity states at current time step.
-        virtual Eigen::VectorXd& GetVelocities() = 0;
+        virtual const Eigen::VectorXd& GetVelocities() = 0;
 
         ///Gets the acceleration vector.
         ///@return Vector with the acceleration states at current time step.
-        virtual Eigen::VectorXd& GetAccelerations() = 0;
+        virtual const Eigen::VectorXd& GetAccelerations() = 0;
 
         ///Gets the perfectly-matched layer history vector.
         ///@return Vector with the PML history states at current time step.
-        virtual Eigen::VectorXd& GetPMLHistoryVector() = 0;
+        virtual const Eigen::VectorXd& GetPMLHistoryVector() = 0;
 
         ///Computes a new time step.
         ///@param mesh The finite element Mesh object.
@@ -99,6 +102,12 @@ class Integrator{
         ///@note More details can be found at @ref linkReaction.
         ///@see Node::GetReaction(), Assembler::ComputeDynamicInternalForceVector().
         virtual Eigen::VectorXd ComputeReactionForce(std::shared_ptr<Mesh> &mesh, unsigned int k=0) = 0;
+
+        ///Gets the external force vector from previous analysis.
+        ///@param mesh Pointer to the Mesh object where Node and Element are stored.
+        ///@param k The time step number to be solved.
+        ///@see Assembler::ComputeExternalForceVector().
+        virtual Eigen::VectorXd ComputeProgressiveForce(std::shared_ptr<Mesh> &mesh, unsigned int k=0) = 0;
 
         ///Gets the incremental nodal support motion vector.
         ///@param mesh Pointer to the Mesh object where Node are stored.

@@ -4,7 +4,7 @@
 
 //Default constructor.
 StaticAnalysis::StaticAnalysis(std::shared_ptr<Mesh> &mesh, std::shared_ptr<Algorithm> &algorithm, std::shared_ptr<Integrator> &integrator, std::shared_ptr<LoadCombo> &loadcombo, unsigned int nSteps) :
-Analysis(loadcombo), theMesh(mesh), NumberOfSteps(nSteps){
+Analysis(loadcombo, nSteps), NumberOfSteps(nSteps), theMesh(mesh){
     //Moves the linear system algorithm to this analysis.
     theAlgorithm = std::move(algorithm); 
 
@@ -55,6 +55,9 @@ StaticAnalysis::Analyze(){
 
     //Finalize all recorders of this analysis.
     EndRecorders();
+
+    //Enforce next phase in analysis
+    UpdateMesh(theMesh, theIntegrator);
 
     //Return the analysis status.
     return false;
@@ -117,13 +120,13 @@ StaticAnalysis::UpdateDomain(unsigned int k){
             unsigned int nTotalDofs = TotalDofs.size();
 
             //Creates the nodal/incremental vector state.
-            Eigen::VectorXd Rij(nTotalDofs); Rij.fill(0.0);
+            Eigen::VectorXd Rj(nTotalDofs); Rj.fill(0.0);
 
             for(unsigned int j = 0; j < nTotalDofs; j++)
-                Rij(j) = R(TotalDofs[j]);
+                Rj(j) = R(TotalDofs[j]);
                 
             //Sets the nodal reaction.
-            Nodes[Tag]->SetReaction(Rij);  
+            Nodes[Tag]->SetReaction(Rj);  
         }
     }
 }

@@ -75,6 +75,9 @@ class DynamicAnalysis : public Analysis{
         void UpdateDomain(unsigned int k);
 
     private:
+        ///Total number of time increments.
+        unsigned int NumberOfTimeSteps;
+
         ///The finite element mesh:
         std::shared_ptr<Mesh> theMesh;
 
@@ -83,9 +86,6 @@ class DynamicAnalysis : public Analysis{
 
         ///The dynamic integrator method.
         std::shared_ptr<Integrator> theIntegrator;
-
-        ///Total number of time increments.
-        unsigned int NumberOfTimeSteps;
 };
 
 #endif

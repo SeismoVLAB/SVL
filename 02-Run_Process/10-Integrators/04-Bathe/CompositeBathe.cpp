@@ -21,7 +21,8 @@ Integrator(mesh), dt(TimeStep){
     theAssembler->SetForceTolerance(ftol);
     theAssembler->SetStiffnessTolerance(ktol);
 
-    //Initialize(mesh);
+    //Assemble the external force vector from previous analysis.
+    Fbar = theAssembler->ComputeProgressiveForceVector(mesh);
 }
 
 //Default destructor.
@@ -75,29 +76,26 @@ CompositeBathe::SetAlgorithm(std::shared_ptr<Algorithm> &algorithm){
 }
 
 //Gets the displacement vector.
-Eigen::VectorXd& 
+const Eigen::VectorXd& 
 CompositeBathe::GetDisplacements(){
     return U;
 }    
 
 //Gets the velocity vector.
-Eigen::VectorXd& 
+const Eigen::VectorXd& 
 CompositeBathe::GetVelocities(){
     return V;
 }
 
 //Gets the acceleration vector.
-Eigen::VectorXd& 
+const Eigen::VectorXd& 
 CompositeBathe::GetAccelerations(){
     return A;
 }
 
 //Gets the perfectly-matched layer history vector.
-Eigen::VectorXd& 
+const Eigen::VectorXd& 
 CompositeBathe::GetPMLHistoryVector(){
-    //Starts profiling this function.
-    PROFILE_FUNCTION();
-
     //Empty PML history vector (not used).
     return Ubar;
 }
@@ -115,7 +113,7 @@ CompositeBathe::ComputeNewStep(std::shared_ptr<Mesh> &mesh, unsigned int k){
     bool stop;
 
     //Incremental displacement vector.
-    Eigen::VectorXd dU;
+    Eigen::VectorXd dU(numberOfTotalDofs);
 
     //Stores displacement/velocities states.
     Eigen::VectorXd Up = U; 
@@ -134,10 +132,13 @@ CompositeBathe::ComputeNewStep(std::shared_ptr<Mesh> &mesh, unsigned int k){
     dU = Total2FreeMatrix*(p->GetDisplacementIncrement());
 
     //Update displacement states.
-    Um = U + dU;
+    Um = U + dU + SupportMotion;
 
     //Update velocity states.
     Vm = 4.0/dt*dU - V;
+
+    //Reverse Node and Element Internal variables to last commited state
+    p->ReverseStatesIncrements(mesh);
 
     //SECOND SUB-STEP SOLUTION: 3-point backward Euler rule.
     flag = false; 
@@ -152,7 +153,7 @@ CompositeBathe::ComputeNewStep(std::shared_ptr<Mesh> &mesh, unsigned int k){
     dU = Total2FreeMatrix*(p->GetDisplacementIncrement());
 
     //Update displacement states.
-    U += dU;
+    U += (dU + SupportMotion);
 
     //Update velocity states.
     V = 1.0/dt*Up - 4.0/dt*Um + 3.0/dt*U;
@@ -177,19 +178,41 @@ CompositeBathe::ComputeReactionForce(std::shared_ptr<Mesh> &mesh, unsigned int k
     Eigen::VectorXd Fext = theAssembler->ComputeExternalForceVector(mesh, k);
 
     //Computes the reaction forces.
-    Eigen::VectorXd Reaction = Fint - Fext;
+    Eigen::VectorXd Reaction = Fint - Fext - Fbar;
 
     return Reaction;
 }
 
+//Gets the external force vector for next phase analysis.
+Eigen::VectorXd 
+CompositeBathe::ComputeProgressiveForce(std::shared_ptr<Mesh> &mesh, unsigned int k){
+//Starts profiling this function.
+    PROFILE_FUNCTION();
+
+    //Assemble the total internal force vector.
+    Eigen::VectorXd Fext = theAssembler->ComputeExternalForceVector(mesh, k);
+
+    //Update the stage force vector.
+    Eigen::VectorXd Force = Fext + Fbar;
+
+    return Force;
+}
+
 //Gets the incremental nodal support motion vector.
 void
-CompositeBathe::ComputeSupportMotionVector(std::shared_ptr<Mesh>& UNUSED(mesh), Eigen::VectorXd &Feff, double UNUSED(factor), unsigned int UNUSED(k)){
+CompositeBathe::ComputeSupportMotionVector(std::shared_ptr<Mesh>& mesh, Eigen::VectorXd &Feff, double UNUSED(factor), unsigned int k){
     //TODO:Include some if statement that performs the addition only if there is support motion applied.
     //Starts profiling this function.
     PROFILE_FUNCTION();
 
-    //TODO: Complete this part when "revert to last commit" is ready.
+    //Assembles the incremental support motion displacements.
+    SupportMotion = theAssembler->ComputeSupportMotionIncrement(mesh, k-1);
+
+    if(flag){
+        //half-time step for trapezoidal rule.
+        SupportMotion *= 0.5;
+    }
+
     //Computes the required forces to impose these displacements.
     Eigen::VectorXd Lg = Total2FreeMatrix.transpose()*(K*SupportMotion);
 
@@ -219,19 +242,18 @@ CompositeBathe::ComputeEffectiveForce(std::shared_ptr<Mesh> &mesh, Eigen::Vector
     if(flag){
         //Force using trapezoidal rule.
         Eigen::VectorXd Faux = theAssembler->ComputeExternalForceVector(mesh, k-1);
-
-        Fext = 1.0/2.0*(Fext + Faux) - Fint - M*(16.0/dt/dt*dU - 8.0/dt*V - A) - C*(4.0/dt*dU - V);
+        Fext = 1.0/2.0*(Fext + Faux) + Fbar - Fint - M*(16.0/dt/dt*dU - 8.0/dt*V - A) - C*(4.0/dt*dU - V);
     }
     else{
         //Force using 3-point backward Euler rule.
-        Fext = Fext - Fint - M*(9.0/dt/dt*(U + dU) - 12.0/dt/dt*Um + 3.0/dt/dt*U - 4.0/dt*Vm + 1.0/dt*V) - C*(3.0/dt*(U + dU) - 4.0/dt*Um + 1.0/dt*U);
+        Fext = Fext + Fbar - Fint - M*(9.0/dt/dt*(U + dU) - 12.0/dt/dt*Um + 3.0/dt/dt*U - 4.0/dt*Vm + 1.0/dt*V) - C*(3.0/dt*(U + dU) - 4.0/dt*Um + 1.0/dt*U);
     }
 
     //Impose boundary conditions on effective force vector.
     Feff = Total2FreeMatrix.transpose()*Fext;
 }
 
-//Gets the effective stiffness assiciated to this integrator.
+//Gets the effective stiffness associated to this integrator.
 void
 CompositeBathe::ComputeEffectiveStiffness(std::shared_ptr<Mesh> &mesh, Eigen::SparseMatrix<double> &Keff){
     //Starts profiling this function.

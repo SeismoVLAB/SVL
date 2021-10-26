@@ -90,16 +90,20 @@ def makeDomainVolume(options={}):
     if not options:
         info = debugInfo(2) 
         print('\x1B[33m ALERT \x1B[0m: In file=\'%s\' at line=%d makeDomainVolume(attributes=?) must be specified.' %(info.filename,info.lineno))
-        return Mesh
+        exit(-1)
 
     if 'attributes' not in options:
         if options['elems'].upper() == 'TETRA4':
+            options['class'] = 'LIN3DTETRA4'
             nQp = 4
         elif options['elems'].upper() == 'TETRA10':
+            options['class'] = 'LIN3DTETRA10'
             nQp = 7
         elif options['elems'].upper() == 'HEXA8':
+            options['class'] = 'LIN3DHEXA8'
             nQp = 8
         elif options['elems'].upper() == 'HEXA20':
+            options['class'] = 'LIN3DHEXA20'
             nQp = 27
         attributes = {'rule': 'GAUSS', 'np': nQp, 'material': np.nan}
     else:
@@ -110,6 +114,11 @@ def makeDomainVolume(options={}):
     #Unpack attribute provided by the user
     ndof = options['ndof']
     name = options['class']
+
+    if options['elems'].upper() != options['class'][5:].upper():
+        info = debugInfo(2)
+        print('\x1B[33m ALERT \x1B[0m: In file=\'%s\' at line=%d makeDomainVolume() options[\'class\'] and options[\'elems\'] must be the same type.' %(info.filename,info.lineno))
+        exit(-1)
 
     nx, ny, nz = options['ne'][0], options['ne'][1], options['ne'][2]
     P0 = np.array(options['P0'])
@@ -146,11 +155,11 @@ def makeDomainVolume(options={}):
                     n7 = (nx+1)*(ny+1)*(k+1) + (j+1)*(nx+1) + i + 2
                     n8 = (nx+1)*(ny+1)*(k+1) + (j+1)*(nx+1) + i + 1
 
-                    tag += 1; Mesh['Elements'][tag] = {'name': name.upper(), 'conn': [n1,n2,n3,n6], 'attributes': attributes}
-                    tag += 1; Mesh['Elements'][tag] = {'name': name.upper(), 'conn': [n5,n6,n8,n1], 'attributes': attributes}
-                    tag += 1; Mesh['Elements'][tag] = {'name': name.upper(), 'conn': [n6,n7,n8,n3], 'attributes': attributes}
-                    tag += 1; Mesh['Elements'][tag] = {'name': name.upper(), 'conn': [n1,n3,n8,n6], 'attributes': attributes}
-                    tag += 1; Mesh['Elements'][tag] = {'name': name.upper(), 'conn': [n1,n3,n8,n4], 'attributes': attributes}
+                    tag += 1; Mesh['Elements'][tag] = {'name': name.upper(), 'conn': [n1,n2,n3,n6], 'attributes': copy.deepcopy(attributes)}
+                    tag += 1; Mesh['Elements'][tag] = {'name': name.upper(), 'conn': [n5,n6,n8,n1], 'attributes': copy.deepcopy(attributes)}
+                    tag += 1; Mesh['Elements'][tag] = {'name': name.upper(), 'conn': [n6,n7,n8,n3], 'attributes': copy.deepcopy(attributes)}
+                    tag += 1; Mesh['Elements'][tag] = {'name': name.upper(), 'conn': [n1,n3,n8,n6], 'attributes': copy.deepcopy(attributes)}
+                    tag += 1; Mesh['Elements'][tag] = {'name': name.upper(), 'conn': [n1,n3,n8,n4], 'attributes': copy.deepcopy(attributes)}
     elif options['elems'].upper() == 'TETRA10':
         #Creates the secondary 3D grid
         #TODO: Implement this feature
@@ -171,7 +180,7 @@ def makeDomainVolume(options={}):
                     n7 = (nx+1)*(ny+1)*(k+1) + (j+1)*(nx+1) + i + 2
                     n8 = (nx+1)*(ny+1)*(k+1) + (j+1)*(nx+1) + i + 1
                 
-                    Mesh['Elements'][tag] = {'name': name.upper(), 'conn': [n1, n2, n3, n4, n5, n6, n7, n8], 'attributes': attributes}
+                    Mesh['Elements'][tag] = {'name': name.upper(), 'conn': [n1, n2, n3, n4, n5, n6, n7, n8], 'attributes': copy.deepcopy(attributes)}
     elif options['elems'].upper() == 'HEXA20':
         #Creates the secondary 3D grid
         for k in range(nz+1):
@@ -221,7 +230,7 @@ def makeDomainVolume(options={}):
                     n19 = (nx+1)*(ny+1)*(nz+1) + (nx*(ny+1) + ny*(nx+1))*(nz+1) + (nx+1)*(ny+1)*k + (j+1)*(nx+1) + i + 2
                     n20 = (nx+1)*(ny+1)*(nz+1) + (nx*(ny+1) + ny*(nx+1))*(nz+1) + (nx+1)*(ny+1)*k + (j+1)*(nx+1) + i + 1
                 
-                    Mesh['Elements'][tag] = {'name': name.upper(), 'conn': [n1, n2, n3, n4, n5, n6, n7, n8, n9, n10, n11, n12, n13, n14, n15, n16, n17, n18, n19, n20], 'attributes': attributes}
+                    Mesh['Elements'][tag] = {'name': name.upper(), 'conn': [n1, n2, n3, n4, n5, n6, n7, n8, n9, n10, n11, n12, n13, n14, n15, n16, n17, n18, n19, n20], 'attributes': copy.deepcopy(attributes)}
 
     #Finds the Boundary Nodes list
     if Options['dimension'] == 3:
@@ -267,16 +276,20 @@ def makeDomainArea(options={}):
     if not options:
         info = debugInfo(2) 
         print('\x1B[33m ALERT \x1B[0m: In file=\'%s\' at line=%d makeDomainArea(attributes=?) must be specified.' %(info.filename,info.lineno))
-        return Mesh
+        exit(-1)
 
     if 'attributes' not in options:
         if options['elems'].upper() == 'TRIA3':
+            options['class'] = 'LIN2DTRIA3'
             nQp = 3
         elif options['elems'].upper() == 'TRIA6':
+            options['class'] = 'LIN2DTRIA6'
             nQp = 7
         elif options['elems'].upper() == 'QUAD4':
+            options['class'] = 'LIN2DQUAD4'
             nQp = 4
         elif options['elems'].upper() == 'QUAD8':
+            options['class'] = 'LIN2DQUAD8'
             nQp = 9
         attributes = {'rule': 'Gauss', 'np': nQp, 'material': np.nan}
     else:
@@ -285,6 +298,11 @@ def makeDomainArea(options={}):
     #Unpack attribute provided by the user
     ndof = options['ndof']
     name = options['class']
+
+    if options['elems'].upper() != options['class'][5:].upper():
+        info = debugInfo(2)
+        print('\x1B[33m ALERT \x1B[0m: In file=\'%s\' at line=%d makeDomainArea() options[\'class\'] and options[\'elems\'] must be the same type.' %(info.filename,info.lineno))
+        exit(-1)
 
     #Unpack attribute provided by the user
     nx, ny = options['ne'][0], options['ne'][1]
@@ -314,8 +332,8 @@ def makeDomainArea(options={}):
                 n3 = (nx+1)*(j+1)+i+2
                 n4 = (nx+1)*(j+1)+i+1
 
-                tag += 1; Mesh['Elements'][tag] = {'name': name.upper(), 'conn': [n1, n2, n4], 'attributes': attributes}
-                tag += 1; Mesh['Elements'][tag] = {'name': name.upper(), 'conn': [n2, n3, n4], 'attributes': attributes}
+                tag += 1; Mesh['Elements'][tag] = {'name': name.upper(), 'conn': [n1, n2, n4], 'attributes': copy.deepcopy(attributes)}
+                tag += 1; Mesh['Elements'][tag] = {'name': name.upper(), 'conn': [n2, n3, n4], 'attributes': copy.deepcopy(attributes)}
     elif options['elems'].upper() == 'TRIA6':
         #Creates the secondary 2D grid
         for j in range(ny+1):
@@ -349,8 +367,8 @@ def makeDomainArea(options={}):
                 n8 = ntags + nx + (2*nx + 1)*j + i + 1
                 n9 = ntags + nx*(ny+1) + (nx+1)*ny + nx*j + i + 1
 
-                tag += 1; Mesh['Elements'][tag] = {'name': name.upper(), 'conn': [n1, n2, n4, n5, n9, n8], 'attributes': attributes}
-                tag += 1; Mesh['Elements'][tag] = {'name': name.upper(), 'conn': [n2, n3, n4, n6, n7, n9], 'attributes': attributes}
+                tag += 1; Mesh['Elements'][tag] = {'name': name.upper(), 'conn': [n1, n2, n4, n5, n9, n8], 'attributes': copy.deepcopy(attributes)}
+                tag += 1; Mesh['Elements'][tag] = {'name': name.upper(), 'conn': [n2, n3, n4, n6, n7, n9], 'attributes': copy.deepcopy(attributes)}
     elif options['elems'].upper() == 'QUAD4':  
         #Defines the Elements in Mesh
         tag = 0
@@ -358,7 +376,7 @@ def makeDomainArea(options={}):
             for i in range(nx):
                 tag += 1
                 conn = [(nx+1)*j+i+1, (nx+1)*j+i+2, (nx+1)*(j+1)+i+2, (nx+1)*(j+1)+i+1]
-                Mesh['Elements'][tag] = {'name': name.upper(), 'conn': conn, 'attributes': attributes}
+                Mesh['Elements'][tag] = {'name': name.upper(), 'conn': conn, 'attributes': copy.deepcopy(attributes)}
     elif options['elems'].upper() == 'QUAD8':
         #Creates the secondary 2D grid
         for j in range(ny+1):
@@ -388,7 +406,7 @@ def makeDomainArea(options={}):
                 n8 = ntags + nx + (2*nx + 1)*j + i + 1
 
                 tag += 1
-                Mesh['Elements'][tag] = {'name': name.upper(), 'conn': [n1, n2, n3, n4, n5, n6, n7, n8], 'attributes': attributes}
+                Mesh['Elements'][tag] = {'name': name.upper(), 'conn': [n1, n2, n3, n4, n5, n6, n7, n8], 'attributes': copy.deepcopy(attributes)}
                 
     #Finds the Boundary Nodes list
     if Options['dimension'] == 2:
@@ -467,7 +485,7 @@ def makeDomainLine(options={}):
         tag = 0
         for i in range(nx):
             tag += 1 
-            Mesh['Elements'][tag] = {'name': name.upper(), 'conn': [i+1, i+2], 'attributes': attributes}
+            Mesh['Elements'][tag] = {'name': name.upper(), 'conn': [i+1, i+2], 'attributes': copy.deepcopy(attributes)}
     elif options['elems'].upper() == 'LINE3':
         #Creates the secondary grid
         for i in range(nx):
@@ -479,7 +497,7 @@ def makeDomainLine(options={}):
         tag = 0
         for i in range(nx):
             tag += 1 
-            Mesh['Elements'][tag] = {'name': name.upper(), 'conn': [i+1, i+2, nx+2+i], 'attributes': attributes}
+            Mesh['Elements'][tag] = {'name': name.upper(), 'conn': [i+1, i+2, nx+2+i], 'attributes': copy.deepcopy(attributes)}
     return Mesh
 
 def removeDomain(mesh={}, attributes={}):

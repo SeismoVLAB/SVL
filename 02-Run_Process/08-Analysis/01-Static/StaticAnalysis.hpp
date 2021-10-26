@@ -75,6 +75,9 @@ class StaticAnalysis : public Analysis {
         void UpdateDomain(unsigned int k);
 
     private:
+        ///Total number of time increments.
+        unsigned int NumberOfSteps;
+
         ///The finite element mesh:
         std::shared_ptr<Mesh> theMesh;
 
@@ -83,9 +86,6 @@ class StaticAnalysis : public Analysis {
 
         ///The static integrator method.
         std::shared_ptr<Integrator> theIntegrator;
-
-        ///Total number of time increments.
-        unsigned int NumberOfSteps;
 };
 
 #endif

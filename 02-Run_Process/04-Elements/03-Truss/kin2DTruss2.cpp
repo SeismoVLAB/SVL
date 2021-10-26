@@ -6,12 +6,9 @@
 //Define constant tolerance value:
 const double TOL = 0.9999995;
 
-//Define VTK cell value for Paraview:
-const unsigned int VTKCELL = 3;
-
 //Overload constructor.
 kin2DTruss2::kin2DTruss2(const std::vector<unsigned int> nodes, std::unique_ptr<Material> &material, const double area) :
-Element("kin2DTruss2", nodes, 4, VTKCELL, GROUPTRUSS), A(area){
+Element("kin2DTruss2", nodes, 4, VTK_LINEAR_LINE, GROUP_ELEMENT_TRUSS), A(area){
     //The element nodes.
     theNodes.resize(2);
 
