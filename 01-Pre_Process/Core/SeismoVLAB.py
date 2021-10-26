@@ -17,6 +17,7 @@ from Core.Utilities import *
 from Core.Numberer import *
 from Core.Partition import *
 from Core.PlaneWave import *
+from Core.FreeField import *
 from Core.Definitions import *
 
 def createFolders():
