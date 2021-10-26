@@ -1386,15 +1386,22 @@ def GenerateDRMFiles():
                         df     = fun['df']
                         endFrequency = fun['CutOffFrequency'] # energy of frequency larger than this is zero
 
-                        depthFactor = 3.0 # consider until depth = depthFactor*wavelength to ensure fix end approximation
-                        dy1  = 1.0        # y-grid spacing of points used to interpolate the mode shape, from ground surface to yDRMmin
-                        nepw = 40         # number of element per wavelength in the extended region, from yDRMmin to depth
-                        mode = 0          # currently only work with mode = 0: fundamental mode of Rayleigh wave
+                        #Consider until depth = depthFactor*wavelength to ensure fix end approximation
+                        depthFactor = 3.0
+
+                        #Y-grid spacing of points used to interpolate the mode shape, from ground surface to yDRMmin
+                        dy1  = np.min(beta/endFrequency/16.0)
+
+                        #Number of element per wavelength in the extended region, from yDRMmin to depth
+                        nepw = 40
+
+                        #Currently only work with mode = 0: fundamental mode of Rayleigh wave      
+                        mode = 0
 
                         #Compute the FFT for displacement, velocity and acceleration fields
                         wVec, FFTdisp, FFTvels, FFTaccel, df, Nt, startFrequency, endFrequency = GetRayleighFFTfields(Disp, Vels, Accel, endFrequency, dt, df, nt)
 
-                        #
+                        #Computes Mode Shape and Phase velocity dispersion for generation of the interpolation functions: uModeShape, vModeShape, and yGridModeShape
                         fDispersion, phaseVelDispersion, yGridModeShape, uModeShape, vModeShape = GetRayleighDispersionAndModeShape(mode, layers, beta, rho, nu, dy1, xmin[1], nepw, startFrequency, endFrequency, df, depthFactor)
 
                         #
@@ -1402,7 +1409,7 @@ def GenerateDRMFiles():
                         uModeShape = np.flipud(np.real(uModeShape))
                         vModeShape = np.flipud(np.real(vModeShape))
 
-                        #
+                        #Interpolation function required to obtain displacement, velocity and acceleration fields in nodes inside the soil layers
                         interpDispersion = interpolate.interp1d(2.0*np.pi*fDispersion, phaseVelDispersion,kind='linear', fill_value='extrapolate')
                         interpuMmodeShape = interpolate.RectBivariateSpline(yGridModeShape,2.0*np.pi*fDispersion, uModeShape)
                         interpvMmodeShape = interpolate.RectBivariateSpline(yGridModeShape,2.0*np.pi*fDispersion, vModeShape)
@@ -1471,16 +1478,22 @@ def GenerateDRMFiles():
                         df     = fun['df']
                         endFrequency = fun['CutOffFrequency'] # energy of frequency larger than this is zero
 
-                        depthFactor = 3.0 # consider until depth = depthFactor*wavelength to ensure fix end approximation
-                        dy1  = 1.0        # y-grid spacing of points used to interpolate the mode shape, from ground surface to yDRMmin
-                        nepw = 40         # number of element per wavelength in the extended region, from yDRMmin to depth
-                        mode = 0          # currently only work with mode = 0: fundamental mode of Rayleigh wave
+                        #Consider until depth = depthFactor*wavelength to ensure fix end approximation
+                        depthFactor = 3.0
+
+                        #Y-grid spacing of points used to interpolate the mode shape, from ground surface to yDRMmin
+                        dy1  = np.min(beta/endFrequency/16.0) 
+
+                        #Number of element per wavelength in the extended region, from yDRMmin to depth
+                        nepw = 40
+
+                        #Currently only work with mode = 0: fundamental mode of Rayleigh wave      
+                        mode = 0
 
                         #Compute the FFT for displacement, velocity and acceleration fields
                         wVec, FFTdisp, FFTvels, FFTaccel, df, Nt, startFrequency, endFrequency = GetRayleighFFTfields(Disp, Vels, Accel, endFrequency, dt, df, nt)
 
-                        #
-                        
+                        #Computes Mode Shape and Phase velocity dispersion for generation of the interpolation functions: uModeShape, vModeShape, and yGridModeShape
                         fDispersion, phaseVelDispersion, yGridModeShape, uModeShape, vModeShape = GetRayleighDispersionAndModeShape(mode, layers, beta, rho, nu, dy1, xmin[2], nepw, startFrequency, endFrequency, df, depthFactor)
 
                         #
@@ -1488,7 +1501,7 @@ def GenerateDRMFiles():
                         uModeShape = np.flipud(np.real(uModeShape))
                         vModeShape = np.flipud(np.real(vModeShape))
 
-                        #
+                        #Interpolation function required to obtain displacement, velocity and acceleration fields in nodes inside the soil layers
                         interpDispersion = interpolate.interp1d(2.0*np.pi*fDispersion, phaseVelDispersion,kind='linear', fill_value='extrapolate')
                         interpuMmodeShape = interpolate.RectBivariateSpline(yGridModeShape,2.0*np.pi*fDispersion, uModeShape)
                         interpvMmodeShape = interpolate.RectBivariateSpline(yGridModeShape,2.0*np.pi*fDispersion, vModeShape)
