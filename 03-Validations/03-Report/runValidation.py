@@ -25,99 +25,103 @@ def main():
 
     #List of Debugging Seismo-VLAB File to be Run.
     files = []
-    files.append("A01-DY_Lin_2D_Elastic_ZeroLength")
-    files.append("A02-DY_Lin_2D_Viscous_ZeroLength")
-    files.append("A03-DY_Lin_2D_Plastic_ZeroLength")
-    files.append("A04-DY_Lin_1DPointMass_Elastic_ZeroLength")
-    files.append("A05-DY_Lin_Hertzian_Contact_ZeroLength")
-    files.append("A06-DY_Lin_1DPointMass_Elastic_ZeroLength_SupportMotion")
-    files.append("A08-DY_2D_UniAxial_BoucWen_Link_Param1")
-    files.append("A10-DY_3D_UniAxial_BoucWen_Link_Param1")
-    files.append("A12-DY_2D_UniAxial_YamamotoHDRB_Link")
-    files.append("A13-DY_3D_UniAxial_YamamotoHDRB_Link")
-    files.append("A15-DY_1D_Material_Fiber_Elastic")
-    files.append("A16-DY_1D_Material_Fiber_Elastic_Gap")
-    files.append("A17-DY_1D_Material_Fiber_Concrete")
-    files.append("A18-DY_1D_Material_Fiber_Steel")
-    files.append("A19-DY_1D_Material_Fiber_Plastic_Gap")
-    files.append("C01-ST_Lin_2DAxial_Elastic_Truss2")
-    files.append("C02-ST_Lin_2DRoof_Elastic_Truss2")
-    files.append("C03-ST_Lin_3DAxial_Elastic_Truss2")
-    files.append("C04-ST_Lin_3DAxial_Plastic_Truss2")
-    files.append("C05-ST_Lin_3DPiramid_Elastic_Truss2")
-    ####files.append("C06-DY_Lin_3DConstrained_Elastic_Truss2") #To Be Done!!
-    ####files.append("C07-ST_Lin_3DCantilever_Elastic_Truss2") #To Be Done!!
-    files.append("C08-ST_kin_2DCantilever_Elastic_Truss2")
-    files.append("C09-ST_kin_3DCantilever_Elastic_Truss2")
-    files.append("C11-ST_Lin_2DSurface_Elastic_Truss2")
-    files.append("C12-ST_Lin_3DSurface_Elastic_Truss2")
-    files.append("C15-ST_Lin_2DSurface_Elastic_Truss3")
-    files.append("C16-ST_Lin_3DSurface_Elastic_Truss3")
-    files.append("D01-ST_Lin_2DBernoulli_Elastic_Frame2")
-    files.append("D02-ST_Lin_2DTimoshenko_Elastic_Frame2")
-    files.append("D03-ST_Lin_3DBernoulli_Elastic_Frame2")
-    files.append("D04-ST_Lin_3DTimoshenko_Elastic_Frame2")
-    files.append("D05-ST_Lin_2DBernoulliArc_Elastic_Frame2")
-    files.append("D06-ST_Lin_2DTimoshenkoArc_Elastic_Frame2")
-    files.append("D07-ST_Lin_2DConstrainedBuilding_Elastic_Frame2")
-    files.append("D08-ST_Lin_2DVolForce_Elastic_Frame2")
-    files.append("D09-ST_Lin_3DVolForce_Elastic_Frame2")
-    files.append("D10-ST_kin_2DPointLoad_Bernoulli_Elastic_Frame2")
-    files.append("D11-ST_kin_2DMomentBernoulli_Elastic_Frame2")
-    files.append("D12-ST_Lin_2DSurfaceHorizontal_Elastic_Frame2")
-    files.append("D13-ST_Lin_3DSurfaceHorizontal_Elastic_Frame2")
-    files.append("D16-DY_Free_Rectangular_3DPointLoad_Elastic_Frame2")
-    files.append("D17-DY_Damped_WideFlange_3DPointLoad_Elastic_Frame2")
-    files.append("D18-DY_Free_Circular_2DPointLoad_Elastic_Frame2")
-    files.append("D19-DY_Damped_Angle_2DPointLoad_Elastic_Frame2")
-    files.append("D20-DY_Free_Rectangular_BodyLoad_Elastic_Frame2")
-    files.append("D21-DY_Damped_Rectangular_BodyLoad_Elastic_Frame2")
-    files.append("D22-ST_Rectangular_SupportMotion_Elastic_Frame2")
-    files.append("D23-DY_Rectangular_SupportMotion_Elastic_Frame2")
-    files.append("D24-DY_WideFlange_Linear_Fiber_Section_Frame2")
-    files.append("D25-DY_WideFlange_NonLinear_Fiber_Section_Frame2")
-    ####files.append("D26-DY_Rectangular_NonLinear_Fiber_Section_Frame2") #To Be Done!!
-    files.append("E01-ST_Lin_2DPointLoad_Elastic_Quad4")
-    files.append("E02-ST_Lin_2DPointLoad_Elastic_Quad8")
-    files.append("E03-ST_Lin_2DSurfaceLoad_Elastic_Quad4")
-    files.append("E04-ST_Lin_2DSurfaceLoad_Elastic_Quad8")
-    files.append("E05-ST_Lin_2DRigidLink_Elastic_Frame2")
-    files.append("F01-ST_Lin_2DPointLoad_ElasticPStrain_Quad4")
-    files.append("F02-DY_Lin_2DPointLoad_ElasticPStrain_Quad4")
-    files.append("F03-DY_Lin_2DPointLoad_J2PStrain_Quad4")
-    files.append("F04-DY_Lin_2DPointLoad_BAPStrain_Quad4")
-    files.append("F06-DY_Lin_2DSoilColumn_ElasticPStrain_Quad4")
-    files.append("F07-DY_Lin_2DSoilColumn_J2PStrain_Quad4")
-    files.append("F08-DY_Lin_2DSoilColumn_BAPStrain_Quad4")
-    ####files.append("F10-ST_Lin_2DPointLoad_ElasticPStrain_Quad8") #To Be Done!!
-    files.append("F11-DY_Lin_2DPMLSoilColumn_ElasticPStrain_Quad4")
-    files.append("F14-ST_Lin_2DConstrainedSSI_Elastic_Quad4_Frame2")
-    ####files.append("F16-DY_Lin_2DSoilColumn_ElasticPStrain_Quad8") #To Be Done!!
-    files.append("H01-ST_Lin_3DinPlanePointLoad_ElasticPStress_Shell4")
-    files.append("H02-ST_Lin_3DoutPlanePointLoad_ElasticPStress_Shell4")
-    files.append("H03-ST_Lin_3DSlabPointLoad_ElasticPStress_Shell4")
-    files.append("H04-ST_Lin_3DSlabBodyLoad_ElasticPStress_Shell4")
-    files.append("H05-ST_Lin_3DBuildingDiaphragm_ElasticPStress_Frame2_Shell4")
-    files.append("H06-ST_Lin_3DSlabSurfaceLoad_ElasticPStress_Shell4")
-    files.append("H07-ST_Lin_3DCantileverSurfaceLoad_Shell4")
-    files.append("H08-DY_Damped_3DPointLoad_Plate_Elastic_Shell4")
-    files.append("I01-ST_Lin_3DPointLoad_Elastic_Hexa8")
-    files.append("I02-ST_Lin_3DSurfaceLoad_Elastic_Hexa8")
-    files.append("I03-ST_Lin_3DPointLoad_Elastic_Hexa20")
-    files.append("I04-ST_Lin_3DSurfaceLoad_Elastic_Hexa20")
-    files.append("I05-ST_Lin_3DBodyLoad_Elastic_Hexa8")
-    files.append("I06-ST_Lin_3DBodyLoad_Elastic_Hexa20")
-    files.append("J02-DY_Lin_3DPointLoad_Elastic_Hexa8")
-    files.append("J05-DY_Lin_3DSoilColumn_Elastic_Hexa8")
-    ####files.append("J06-DY_Lin_3DSoilColumn_Elastic_Hexa20") #To Be Done!!
-    files.append("J12-DY_Axial_Load_Long_Rod_PML3D")
+    files.append(["A01-DY_Lin_2D_Elastic_ZeroLength", 1])
+    files.append(["A02-DY_Lin_2D_Viscous_ZeroLength", 1])
+    files.append(["A03-DY_Lin_2D_Plastic_ZeroLength", 1])
+    files.append(["A04-DY_Lin_1DPointMass_Elastic_ZeroLength", 1])
+    files.append(["A05-DY_Lin_Hertzian_Contact_ZeroLength", 1])
+    files.append(["A06-DY_Lin_1DPointMass_Elastic_ZeroLength_SupportMotion", 1])
+    files.append(["A08-DY_2D_UniAxial_BoucWen_Link_Param1", 1])
+    files.append(["A10-DY_3D_UniAxial_BoucWen_Link_Param1", 1])
+    files.append(["A12-DY_2D_UniAxial_YamamotoHDRB_Link", 1])
+    files.append(["A13-DY_3D_UniAxial_YamamotoHDRB_Link", 1])
+    files.append(["A15-DY_1D_Material_Fiber_Elastic", 1])
+    files.append(["A16-DY_1D_Material_Fiber_Elastic_Gap", 1])
+    files.append(["A17-DY_1D_Material_Fiber_Concrete", 1])
+    files.append(["A18-DY_1D_Material_Fiber_Steel", 1])
+    files.append(["A19-DY_1D_Material_Fiber_Plastic_Gap", 1])
+    files.append(["C01-ST_Lin_2DAxial_Elastic_Truss2", 1])
+    files.append(["C02-ST_Lin_2DRoof_Elastic_Truss2", 1])
+    files.append(["C03-ST_Lin_3DAxial_Elastic_Truss2", 1])
+    files.append(["C04-ST_Lin_3DAxial_Plastic_Truss2", 1])
+    files.append(["C05-ST_Lin_3DPiramid_Elastic_Truss2", 1])
+    ####files.append(["C06-DY_Lin_3DConstrained_Elastic_Truss2", 1]) #To Be Done!!
+    ####files.append(["C07-ST_Lin_3DCantilever_Elastic_Truss2", 1]) #To Be Done!!
+    files.append(["C08-ST_kin_2DCantilever_Elastic_Truss2", 1])
+    files.append(["C09-ST_kin_3DCantilever_Elastic_Truss2", 1])
+    files.append(["C11-ST_Lin_2DSurface_Elastic_Truss2", 1])
+    files.append(["C12-ST_Lin_3DSurface_Elastic_Truss2", 1])
+    files.append(["C15-ST_Lin_2DSurface_Elastic_Truss3", 1])
+    files.append(["C16-ST_Lin_3DSurface_Elastic_Truss3", 1])
+    files.append(["D01-ST_Lin_2DBernoulli_Elastic_Frame2", 1])
+    files.append(["D02-ST_Lin_2DTimoshenko_Elastic_Frame2", 1])
+    files.append(["D03-ST_Lin_3DBernoulli_Elastic_Frame2", 1])
+    files.append(["D04-ST_Lin_3DTimoshenko_Elastic_Frame2", 1])
+    files.append(["D05-ST_Lin_2DBernoulliArc_Elastic_Frame2", 1])
+    files.append(["D06-ST_Lin_2DTimoshenkoArc_Elastic_Frame2", 1])
+    files.append(["D07-ST_Lin_2DConstrainedBuilding_Elastic_Frame2", 1])
+    files.append(["D08-ST_Lin_2DVolForce_Elastic_Frame2", 1])
+    files.append(["D09-ST_Lin_3DVolForce_Elastic_Frame2", 1])
+    files.append(["D10-ST_kin_2DPointLoad_Bernoulli_Elastic_Frame2", 1])
+    files.append(["D11-ST_kin_2DMomentBernoulli_Elastic_Frame2", 1])
+    files.append(["D12-ST_Lin_2DSurfaceHorizontal_Elastic_Frame2", 1])
+    files.append(["D13-ST_Lin_3DSurfaceHorizontal_Elastic_Frame2", 1])
+    files.append(["D16-DY_Free_Rectangular_3DPointLoad_Elastic_Frame2", 1])
+    files.append(["D17-DY_Damped_WideFlange_3DPointLoad_Elastic_Frame2", 1])
+    files.append(["D18-DY_Free_Circular_2DPointLoad_Elastic_Frame2", 1])
+    files.append(["D19-DY_Damped_Angle_2DPointLoad_Elastic_Frame2", 1])
+    files.append(["D20-DY_Free_Rectangular_BodyLoad_Elastic_Frame2", 1])
+    files.append(["D21-DY_Damped_Rectangular_BodyLoad_Elastic_Frame2", 1])
+    files.append(["D22-ST_Rectangular_SupportMotion_Elastic_Frame2", 1])
+    files.append(["D23-DY_Rectangular_SupportMotion_Elastic_Frame2", 1])
+    files.append(["D24-DY_WideFlange_Linear_Fiber_Section_Frame2", 1])
+    files.append(["D25-DY_WideFlange_NonLinear_Fiber_Section_Frame2", 1])
+    ####files.append(["D26-DY_Rectangular_NonLinear_Fiber_Section_Frame2", 1]) #To Be Done!!
+    files.append(["E01-ST_Lin_2DPointLoad_Elastic_Quad4", 1])
+    files.append(["E02-ST_Lin_2DPointLoad_Elastic_Quad8", 1])
+    files.append(["E03-ST_Lin_2DSurfaceLoad_Elastic_Quad4", 1])
+    files.append(["E04-ST_Lin_2DSurfaceLoad_Elastic_Quad8", 1])
+    files.append(["E05-ST_Lin_2DRigidLink_Elastic_Frame2", 1])
+    files.append(["F01-ST_Lin_2DPointLoad_ElasticPStrain_Quad4", 1])
+    files.append(["F02-DY_Lin_2DPointLoad_ElasticPStrain_Quad4", 1])
+    files.append(["F03-DY_Lin_2DPointLoad_J2PStrain_Quad4", 1])
+    files.append(["F04-DY_Lin_2DPointLoad_BAPStrain_Quad4", 1])
+    files.append(["F06-DY_Lin_2DSoilColumn_ElasticPStrain_Quad4", 1])
+    files.append(["F07-DY_Lin_2DSoilColumn_J2PStrain_Quad4", 1])
+    files.append(["F08-DY_Lin_2DSoilColumn_BAPStrain_Quad4", 1])
+    ####files.append(["F10-ST_Lin_2DPointLoad_ElasticPStrain_Quad8", 1]) #To Be Done!!
+    files.append(["F11-DY_Lin_2DPMLSoilColumn_ElasticPStrain_Quad4", 1])
+    files.append(["F14-ST_Lin_2DConstrainedSSI_Elastic_Quad4_Frame2", 1])
+    ####files.append(["F16-DY_Lin_2DSoilColumn_ElasticPStrain_Quad8", 1]) #To Be Done!!
+    files.append(["H01-ST_Lin_3DinPlanePointLoad_ElasticPStress_Shell4", 1])
+    files.append(["H02-ST_Lin_3DoutPlanePointLoad_ElasticPStress_Shell4", 1])
+    files.append(["H03-ST_Lin_3DSlabPointLoad_ElasticPStress_Shell4", 1])
+    files.append(["H04-ST_Lin_3DSlabBodyLoad_ElasticPStress_Shell4", 1])
+    files.append(["H05-ST_Lin_3DBuildingDiaphragm_ElasticPStress_Frame2_Shell4", 1])
+    files.append(["H06-ST_Lin_3DSlabSurfaceLoad_ElasticPStress_Shell4", 1])
+    files.append(["H07-ST_Lin_3DCantileverSurfaceLoad_Shell4", 1])
+    files.append(["H08-DY_Damped_3DPointLoad_Plate_Elastic_Shell4", 1])
+    files.append(["I01-ST_Lin_3DPointLoad_Elastic_Hexa8", 1])
+    files.append(["I02-ST_Lin_3DSurfaceLoad_Elastic_Hexa8", 1])
+    files.append(["I03-ST_Lin_3DPointLoad_Elastic_Hexa20", 1])
+    files.append(["I04-ST_Lin_3DSurfaceLoad_Elastic_Hexa20", 1])
+    files.append(["I05-ST_Lin_3DBodyLoad_Elastic_Hexa8", 1])
+    files.append(["I06-ST_Lin_3DBodyLoad_Elastic_Hexa20", 1])
+    files.append(["J02-DY_Lin_3DPointLoad_Elastic_Hexa8", 1])
+    files.append(["J05-DY_Lin_3DSoilColumn_Elastic_Hexa8", 1])
+    ####files.append(["J06-DY_Lin_3DSoilColumn_Elastic_Hexa20", 1]) #To Be Done!!
+    files.append(["J12-DY_Axial_Load_Long_Rod_PML3D", 1])
+
+    files.append(["P01-ST_DY_Lin_1D_Progressive_Mass_Elastic_ZeroLength", 2])
+    files.append(["P02-ST_kin_2D_Progressive_Moment_Elastic_Frame2", 3])
+    files.append(["P03-ST_DY_Progressive_WideFlange_NonLinear_Fiber_Section_Frame2", 2])
 
     #The Global LaTeX files to be Included.
     LaTeXFiles = []
 
     n = len(files)
     for k in range(n):
-        LaTeXFiles.append(cwd + "/../01-Debugging/" + files[k] + "/LaTeX/LaTeXFile.tex")
+        LaTeXFiles.append(cwd + "/../01-Debugging/" + files[k][0] + "/LaTeX/LaTeXFile.tex")
 
     #Run all the validation cases.
     print('Running all the validation cases')
@@ -159,19 +163,21 @@ def RunValidationCases(files):
     n = len(files)
     for k in range(n):
         #Excecutes the Pre-Analysis and Generate Files.
-        cmdline = "python3 " + cwd + "/../01-Debugging/" + files[k] + "/" + files[k] + ".py"
+        cmdline = "python3 " + cwd + "/../01-Debugging/" + files[k][0] + "/" + files[k][0] + ".py"
         subprocess.check_output(cmdline, shell=True)
 
         #Excecutes the Run-Analysis and Generate Files.
-        cmdline = cwd + "/../../02-Run_Process/SeismoVLAB.exe -dir " + cwd + "/../01-Debugging/" + files[k] + "/Partition -file Debugging_" + files[k][0:3] + ".$.json"
+        cmdline = cwd + "/../../02-Run_Process/SeismoVLAB.exe -dir \'" + cwd + "/../01-Debugging/" + files[k][0] + "/Partition\' -file" 
+        for j in range(files[k][1]):
+            cmdline += " \'Debugging_" + files[k][0][0:3] + "." + str(j+1) + ".$.json\'"
         subprocess.check_output(cmdline, shell=True)
 
         #Removes the unnecessary Files.
-        cmdline = "rm -r " + cwd + "/../01-Debugging/" + files[k] + "/Partition" 
+        cmdline = "rm -r " + cwd + "/../01-Debugging/" + files[k][0] + "/Partition" 
         os.system(cmdline)
 
         #Removes the unnecessary Files.
-        cmdline = "rm -r " + cwd + "/../01-Debugging/" + files[k] + "/Paraview" 
+        cmdline = "rm -r " + cwd + "/../01-Debugging/" + files[k][0] + "/Paraview" 
         os.system(cmdline)
 
 def GenValidationResults(files):
@@ -196,7 +202,7 @@ def GenValidationResults(files):
     n = len(files)
     for k in range(n):
         #Obtains the debugging folder path.
-        ChangePath = cwd + "/../01-Debugging/" + files[k]      
+        ChangePath = cwd + "/../01-Debugging/" + files[k][0]      
 
         #Enters the Debug's Case Folder.
         os.chdir(ChangePath)
@@ -208,7 +214,7 @@ def GenValidationResults(files):
         os.chdir(cwd)
 
         #Removes the unnecessary Files.
-        cmdline = "rm -r " + cwd + "/../01-Debugging/" + files[k] + "/Solution"
+        cmdline = "rm -r " + cwd + "/../01-Debugging/" + files[k][0] + "/Solution"
         os.system(cmdline)
 
 def MainTeX(LaTeXFiles, files):
@@ -273,7 +279,7 @@ def MainTeX(LaTeXFiles, files):
     #Writes the Debugging cases results.
     n = len(LaTeXFiles)
     for k in range(n):
-        LaTeXfile.write("\\subsection*{DEBUG CASE : " + files[k].replace("_", "\_") + "} \n")
+        LaTeXfile.write("\\subsection*{DEBUG CASE : " + files[k][0].replace("_", "\_") + "} \n")
         LaTeXfile.write("\\input{" + LaTeXFiles[k] + "} \n") 
 
     LaTeXfile.write("\n")
