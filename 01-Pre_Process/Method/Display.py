@@ -155,6 +155,30 @@ def renderData(filename=''):
             Paraviewfile.write("%d " % SVLclasses['Elements'][name]['group'])
 
         Paraviewfile.write("\n%s" % head4)
+        Paraviewfile.write("</DataArray>\n%s" % head4)
+
+        #Materials
+        Paraviewfile.write("<DataArray type=\"Int64\" Name=\"Materials\" format=\"ascii\">\n%s" % head4)
+
+        for eTag in Entities['Elements']:
+            if 'material' in Entities['Elements'][eTag]['attributes']:
+                Paraviewfile.write("%d " % Entities['Elements'][eTag]['attributes']['material'])
+            else:
+                Paraviewfile.write("-1 ")
+
+        Paraviewfile.write("\n%s" % head4)
+        Paraviewfile.write("</DataArray>\n%s" % head4)
+
+        #Sections
+        Paraviewfile.write("<DataArray type=\"Int64\" Name=\"Sections\" format=\"ascii\">\n%s" % head4)
+
+        for eTag in Entities['Elements']:
+            if 'section' in Entities['Elements'][eTag]['attributes']:
+                Paraviewfile.write("%d " % Entities['Elements'][eTag]['attributes']['section'])
+            else:
+                Paraviewfile.write("-1 ")
+
+        Paraviewfile.write("\n%s" % head4)
 
         if len(Options['partition']) != 0:
             Paraviewfile.write("</DataArray>\n%s" % head4)
