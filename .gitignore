@@ -15,6 +15,13 @@ Icon
 *.cpp~
 *.hpp~
 
+# Debugging/Performance folders
+/03-Validations/01-Debugging/*
+!/03-Validations/01-Debugging/*.zip
+
+/03-Validations/02-Performance
+!/03-Validations/02-Performance/*.zip
+
 # C++ / Compilation files
 *.o
 SeismoVLAB.exe
