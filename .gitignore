@@ -22,6 +22,9 @@ Icon
 /03-Validations/02-Performance
 !/03-Validations/02-Performance/*.zip
 
+# Metis software
+/01-Pre_Process/Metis/mpmetis
+
 # C++ / Compilation files
 *.o
 SeismoVLAB.exe
