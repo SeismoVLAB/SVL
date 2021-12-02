@@ -767,6 +767,74 @@ def Assemble(a,b,k):
     
     return c
     
+def getAdmissibleEigValEigVec(Ain,Min,w,Vupper,Vlower,mode):
+    """
+    This function calculates the eigenvalues (Rayleigh wave velocities) and eigenvectors (mode shapes)
+    of the generalized eigenvalue problem, and pick the admissible solutions. The admissible velocities
+    of propagating Rayleigh modes are real values and must be in the range [Vlower, Vupper].\n
+    
+    @visit  https://github.com/SeismoVLAB/SVL\n
+    @author Kien T. Nguyen 2021, ORCID: 0000-0001-5761-3156
+    
+    Parameters
+    ----------
+    Ain, Min : ndarray
+        Coefficient matrices for the generalized eigenvalue problem: A * x[i] = w[i] * M * x[i].
+    w : float
+        Angular frequency.
+    Vupper, Vlower : float
+        The upper and lower bound of Rayleigh wave velocity.
+    mode : int
+        The desired mode. 0: fundamental, 1: 1st higher mode
+
+    Returns
+    -------
+    eigVel, eigShape : ndarray
+        Velocities and mode shapes of Rayleigh natural propagating modes.
+
+    """
+    noModes = mode + 1
+    m = noModes
+    unfinished = True
+    
+    while unfinished:
+        eigk, eigShape = sla.eigs(Ain, k=m, M = Min, sigma=w/Vlower, which = 'LM') #note that k is the number of modes desired
+        eigv = w/eigk
+        vreal = np.real(eigv[np.imag(eigv)==0]) 
+        vrealAdmiss = vreal[(Vlower<=vreal) & (vreal<=Vupper)]
+        
+        nv = np.size(vrealAdmiss)
+        if nv==0:
+            #no real velocity in admissible range, increase number of modes desired
+            m *= 2 
+        elif nv>=noModes:
+            #enough number of real admissible velocity needed, stop
+            unfinished = False
+        else:
+            #not enough real admissible velocity needed
+            if max(vreal)>Vupper:
+                #other velocities are outside admissible range, useless to increase number of modes sought, stop 
+                unfinished = False
+            else:
+                #there are potentials velocities in the admissible range, increase number of modes desired
+                m *=2
+                    
+    indices = np.where(np.in1d(eigv, vrealAdmiss))[0]
+    if nv>=noModes:
+        eigVel = vrealAdmiss[0:noModes]
+        eigShape = eigShape[:,indices]
+        modeShape = eigShape[:,0:noModes]
+    else:
+        eigNaN = np.empty(noModes-nv)
+        eigNaN.fill(np.nan)
+        eigVel = np.concatenate((vrealAdmiss,eigNaN))
+        
+        eigNaN = np.empty((eigShape.shape[0],noModes-nv))
+        eigNaN.fill(np.nan)
+        modeShape = np.concatenate((eigShape[:,indices],eigNaN),1)
+        
+    return eigVel, modeShape  
+    
 def GetRayleighDispersionAndModeShape(mode, intY, beta, rho, nu, dy1, yDRMmin, nepw, startFre, endFre, df, depthFactor):
     """
     This function calculates the dispersion curves and mode shapes of Rayleigh
@@ -884,10 +952,9 @@ def GetRayleighDispersionAndModeShape(mode, intY, beta, rho, nu, dy1, yDRMmin, n
         Ain = sps.vstack([sps.hstack([sps.csr_matrix((noDoF, noDoF), dtype = np.float), sps.identity(noDoF,dtype=np.float)]), sps.hstack([w*w*M-G, -B])])
         Min = sps.vstack([sps.hstack([sps.identity(noDoF,dtype=np.float),sps.csr_matrix((noDoF, noDoF), dtype = np.float)]), sps.hstack([sps.csr_matrix((noDoF, noDoF), dtype = np.float),A])])
         
-        eigk, eigShape = sla.eigs(Ain, k=mode+1, M = Min, sigma=w/Vlower) #note that k is the number of modes desired
-        
-        wavenumber = np.real(eigk[mode])
-        phaseVelDispersion[indexFre] = w/wavenumber
+        #Avoids mode kissing for Rayleigh wave mode with extremly high layer contrast
+        eigVel, eigShape = getAdmissibleEigValEigVec(Ain,Min,w,Vupper,Vlower,mode)
+        phaseVelDispersion[indexFre] = eigVel[mode]
         modeShape.append(eigShape[0:Ngrid,mode])
     
     modeShapeReshape = np.transpose(np.vstack(modeShape)) #reshape the matrix, column is indexFre, row is interlacing of u and v of each point     
